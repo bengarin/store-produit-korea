@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Link, NavLink, useLocation } from 'react-router-dom';
 import { Menu, ShoppingCart } from 'lucide-react';
 import Logo from './Logo.jsx';
@@ -35,10 +35,24 @@ export default function Header() {
 }
 
 export function CartButton({ count }) {
+  // Petit rebond de l'icône à chaque ajout (le compteur augmente).
+  const prev = useRef(count);
+  const [bump, setBump] = useState(false);
+  useEffect(() => {
+    if (count > prev.current) {
+      setBump(true);
+      const t = setTimeout(() => setBump(false), 600);
+      prev.current = count;
+      return () => clearTimeout(t);
+    }
+    prev.current = count;
+    return undefined;
+  }, [count]);
+
   return (
-    <Link to="/panier" className="icon-btn cart-btn" aria-label={`Mon panier, ${count} article${count > 1 ? 's' : ''}`}>
+    <Link to="/panier" className={`icon-btn cart-btn ${bump ? 'is-bumping' : ''}`} aria-label={`Mon panier, ${count} article${count > 1 ? 's' : ''}`}>
       <ShoppingCart size={22} strokeWidth={1.6} />
-      {count > 0 && <span className="cart-btn__badge">{count > 99 ? '99+' : count}</span>}
+      {count > 0 && <span key={count} className="cart-btn__badge">{count > 99 ? '99+' : count}</span>}
     </Link>
   );
 }

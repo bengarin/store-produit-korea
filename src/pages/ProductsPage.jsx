@@ -20,22 +20,20 @@ export default function ProductsPage() {
     <>
       <Header />
       <main className="container section products-page">
-        <div className="section-head">
-          <div>
-            <p className="eyebrow">{onlyFavorites ? 'Votre sélection' : 'Notre collection'}</p>
-            <h1 className="section-title">{onlyFavorites ? 'Mes favoris' : 'Nos produits'}</h1>
-            <p className="section-intro">
-              {onlyFavorites
-                ? 'Les soins que vous avez mis de côté.'
-                : `Découvrez nos ${PRODUCTS.length} soins essentiels pour une peau saine et éclatante.`}
-            </p>
-          </div>
+        <header className="section-head">
+          <p className="eyebrow">{onlyFavorites ? 'Votre sélection' : 'Notre collection'}</p>
+          <h1 className="section-title">{onlyFavorites ? 'Mes favoris' : 'Nos produits'}</h1>
+          <p className="section-intro">
+            {onlyFavorites
+              ? 'Les soins que vous avez mis de côté.'
+              : `Découvrez nos ${PRODUCTS.length} soins essentiels, sélectionnés pour une routine simple et douce au quotidien.`}
+          </p>
           <CategoryChips
             value={category}
             onChange={selectCategory}
             extra={onlyFavorites && <Link className="chip chip--link" to="/produits">Tout le catalogue</Link>}
           />
-        </div>
+        </header>
         <ProductGrid
           category={category}
           onlyFavorites={onlyFavorites}

@@ -6,10 +6,21 @@ import TrustBar from '../components/TrustBar.jsx';
 import SiteFooter from '../components/SiteFooter.jsx';
 import ProductGrid, { CategoryChips } from '../components/ProductGrid.jsx';
 import { PRODUCTS, CATALOG_IS_PLACEHOLDER } from '../data/products.js';
+import SectionDivider from '../components/SectionDivider.jsx';
 import heroImg from '../assets/hero/nature-hero-products.webp';
 import heroImg640 from '../assets/hero/nature-hero-products-640.webp';
 import heroWide from '../assets/hero/nature-hero-products-wide.webp';
 import heroWide1280 from '../assets/hero/nature-hero-products-wide-1280.webp';
+
+// Défilement fluide vers la collection (fonctionne aussi si l'URL contient déjà #collection).
+function scrollToCollection(e) {
+  const target = document.getElementById('collection');
+  if (!target) return;
+  e.preventDefault();
+  const reduce = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
+  target.scrollIntoView({ behavior: reduce ? 'auto' : 'smooth', block: 'start' });
+  window.history.replaceState(window.history.state, '', '#collection');
+}
 
 export default function HomePage() {
   const [category, setCategory] = useState('all');
@@ -26,7 +37,7 @@ export default function HomePage() {
               <p className="hero__text">
                 Une sélection de soins coréens et naturels pour une peau saine, hydratée et lumineuse.
               </p>
-              <Link to={{ hash: '#collection' }} className="btn btn--primary btn--lg">
+              <Link to={{ hash: '#collection' }} className="btn btn--primary btn--lg" onClick={scrollToCollection}>
                 Découvrir nos produits <ArrowDown size={17} />
               </Link>
               <TrustBar className="trust--hero" />
@@ -59,15 +70,16 @@ export default function HomePage() {
 
         <TrustBar className="trust--band" />
 
-        <section className="section container" id="collection" aria-labelledby="collection-title">
-          <div className="section-head">
-            <div>
-              <p className="eyebrow">Notre collection</p>
-              <h2 className="section-title" id="collection-title">Nos produits</h2>
-              <p className="section-intro">Découvrez nos {PRODUCTS.length} soins essentiels pour une peau saine et éclatante.</p>
-            </div>
+        <section className="section container collection" id="collection" aria-labelledby="collection-title">
+          <SectionDivider />
+          <header className="section-head">
+            <p className="eyebrow">Notre collection</p>
+            <h2 className="section-title" id="collection-title">Nos produits</h2>
+            <p className="section-intro">
+              Découvrez nos {PRODUCTS.length} soins essentiels, sélectionnés pour une routine simple et douce au quotidien.
+            </p>
             <CategoryChips value={category} onChange={setCategory} />
-          </div>
+          </header>
           <ProductGrid category={category} />
           {CATALOG_IS_PLACEHOLDER && (
             <p className="demo-note">Prix provisoires — à confirmer avant la mise en ligne.</p>

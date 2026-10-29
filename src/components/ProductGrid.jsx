@@ -44,13 +44,27 @@ export default function ProductGrid({ category = 'all', onlyFavorites = false, e
     [addItem, showToast],
   );
 
-  if (!visible.length) return <p className="empty-inline">{emptyText || 'Aucun produit dans cette catégorie.'}</p>;
-
   return (
-    <div className="product-grid">
-      {visible.map((p) => (
-        <ProductCard key={p.id} product={p} isFavorite={favorites.includes(p.id)} onToggleFavorite={toggleFavorite} onAdd={handleAdd} />
-      ))}
-    </div>
+    <>
+      <p className="grid-count" aria-live="polite">
+        {visible.length} produit{visible.length > 1 ? 's' : ''}
+      </p>
+      {visible.length ? (
+        <div className="product-grid">
+          {visible.map((p, i) => (
+            <ProductCard
+              key={p.id}
+              product={p}
+              index={i}
+              isFavorite={favorites.includes(p.id)}
+              onToggleFavorite={toggleFavorite}
+              onAdd={handleAdd}
+            />
+          ))}
+        </div>
+      ) : (
+        <p className="empty-inline">{emptyText || 'Aucun produit dans cette catégorie.'}</p>
+      )}
+    </>
   );
 }
