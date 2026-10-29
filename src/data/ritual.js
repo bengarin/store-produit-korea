@@ -8,7 +8,7 @@ export const RITUAL_STEPS = [
   {
     step: 1,
     title: 'Nettoyer & préparer',
-    text: 'Après votre nettoyant habituel, une touche de fraîcheur pour préparer la peau.',
+    text: 'Après votre nettoyage quotidien, préparez votre peau en douceur.',
     productId: 'baroness-aloe-vera-gel',
   },
   {

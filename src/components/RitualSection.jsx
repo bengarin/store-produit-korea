@@ -19,8 +19,8 @@ export default function RitualSection() {
       <div className="container">
         <Reveal as="header" className="section-head">
           <p className="eyebrow">Votre routine beauté</p>
-          <h2 className="section-title" id="ritual-title">Le rituel NATURÉ</h2>
-          <p className="section-intro">Trois étapes simples, trois soins de notre sélection.</p>
+          <h2 className="section-title" id="ritual-title">Le rituel NATURE</h2>
+          <p className="section-intro">Trois étapes simples, trois soins, une seule sélection.</p>
         </Reveal>
 
         <ol className="ritual__steps">

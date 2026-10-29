@@ -33,10 +33,10 @@ export default function HomePage() {
         <section className="hero" aria-labelledby="hero-title">
           <div className="hero__inner">
             <div className="hero__copy">
-              <p className="eyebrow">Révélez votre éclat naturel</p>
+              <p className="eyebrow">La beauté au naturel</p>
               <h1 id="hero-title">Des soins doux pour une peau plus belle chaque jour</h1>
               <p className="hero__text">
-                Une sélection de soins coréens et naturels pour une peau saine, hydratée et lumineuse.
+                Une sélection de soins naturels pour une peau saine, lumineuse et harmonieuse.
               </p>
               <Link to={{ hash: '#collection' }} className="btn btn--primary btn--lg" onClick={scrollToCollection}>
                 Découvrir nos produits <ArrowDown size={17} />
