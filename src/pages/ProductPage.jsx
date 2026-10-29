@@ -109,6 +109,9 @@ export default function ProductPage() {
               </button>
             </div>
 
+
+            {!desktop && <ProductDetails product={product} desktop={false} />}
+
             <ul className="pdp__trust">
               {REASSURANCE_ITEMS.map(({ icon: Icon, title, text }) => (
                 <li key={title}>
@@ -117,8 +120,6 @@ export default function ProductPage() {
                 </li>
               ))}
             </ul>
-
-            {!desktop && <ProductDetails product={product} desktop={false} />}
 
             {CATALOG_IS_PLACEHOLDER && (
               <p className="pdp__note">

@@ -486,10 +486,11 @@ ul, ol { padding: 0; }
 .pdp__media { position: relative; }
 
 /* Galerie */
-.gallery__stage { position: relative; overflow: hidden; border: 1px solid var(--border); border-radius: 18px; background: #f6f0e7; }
-.gallery__main { aspect-ratio: 1 / 1; }
+/* Cadre à hauteur explicite (300–360 px) : ne dépend pas de aspect-ratio, que les anciens Safari ignorent. */
+.gallery__stage { position: relative; isolation: isolate; height: clamp(300px, 88vw, 360px); overflow: hidden; border: 1px solid var(--border); border-radius: 18px; background: #f6f0e7; }
+.gallery__main { width: 100%; height: 100%; }
 .gallery__main.product-image--contain img { padding: 5%; }
-.gallery__main img { animation: fade 0.3s var(--ease); transition: transform 0.35s var(--ease); transform-origin: var(--zoom-origin, 50% 50%); }
+/* Image principale : ni animation ni transformation sur mobile (avec mix-blend-mode, cause d'image invisible sur Safari iOS). */
 .gallery__arrow { position: absolute; top: 50%; z-index: 2; display: grid; place-items: center; width: 40px; height: 40px; border-radius: 50%; background: rgba(255, 253, 249, 0.92); color: var(--green-deep); box-shadow: var(--shadow-sm); transform: translateY(-50%); transition: background-color 0.2s, transform 0.15s var(--ease); }
 .gallery__arrow:hover { background: #fff; }
 .gallery__arrow:active { transform: translateY(-50%) scale(0.94); }
@@ -514,11 +515,11 @@ ul, ol { padding: 0; }
 .pdp__price { margin-top: 10px; font-size: 24px; font-weight: 700; color: var(--green-deep); }
 .pdp__desc { margin-top: 12px; font-size: 15.5px; line-height: 1.6; color: var(--text-2); }
 .pdp-tiles { list-style: none; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; margin-top: 18px; }
-.pdp-tiles li { display: grid; justify-items: center; align-content: start; gap: 8px; padding: 12px 4px; border: 1px solid var(--border); border-radius: 14px; background: var(--surface); text-align: center; font-size: 12px; line-height: 1.25; color: var(--text-2); }
+.pdp-tiles li { display: grid; justify-items: center; align-content: start; gap: 6px; padding: 10px 2px; border: 1px solid var(--border); border-radius: 12px; background: transparent; text-align: center; font-size: 12px; line-height: 1.25; color: var(--text-2); }
 .pdp-tiles svg { color: var(--green); }
 
 /* Barre d'achat : fixe en bas sur mobile, au-dessus de la zone de sécurité */
-.pdp__buy { position: fixed; left: 0; right: 0; bottom: 0; z-index: 40; display: grid; grid-template-columns: minmax(0, 1fr); gap: 8px; padding: 10px var(--gutter) calc(10px + env(safe-area-inset-bottom)); background: rgba(250, 246, 239, 0.97); border-top: 1px solid var(--border); box-shadow: 0 -10px 24px rgba(70, 58, 38, 0.08); }
+.pdp__buy { position: fixed; left: 0; right: 0; bottom: 0; z-index: 40; display: grid; grid-template-columns: minmax(0, 1fr); gap: 8px; padding: 10px var(--gutter) calc(10px + env(safe-area-inset-bottom)); background: var(--bg); border-top: 1px solid var(--border); box-shadow: 0 -10px 24px rgba(70, 58, 38, 0.08); }
 .pdp__buy-row { display: flex; gap: 8px; min-width: 0; }
 .pdp__add { flex: 1; min-width: 0; min-height: 50px; padding-inline: 12px; background: var(--green); color: #fff; font-size: 15.5px; }
 .pdp__add:hover { background: var(--green-hover); }
@@ -526,11 +527,13 @@ ul, ol { padding: 0; }
 .pdp__now-total { font-weight: 400; opacity: 0.85; }
 
 /* Réassurance */
-.pdp__trust { list-style: none; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px 12px; margin-top: 22px; padding-top: 18px; border-top: 1px solid var(--border); }
-.pdp__trust li { display: flex; align-items: center; gap: 10px; min-width: 0; }
-.pdp__trust-icon { flex: none; display: grid; place-items: center; width: 40px; height: 40px; border: 1px solid #c9d4c3; border-radius: 50%; color: var(--green); }
-.pdp__trust strong { display: block; font-size: 13px; font-weight: 600; line-height: 1.25; }
-.pdp__trust small { display: block; margin-top: 2px; font-size: 12px; line-height: 1.3; color: var(--muted); }
+/* Garanties : liste compacte sur mobile (une ligne par élément) */
+.pdp__trust { list-style: none; display: grid; gap: 8px; margin-top: 20px; padding: 14px 16px; border: 1px solid var(--border); border-radius: 14px; background: var(--surface); }
+.pdp__trust li { display: flex; align-items: center; gap: 10px; min-width: 0; font-size: 13.5px; }
+.pdp__trust-icon { flex: none; display: grid; place-items: center; width: 22px; color: var(--green); }
+.pdp__trust-icon svg { width: 18px; height: 18px; }
+.pdp__trust strong { font-weight: 600; }
+.pdp__trust small { display: none; }
 
 /* Accordéons (mobile) */
 .pdp__accordions { margin-top: 22px; border-top: 1px solid var(--border); }
@@ -730,7 +733,6 @@ select { appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmln
   .pdp__layout { display: grid; grid-template-columns: minmax(0, 1.05fr) minmax(0, 1fr); gap: clamp(32px, 4.5vw, 64px); align-items: start; padding-top: 20px; }
   .pdp__media { position: sticky; top: calc(93px + 20px); }
   .gallery__stage { border-radius: 22px; }
-  .gallery__main { aspect-ratio: 1 / 1.05; }
   .gallery__arrow { width: 46px; height: 46px; }
   .gallery__arrow--prev { left: 16px; }
   .gallery__arrow--next { right: 16px; }
@@ -749,7 +751,12 @@ select { appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmln
   .pdp__add:hover { background: var(--sage-soft); }
   .pdp__add, .qty--buy button { min-height: 54px; height: 54px; }
   .pdp__now { min-height: 56px; font-size: 16.5px; }
-  .pdp__trust { margin-top: 26px; max-width: 520px; gap: 18px 16px; }
+  .pdp__trust { grid-template-columns: repeat(2, minmax(0, 1fr)); margin-top: 26px; max-width: 520px; gap: 18px 16px; padding: 18px 0 0; border: 0; border-top: 1px solid var(--border); border-radius: 0; background: none; }
+  .pdp__trust-icon { width: 40px; height: 40px; border: 1px solid #c9d4c3; border-radius: 50%; }
+  .pdp__trust strong { display: block; line-height: 1.25; }
+  .pdp__trust small { display: block; margin-top: 2px; color: var(--muted); }
+  .gallery__stage { height: auto; aspect-ratio: 1 / 1.05; }
+  .gallery__main img { transition: transform 0.35s var(--ease); transform-origin: var(--zoom-origin, 50% 50%); }
   .pdp__trust strong { font-size: 14px; }
   .pdp__trust small { font-size: 12.5px; }
 
