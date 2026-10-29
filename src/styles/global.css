@@ -171,18 +171,20 @@ ul, ol { padding: 0; }
 /* ==========================================================================
    Accueil — hero
    ========================================================================== */
-.hero { position: relative; overflow: hidden; background: linear-gradient(180deg, var(--bg) 0%, var(--bg) 40%, #f1e1cc 100%); }
+.hero { position: relative; background: var(--bg); }
 .hero__inner { display: flex; flex-direction: column; max-width: 560px; margin-inline: auto; }
-.hero__copy { position: relative; z-index: 2; padding: clamp(24px, 7vw, 40px) var(--gutter) 0; }
-.hero h1 { font-family: var(--font-serif); font-weight: 600; font-size: clamp(31px, 9.6vw, 42px); line-height: 1.02; letter-spacing: -0.01em; color: var(--text); text-wrap: balance; }
-.hero__text { margin: var(--s-4) 0 var(--s-5); font-size: 14.5px; color: var(--text-2); max-width: 330px; }
+.hero__copy { position: relative; z-index: 2; padding: clamp(20px, 6vw, 32px) var(--gutter) 0; }
+.hero h1 { font-family: var(--font-serif); font-weight: 600; font-size: clamp(31px, 9.4vw, 42px); line-height: 1.02; letter-spacing: -0.01em; color: var(--text); text-wrap: balance; }
+.hero__text { margin: var(--s-3) 0 var(--s-4); font-size: 14.5px; line-height: 1.5; color: var(--text-2); max-width: 330px; }
 .hero .btn { padding-inline: 22px; }
-/* Mobile : l'image entière (ratio 941×1672) passe sous le texte.
-   Son tiers haut n'est qu'un mur vide : on le remonte sous le texte et on le fond dans le crème.
-   Les produits commencent à ~45 % de la hauteur de l'image → toujours sous le bouton. */
-.hero__visual { --w: min(100vw, 560px); position: relative; width: 100%; margin-top: calc(var(--w) * -0.6); }
-.hero__visual img { display: block; width: 100%; height: auto; object-fit: contain; }
-.hero__visual::before { content: ''; position: absolute; inset: 0 0 auto; z-index: 1; height: 47%; pointer-events: none; background: linear-gradient(180deg, var(--bg) 0%, rgba(250, 246, 239, 0.94) 38%, rgba(250, 246, 239, 0) 100%); }
+/* Mobile : cadre limité à la bande des produits (38 % → 88 % de la hauteur de l'image, ratio 941×836).
+   Le mur vide du haut et le sol du bas sont hors cadre ; les emballages restent entiers.
+   Le haut du cadre remonte sous le CTA et se fond dans le crème du texte. */
+.hero__visual { position: relative; width: 100%; aspect-ratio: 941 / 836; margin-top: -22px; }
+.hero__visual picture { display: block; height: 100%; }
+.hero__visual img { position: absolute; inset: 0; display: block; width: 100%; height: 100%; object-fit: cover; object-position: 50% 76%; }
+.hero__visual::before { content: ''; position: absolute; inset: 0 0 auto; z-index: 1; height: 34%; pointer-events: none; background: linear-gradient(180deg, var(--bg) 0%, rgba(250, 246, 239, 0.85) 35%, rgba(250, 246, 239, 0) 100%); }
+.hero__visual::after { content: ''; position: absolute; inset: auto 0 0; z-index: 1; height: 14%; pointer-events: none; background: linear-gradient(0deg, var(--bg) 0%, rgba(250, 246, 239, 0) 100%); }
 
 /* Tablette : l'image (560 px max) ne couvre pas toute la largeur → bords latéraux adoucis. */
 @media (min-width: 561px) and (max-width: 999px) {
@@ -630,7 +632,9 @@ select { appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmln
      Seule une fine bande de feuillage en haut (≈ 12 %) est hors cadre. */
   .hero { background: var(--bg); }
   .hero__inner { position: relative; display: block; max-width: 1600px; margin-inline: auto; aspect-ratio: 1672 / 830; }
-  .hero__visual { position: absolute; inset: 0; margin: 0; }
+  .hero { overflow: hidden; }
+  .hero__visual { position: absolute; inset: 0; margin: 0; aspect-ratio: auto; }
+  .hero__visual::after { display: none; }
   .hero__visual picture { display: block; height: 100%; }
   .hero__visual img { height: 100%; object-fit: cover; object-position: 50% 100%; }
   .hero__visual::before { inset: 0 auto 0 0; width: 50%; height: auto; background: linear-gradient(90deg, rgba(250, 246, 239, 0.9) 0%, rgba(250, 246, 239, 0.72) 50%, rgba(250, 246, 239, 0) 100%); }
