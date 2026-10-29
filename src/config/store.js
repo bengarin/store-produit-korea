@@ -4,7 +4,7 @@
  * Valeurs marquées [DÉMO] = à remplacer par vos vraies règles business.
  */
 export const STORE_CONFIG = {
-  brandName: 'NATURÉ',
+  brandName: 'Ma Petite Corée',
   brandTagline: 'KOREAN & NATURAL SKINCARE',
 
   /** Devise affichée après les prix. */

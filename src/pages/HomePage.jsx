@@ -59,7 +59,7 @@ export default function HomePage() {
                   sizes="(min-width: 900px) 46vw, (min-width: 600px) 520px, 100vw"
                   width="941"
                   height="1672"
-                  alt="Les cinq soins NATURÉ sur des socles en pierre : gel Baroness Aloe Vera, crème SOME BY MI Yuja Niacin, émulsion ORJENA Power Collagen, patchs BIOVÈNE et crème Quret Vitamin Collagen"
+                  alt="Les cinq soins de la boutique sur des socles en pierre : gel Baroness Aloe Vera, crème SOME BY MI Yuja Niacin, émulsion ORJENA Power Collagen, patchs BIOVÈNE et crème Quret Vitamin Collagen"
                   fetchpriority="high"
                   decoding="async"
                 />

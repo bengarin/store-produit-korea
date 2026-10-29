@@ -27,7 +27,7 @@ export default function MenuDrawer({ open, onClose }) {
       <button className="drawer__backdrop" onClick={onClose} aria-label="Fermer le menu" tabIndex={-1} />
       <nav className="drawer__panel">
         <div className="drawer__top">
-          <Logo compact />
+          <Logo variant="full" />
           <button className="icon-btn" onClick={onClose} aria-label="Fermer le menu" autoFocus>
             <X size={22} />
           </button>
