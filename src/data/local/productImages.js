@@ -17,41 +17,41 @@
  */
 
 // Baroness Aloe Vera Soothing Gel
-import aloePackshot from '../assets/products/baroness-aloe-vera-gel/packshot.webp';
-import aloeSplash from '../assets/products/baroness-aloe-vera-gel/splash.webp';
-import aloeInHand from '../assets/products/baroness-aloe-vera-gel/in-hand.webp';
+import aloePackshot from '../../assets/products/baroness-aloe-vera-gel/packshot.webp';
+import aloeSplash from '../../assets/products/baroness-aloe-vera-gel/splash.webp';
+import aloeInHand from '../../assets/products/baroness-aloe-vera-gel/in-hand.webp';
 // SOME BY MI Yuja Niacin Anti Blemish Cream
-import yujaPackshot from '../assets/products/some-by-mi-yuja-niacin-cream/packshot.webp';
-import yujaLifestyle from '../assets/products/some-by-mi-yuja-niacin-cream/lifestyle.webp';
-import yujaTexture from '../assets/products/some-by-mi-yuja-niacin-cream/texture.webp';
-import yujaInUse from '../assets/products/some-by-mi-yuja-niacin-cream/in-use.webp';
+import yujaPackshot from '../../assets/products/some-by-mi-yuja-niacin-cream/packshot.webp';
+import yujaLifestyle from '../../assets/products/some-by-mi-yuja-niacin-cream/lifestyle.webp';
+import yujaTexture from '../../assets/products/some-by-mi-yuja-niacin-cream/texture.webp';
+import yujaInUse from '../../assets/products/some-by-mi-yuja-niacin-cream/in-use.webp';
 // BIOVÈNE Tripeptide Cucumber Age-Defy Under Eye Patches
-import bioPackshot from '../assets/products/biovene-eye-patches/packshot.webp';
-import bioTexture from '../assets/products/biovene-eye-patches/texture.webp';
-import bioBox from '../assets/products/biovene-eye-patches/box.webp';
-import bioLifestyle from '../assets/products/biovene-eye-patches/lifestyle.webp';
-import bioLifestyleBox from '../assets/products/biovene-eye-patches/lifestyle-box.webp';
+import bioPackshot from '../../assets/products/biovene-eye-patches/packshot.webp';
+import bioTexture from '../../assets/products/biovene-eye-patches/texture.webp';
+import bioBox from '../../assets/products/biovene-eye-patches/box.webp';
+import bioLifestyle from '../../assets/products/biovene-eye-patches/lifestyle.webp';
+import bioLifestyleBox from '../../assets/products/biovene-eye-patches/lifestyle-box.webp';
 // Quret Vitamin Collagen Vital Cream
-import vitPackshot from '../assets/products/vitamin-collagen-vital-cream/packshot.webp';
-import vitSetBox from '../assets/products/vitamin-collagen-vital-cream/set-box.webp';
-import vitTube from '../assets/products/vitamin-collagen-vital-cream/tube.webp';
-import vitTubeBox from '../assets/products/vitamin-collagen-vital-cream/tube-box.webp';
+import vitPackshot from '../../assets/products/vitamin-collagen-vital-cream/packshot.webp';
+import vitSetBox from '../../assets/products/vitamin-collagen-vital-cream/set-box.webp';
+import vitTube from '../../assets/products/vitamin-collagen-vital-cream/tube.webp';
+import vitTubeBox from '../../assets/products/vitamin-collagen-vital-cream/tube-box.webp';
 // ORJENA Power Collagen Emulsion
-import orjPackshot from '../assets/products/orjena-power-collagen-emulsion/packshot.webp';
-import orjBox from '../assets/products/orjena-power-collagen-emulsion/box.webp';
-import orjInHand from '../assets/products/orjena-power-collagen-emulsion/in-hand.webp';
+import orjPackshot from '../../assets/products/orjena-power-collagen-emulsion/packshot.webp';
+import orjBox from '../../assets/products/orjena-power-collagen-emulsion/box.webp';
+import orjInHand from '../../assets/products/orjena-power-collagen-emulsion/in-hand.webp';
 
 // Visuels « en situation » : packshot réel détouré posé sur la photo de son ingrédient (rituel, carrousel d'accueil).
-import aloeScene from '../assets/scenes/baroness-aloe-vera-gel.webp';
-import aloeScene640 from '../assets/scenes/baroness-aloe-vera-gel-640.webp';
-import yujaScene from '../assets/scenes/some-by-mi-yuja-niacin-cream.webp';
-import yujaScene640 from '../assets/scenes/some-by-mi-yuja-niacin-cream-640.webp';
-import bioScene from '../assets/scenes/biovene-eye-patches.webp';
-import bioScene640 from '../assets/scenes/biovene-eye-patches-640.webp';
-import vitScene from '../assets/scenes/vitamin-collagen-vital-cream.webp';
-import vitScene640 from '../assets/scenes/vitamin-collagen-vital-cream-640.webp';
-import orjScene from '../assets/scenes/orjena-power-collagen-emulsion.webp';
-import orjScene640 from '../assets/scenes/orjena-power-collagen-emulsion-640.webp';
+import aloeScene from '../../assets/scenes/baroness-aloe-vera-gel.webp';
+import aloeScene640 from '../../assets/scenes/baroness-aloe-vera-gel-640.webp';
+import yujaScene from '../../assets/scenes/some-by-mi-yuja-niacin-cream.webp';
+import yujaScene640 from '../../assets/scenes/some-by-mi-yuja-niacin-cream-640.webp';
+import bioScene from '../../assets/scenes/biovene-eye-patches.webp';
+import bioScene640 from '../../assets/scenes/biovene-eye-patches-640.webp';
+import vitScene from '../../assets/scenes/vitamin-collagen-vital-cream.webp';
+import vitScene640 from '../../assets/scenes/vitamin-collagen-vital-cream-640.webp';
+import orjScene from '../../assets/scenes/orjena-power-collagen-emulsion.webp';
+import orjScene640 from '../../assets/scenes/orjena-power-collagen-emulsion-640.webp';
 
 const img = (src, alt, kind, fit = 'contain') => ({ src, alt, kind, fit });
 const SCENES = {

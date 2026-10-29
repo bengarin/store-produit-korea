@@ -4,7 +4,7 @@ import logoFull from '../assets/brand/logo-full.webp';
 import logoCompact from '../assets/brand/logo-compact.webp';
 
 /**
- * Logo Ma Petite Corée.ma — recadrages du fichier fourni (src/assets/brand/logo-mapetitecoree-original.webp).
+ * Logo Ma Petite Corée.ma — recadrages du fichier fourni (design/brand/logo-mapetitecoree-original.webp, hors bundle).
  * - variant "compact" : symbole + nom sur deux lignes (header)
  * - variant "full"    : symbole + nom + « KOREAN & NATURAL SKINCARE » (menu, footer)
  */

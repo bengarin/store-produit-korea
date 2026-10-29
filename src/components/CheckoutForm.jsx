@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Truck, HandCoins, Lock, Loader2 } from 'lucide-react';
 import { STORE_CONFIG } from '../config/store.js';
 import { formatPrice } from '../utils/currency.js';
-import { normalizeMoroccanPhone } from '../utils/order.js';
+import { normalizeMoroccanPhone } from '../utils/phone.js';
 
 const EMPTY = { fullName: '', phone: '', city: '', otherCity: '', address: '' };
 

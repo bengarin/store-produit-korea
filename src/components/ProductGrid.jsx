@@ -1,14 +1,16 @@
 import { useCallback, useMemo } from 'react';
 import ProductCard from './ProductCard.jsx';
-import { CATEGORIES, PRODUCTS } from '../data/products.js';
+import { useCatalog } from '../context/CatalogContext.jsx';
 import { useCart } from '../context/CartContext.jsx';
 import { useToast } from '../context/ToastContext.jsx';
 
 /** Filtres catégories (pilules) */
 export function CategoryChips({ value, onChange, extra = null }) {
+  const { categories } = useCatalog();
+  const options = [{ id: 'all', label: 'Tous' }, ...categories];
   return (
     <div className="chips" role="group" aria-label="Filtrer par catégorie">
-      {CATEGORIES.map((c) => (
+      {options.map((c) => (
         <button
           key={c.id}
           className={`chip ${value === c.id ? 'is-active' : ''}`}
@@ -25,18 +27,19 @@ export function CategoryChips({ value, onChange, extra = null }) {
 
 /** Grille produits filtrée + ajout au panier avec toast. */
 export default function ProductGrid({ category = 'all', onlyFavorites = false, ids = null, emptyText }) {
+  const { products } = useCatalog();
   const { addItem, favorites, toggleFavorite } = useCart();
   const showToast = useToast();
 
   const visible = useMemo(
     () =>
-      PRODUCTS.filter(
+      products.filter(
         (p) =>
           (category === 'all' || p.categories.includes(category)) &&
           (!onlyFavorites || favorites.includes(p.id)) &&
           (!ids || ids.includes(p.id)),
       ),
-    [category, onlyFavorites, ids, favorites],
+    [products, category, onlyFavorites, ids, favorites],
   );
 
   const handleAdd = useCallback(

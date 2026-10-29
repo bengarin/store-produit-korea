@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Check, Heart, MessageCircle, Info } from 'lucide-react';
-import { loadLastOrder, buildWhatsAppLink } from '../utils/order.js';
+import { loadLastOrder, buildWhatsAppLink, ORDERS_ARE_SIMULATED } from '../services/orderService.js';
 import { formatPrice } from '../utils/currency.js';
 
 export default function ConfirmationPage() {
@@ -71,7 +71,7 @@ export default function ConfirmationPage() {
           )}
         </div>
 
-        <p className="demo-note">Démo front-end : cette commande est simulée et n’a été transmise à aucun service.</p>
+        {ORDERS_ARE_SIMULATED && <p className="demo-note">Démo front-end : cette commande est simulée et n’a été transmise à aucun service.</p>}
       </div>
     </main>
   );

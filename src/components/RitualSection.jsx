@@ -4,10 +4,11 @@ import Reveal from './Reveal.jsx';
 import ProductImage from './ProductImage.jsx';
 import AddToCartIcon from './AddToCartIcon.jsx';
 import { RITUAL_STEPS } from '../data/ritual.js';
-import { getProductById } from '../data/products.js';
+import { useCatalog } from '../context/CatalogContext.jsx';
 import { formatPrice } from '../utils/currency.js';
 
 export default function RitualSection() {
+  const { getProductById } = useCatalog();
   const steps = RITUAL_STEPS.map((s) => {
     const product = getProductById(s.productId);
     if (!product) return null;

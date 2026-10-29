@@ -3,11 +3,13 @@ import { createPortal } from 'react-dom';
 import { NavLink } from 'react-router-dom';
 import { X, Home, Store, Heart, ShoppingCart } from 'lucide-react';
 import Logo from './Logo.jsx';
-import { CATEGORIES } from '../data/products.js';
+import { useCatalog } from '../context/CatalogContext.jsx';
+import { ORDERS_ARE_SIMULATED } from '../services/orderService.js';
 import { useCart } from '../context/CartContext.jsx';
 
 export default function MenuDrawer({ open, onClose }) {
   const { count, favorites } = useCart();
+  const { categories } = useCatalog();
 
   useEffect(() => {
     if (!open) return undefined;
@@ -35,7 +37,7 @@ export default function MenuDrawer({ open, onClose }) {
         <ul className="drawer__links" onClick={onClose}>
           <li><NavLink to="/" end><Home size={18} /> Accueil</NavLink></li>
           <li><NavLink to="/produits" end><Store size={18} /> Nos produits</NavLink></li>
-          {CATEGORIES.filter((c) => c.id !== 'all').map((c) => (
+          {categories.map((c) => (
             <li key={c.id} className="drawer__sub">
               <NavLink to={`/produits?categorie=${c.id}`}>{c.label}</NavLink>
             </li>
@@ -43,7 +45,7 @@ export default function MenuDrawer({ open, onClose }) {
           <li><NavLink to="/produits?favoris=1"><Heart size={18} /> Mes favoris ({favorites.length})</NavLink></li>
           <li><NavLink to="/panier"><ShoppingCart size={18} /> Mon panier ({count})</NavLink></li>
         </ul>
-        <p className="drawer__note">Boutique de démonstration — les commandes sont simulées.</p>
+        {ORDERS_ARE_SIMULATED && <p className="drawer__note">Boutique de démonstration — les commandes sont simulées.</p>}
       </nav>
     </div>,
     document.body,

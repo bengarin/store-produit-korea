@@ -6,16 +6,19 @@ import CartItem from '../components/CartItem.jsx';
 import OrderSummary from '../components/OrderSummary.jsx';
 import { useCart } from '../context/CartContext.jsx';
 import { useToast } from '../context/ToastContext.jsx';
-import { computeTotals, resolveLines, clearDirectOrder } from '../utils/order.js';
+import { useCatalog } from '../context/CatalogContext.jsx';
+import { computeTotals, resolveLines } from '../utils/pricing.js';
+import { clearDirectOrder } from '../services/orderService.js';
 
 export default function CartPage() {
   const { items, count, setQty, removeItem, clearCart, promoCode, applyPromo, removePromo, maxQty } = useCart();
+  const { getProductById } = useCatalog();
   const showToast = useToast();
   const navigate = useNavigate();
   const [code, setCode] = useState('');
   const [promoError, setPromoError] = useState('');
 
-  const lines = useMemo(() => resolveLines(items), [items]);
+  const lines = useMemo(() => resolveLines(items, getProductById), [items, getProductById]);
   const totals = useMemo(() => computeTotals(lines, promoCode), [lines, promoCode]);
 
   const handleRemove = useCallback(

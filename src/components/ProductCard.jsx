@@ -4,9 +4,10 @@ import { Heart, ShoppingCart, Check, Leaf } from 'lucide-react';
 import ProductImage from './ProductImage.jsx';
 import useReveal from '../hooks/useReveal.js';
 import { formatPrice } from '../utils/currency.js';
-import { CATEGORY_LABELS } from '../data/products.js';
+import { useCatalog } from '../context/CatalogContext.jsx';
 
 function ProductCard({ product, index = 0, isFavorite, onToggleFavorite, onAdd, animate = true, variant = 'default' }) {
+  const { categoryLabel } = useCatalog();
   const scene = variant === 'scene';
   const url = `/produits/${product.id}`;
   const [revealRef, visible] = useReveal();
@@ -35,7 +36,7 @@ function ProductCard({ product, index = 0, isFavorite, onToggleFavorite, onAdd, 
       >
         <Heart size={19} strokeWidth={1.6} />
       </button>
-      <span className="product-card__badge"><Leaf size={13} aria-hidden="true" />{product.categories.map((c) => CATEGORY_LABELS[c]).join(' · ')}</span>
+      <span className="product-card__badge"><Leaf size={13} aria-hidden="true" />{product.categories.map(categoryLabel).join(' · ')}</span>
       <Link to={url} className="product-card__media" tabIndex={-1} aria-hidden="true">
         <ProductImage image={scene ? product.image : product.cardImage} />
         {scene && product.hoverImage && (

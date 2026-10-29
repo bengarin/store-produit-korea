@@ -4,18 +4,21 @@ import { useNavigate, useParams, Link } from 'react-router-dom';
 import { ChevronRight, Heart, ShoppingCart, Zap, Info, Leaf } from 'lucide-react';
 import ProductGallery from '../components/ProductGallery.jsx';
 import ProductDetails from '../components/ProductDetails.jsx';
+import NamedIcon from '../components/NamedIcon.jsx';
 import QuantitySelector from '../components/QuantitySelector.jsx';
 import Header from '../components/Header.jsx';
 import SiteFooter from '../components/SiteFooter.jsx';
 import { REASSURANCE_ITEMS } from '../components/Reassurance.jsx';
-import { getProductById, CATALOG_IS_PLACEHOLDER, CATEGORY_LABELS } from '../data/products.js';
+import { useCatalog } from '../context/CatalogContext.jsx';
+import { STORE_CONFIG } from '../config/store.js';
 import { useCart } from '../context/CartContext.jsx';
 import { useToast } from '../context/ToastContext.jsx';
 import { formatPrice } from '../utils/currency.js';
-import { saveDirectOrder } from '../utils/order.js';
+import { saveDirectOrder } from '../services/orderService.js';
 
 export default function ProductPage() {
   const { id } = useParams();
+  const { getProductById, categoryLabel } = useCatalog();
   const product = getProductById(id);
   const navigate = useNavigate();
   const { addItem, favorites, toggleFavorite, maxQty } = useCart();
@@ -39,7 +42,7 @@ export default function ProductPage() {
   const isFav = favorites.includes(product.id);
   const changeQty = (q) => setQty(Math.max(1, Math.min(maxQty, q)));
   const mainCat = product.categories[0];
-  const categories = product.categories.map((c) => CATEGORY_LABELS[c]).join(' · ');
+  const categories = product.categories.map(categoryLabel).join(' · ');
 
   const handleAdd = () => {
     addItem(product.id, qty);
@@ -60,7 +63,7 @@ export default function ProductPage() {
           <ChevronRight size={13} aria-hidden="true" />
           <Link to="/produits">Nos produits</Link>
           <ChevronRight size={13} aria-hidden="true" />
-          <Link to={`/produits?categorie=${mainCat}`}>{CATEGORY_LABELS[mainCat]}</Link>
+          <Link to={`/produits?categorie=${mainCat}`}>{categoryLabel(mainCat)}</Link>
           <ChevronRight size={13} aria-hidden="true" />
           <span aria-current="page">{product.displayName}</span>
         </nav>
@@ -70,7 +73,7 @@ export default function ProductPage() {
             <ProductGallery
               key={product.id}
               product={product}
-              badge={<span className="pdp__badge"><Leaf size={13} aria-hidden="true" />{CATEGORY_LABELS[mainCat]}</span>}
+              badge={<span className="pdp__badge"><Leaf size={13} aria-hidden="true" />{categoryLabel(mainCat)}</span>}
               actions={(
                 <button
                   className={`pdp__fav fav-toggle ${isFav ? 'is-active' : ''}`}
@@ -91,8 +94,8 @@ export default function ProductPage() {
             <p className="pdp__desc">{product.summary}</p>
 
             <ul className="pdp-tiles" aria-label="Caractéristiques">
-              {product.highlights.map(({ icon: Icon, label }) => (
-                <li key={label}><Icon size={22} strokeWidth={1.4} aria-hidden="true" /><span>{label}</span></li>
+              {product.highlights.map(({ icon, label }) => (
+                <li key={label}><NamedIcon name={icon} size={22} strokeWidth={1.4} aria-hidden="true" /><span>{label}</span></li>
               ))}
             </ul>
 
@@ -121,7 +124,7 @@ export default function ProductPage() {
               ))}
             </ul>
 
-            {CATALOG_IS_PLACEHOLDER && (
+            {STORE_CONFIG.showDemoNotices && (
               <p className="pdp__note">
                 <Info size={13} aria-hidden="true" />
                 Description indicative : vérifiez la composition sur l’emballage.

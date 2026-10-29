@@ -1,39 +1,29 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
-import { getProductById } from '../data/products.js';
-import { readJSON, writeJSON, safeLocal } from '../utils/storage.js';
-import { getPromoPercent } from '../utils/order.js';
-
-const CART_KEY = 'nature.cart';
-const PROMO_KEY = 'nature.promo';
-const FAV_KEY = 'nature.favorites';
-const MAX_QTY = 20;
+import { useCatalog } from './CatalogContext.jsx';
+import { MAX_QTY, clampQty, loadCart, saveCart, loadPromoCode, savePromoCode } from '../services/cartService.js';
+import { loadFavorites, saveFavorites } from '../services/favoritesService.js';
+import { getPromoPercent } from '../utils/pricing.js';
 
 const CartContext = createContext(null);
 
-const clampQty = (q) => Math.max(1, Math.min(MAX_QTY, Math.floor(q) || 1));
-
-function loadCart() {
-  const raw = readJSON(safeLocal(), CART_KEY, []);
-  // On ignore les produits qui n'existent plus dans le catalogue.
-  return Array.isArray(raw)
-    ? raw.filter((i) => i && getProductById(i.id)).map((i) => ({ id: i.id, qty: clampQty(i.qty) }))
-    : [];
-}
-
 export function CartProvider({ children }) {
+  const { status, getProductById } = useCatalog();
   const [items, setItems] = useState(loadCart);
-  const [promoCode, setPromoCode] = useState(() => readJSON(safeLocal(), PROMO_KEY, ''));
-  const [favorites, setFavorites] = useState(() => readJSON(safeLocal(), FAV_KEY, []));
+  const [promoCode, setPromoCode] = useState(loadPromoCode);
+  const [favorites, setFavorites] = useState(loadFavorites);
 
+  // Une fois le catalogue prêt, on retire les produits qui n'existent plus.
   useEffect(() => {
-    writeJSON(safeLocal(), CART_KEY, items);
-  }, [items]);
-  useEffect(() => {
-    writeJSON(safeLocal(), PROMO_KEY, promoCode);
-  }, [promoCode]);
-  useEffect(() => {
-    writeJSON(safeLocal(), FAV_KEY, favorites);
-  }, [favorites]);
+    if (status !== 'ready') return;
+    setItems((prev) => {
+      const kept = prev.filter((i) => getProductById(i.id));
+      return kept.length === prev.length ? prev : kept;
+    });
+  }, [status, getProductById]);
+
+  useEffect(() => saveCart(items), [items]);
+  useEffect(() => savePromoCode(promoCode), [promoCode]);
+  useEffect(() => saveFavorites(favorites), [favorites]);
 
   const addItem = useCallback((id, qty = 1) => {
     setItems((prev) => {
@@ -54,7 +44,7 @@ export function CartProvider({ children }) {
     setPromoCode('');
   }, []);
 
-  /** Retourne true si le code est valide. */
+  /** Retourne true si le code est valide (contrôle local d'affichage ; le backend devra revalider). */
   const applyPromo = useCallback((code) => {
     const normalized = code.trim().toUpperCase();
     if (!getPromoPercent(normalized)) return false;

@@ -2,11 +2,13 @@ import { Link, useSearchParams } from 'react-router-dom';
 import Header from '../components/Header.jsx';
 import SiteFooter from '../components/SiteFooter.jsx';
 import ProductGrid, { CategoryChips } from '../components/ProductGrid.jsx';
-import { PRODUCTS, CATALOG_IS_PLACEHOLDER } from '../data/products.js';
+import { useCatalog } from '../context/CatalogContext.jsx';
+import { STORE_CONFIG } from '../config/store.js';
 import { getIngredientById } from '../data/ingredients.js';
 
 export default function ProductsPage() {
   const [params, setParams] = useSearchParams();
+  const { products } = useCatalog();
   const category = params.get('categorie') || 'all';
   const onlyFavorites = params.get('favoris') === '1';
   const ingredient = getIngredientById(params.get('ingredient'));
@@ -30,7 +32,7 @@ export default function ProductsPage() {
               ? 'Les soins que vous avez mis de côté.'
               : ingredient
                 ? ingredient.description
-                : `Découvrez nos ${PRODUCTS.length} soins essentiels, sélectionnés pour une routine simple et douce au quotidien.`}
+                : `Découvrez nos ${products.length} soins essentiels, sélectionnés pour une routine simple et douce au quotidien.`}
           </p>
           <CategoryChips
             value={category}
@@ -44,7 +46,7 @@ export default function ProductsPage() {
           ids={ingredient ? ingredient.productIds : null}
           emptyText={onlyFavorites ? 'Aucun favori pour le moment. Touchez le ♡ d’un produit pour l’ajouter.' : undefined}
         />
-        {CATALOG_IS_PLACEHOLDER && (
+        {STORE_CONFIG.showDemoNotices && (
           <p className="demo-note">Prix provisoires — à confirmer avant la mise en ligne.</p>
         )}
       </main>

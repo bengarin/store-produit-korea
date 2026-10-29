@@ -2,33 +2,19 @@
  * 🧴 CATALOGUE PRODUITS (données locales de démonstration)
  *
  * - Prix : valeurs PROVISOIRES [DÉMO] → modifiez `price` (en DH).
- * - Photos : voir src/data/productImages.js (un dossier par produit dans
+ * - Photos : voir src/data/local/productImages.js (un dossier par produit dans
  *   src/assets/products/<id>/).
+ * - Ce fichier est la SOURCE LOCALE : il sera remplacé par l'API (GET /products).
  * - Textes : contenu INDICATIF basé sur le nom du produit. À valider avec
  *   l'emballage / la fiche officielle de la marque avant la mise en ligne.
  *   Aucune allégation médicale ou dermatologique n'est faite ici.
  */
-import { Droplets, Leaf, Sparkles, Sun, Citrus, Eye, Clock, Layers, FlaskConical, Hand } from 'lucide-react';
-
-import { PRODUCT_IMAGES } from './productImages.js';
-
-export const CATEGORIES = [
-  { id: 'all', label: 'Tous' },
-  { id: 'hydratation', label: 'Hydratation' },
-  { id: 'anti-age', label: 'Anti-âge' },
-  { id: 'eclat', label: 'Éclat' },
-];
-
-export const CATEGORY_LABELS = {
-  hydratation: 'Hydratation',
-  'anti-age': 'Anti-âge',
-  eclat: 'Éclat',
-};
-
-/** true tant que les photos/prix/textes sont des valeurs de démonstration. */
-export const CATALOG_IS_PLACEHOLDER = true;
-
-export const PRODUCTS = [
+/**
+ * Forme « brute » d'un produit, identique à ce que renverra GET /products (voir docs/BACKEND.md).
+ * Les images sont rattachées par productService (src/data/local/productImages.js).
+ * `highlights[].icon` = nom d'icône (voir src/utils/icons.js), pas un composant.
+ */
+export const LOCAL_PRODUCTS = [
   {
     id: 'baroness-aloe-vera-gel',
     cardLine: "Gel à l'aloe vera, frais et léger.",
@@ -40,10 +26,10 @@ export const PRODUCTS = [
     summary:
       "Gel à l'aloe vera à la texture fraîche et légère, pensé pour le visage et le corps.",
     highlights: [
-      { icon: Leaf, label: "À l'aloe vera" },
-      { icon: Droplets, label: 'Texture gel' },
-      { icon: Hand, label: 'Visage & corps' },
-      { icon: Sun, label: 'Usage quotidien' },
+      { icon: 'leaf', label: "À l'aloe vera" },
+      { icon: 'droplets', label: 'Texture gel' },
+      { icon: 'hand', label: 'Visage & corps' },
+      { icon: 'sun', label: 'Usage quotidien' },
     ],
     ingredients: [
       'Aloe vera (ingrédient principal indiqué dans le nom du produit)',
@@ -72,10 +58,10 @@ export const PRODUCTS = [
     summary:
       'Une crème formulée avec du Yuja (agrume coréen) et de la niacinamide, pour une routine axée sur l’éclat du teint.',
     highlights: [
-      { icon: Citrus, label: 'Extrait de Yuja' },
-      { icon: FlaskConical, label: 'Niacinamide' },
-      { icon: Sparkles, label: 'Routine éclat' },
-      { icon: Sun, label: 'Usage quotidien' },
+      { icon: 'citrus', label: 'Extrait de Yuja' },
+      { icon: 'flask', label: 'Niacinamide' },
+      { icon: 'sparkles', label: 'Routine éclat' },
+      { icon: 'sun', label: 'Usage quotidien' },
     ],
     ingredients: [
       'Extrait de Yuja (citron coréen)',
@@ -105,10 +91,10 @@ export const PRODUCTS = [
     summary:
       'Patchs pour le contour des yeux associant tripeptide et concombre, pour un moment de soin rapide.',
     highlights: [
-      { icon: Eye, label: 'Contour des yeux' },
-      { icon: FlaskConical, label: 'Tripeptide' },
-      { icon: Leaf, label: 'Concombre' },
-      { icon: Clock, label: 'Pose rapide' },
+      { icon: 'eye', label: 'Contour des yeux' },
+      { icon: 'flask', label: 'Tripeptide' },
+      { icon: 'leaf', label: 'Concombre' },
+      { icon: 'clock', label: 'Pose rapide' },
     ],
     ingredients: [
       'Tripeptide',
@@ -138,10 +124,10 @@ export const PRODUCTS = [
     summary:
       'Crème associant vitamines et collagène, pour une routine de soin riche et confortable.',
     highlights: [
-      { icon: Sparkles, label: 'Vitamines' },
-      { icon: Layers, label: 'Collagène' },
-      { icon: Droplets, label: 'Texture crème' },
-      { icon: Sun, label: 'Matin & soir' },
+      { icon: 'sparkles', label: 'Vitamines' },
+      { icon: 'layers', label: 'Collagène' },
+      { icon: 'droplets', label: 'Texture crème' },
+      { icon: 'sun', label: 'Matin & soir' },
     ],
     ingredients: [
       'Vitamines (selon le nom du produit)',
@@ -171,10 +157,10 @@ export const PRODUCTS = [
     summary:
       'Émulsion fluide au collagène, à utiliser comme étape légère de la routine coréenne.',
     highlights: [
-      { icon: Layers, label: 'Collagène' },
-      { icon: Droplets, label: 'Texture fluide' },
-      { icon: Hand, label: 'Facile à étaler' },
-      { icon: Sun, label: 'Usage quotidien' },
+      { icon: 'layers', label: 'Collagène' },
+      { icon: 'droplets', label: 'Texture fluide' },
+      { icon: 'hand', label: 'Facile à étaler' },
+      { icon: 'sun', label: 'Usage quotidien' },
     ],
     ingredients: [
       'Collagène (selon le nom du produit)',
@@ -194,7 +180,3 @@ export const PRODUCTS = [
   },
 ];
 
-// Rattache les photos à chaque produit (cardImage, mainImage, galleryImages).
-PRODUCTS.forEach((p) => Object.assign(p, PRODUCT_IMAGES[p.id]));
-
-export const getProductById = (id) => PRODUCTS.find((p) => p.id === id);

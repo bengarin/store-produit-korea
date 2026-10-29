@@ -7,6 +7,9 @@ export const STORE_CONFIG = {
   brandName: 'Ma Petite Corée',
   brandTagline: 'KOREAN & NATURAL SKINCARE',
 
+  /** Affiche les mentions « prix provisoires / description indicative ». Passer à false une fois validés. */
+  showDemoNotices: true,
+
   /** Devise affichée après les prix. */
   currencyLabel: 'DH',
 

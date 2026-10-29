@@ -1,8 +1,9 @@
 /**
  * 🌿 INGRÉDIENTS À L'HONNEUR
  *
- * - productIds : produits RÉELS du catalogue (src/data/products.js) qui contiennent
- *   l'ingrédient d'après leur nom. Laisser [] si aucun produit n'est encore associé :
+ * - productIds : produits RÉELS du catalogue (src/data/local/products.js) qui contiennent
+ *   l'ingrédient d'après leur nom (les ids absents du catalogue sont ignorés à l'affichage).
+ *   Laisser [] si aucun produit n'est encore associé :
  *   la carte affichera « Soins bientôt disponibles » sans lien.
  * - focus : point de cadrage horizontal de la photo dans la carte (0 % = gauche, 100 % = droite).
  * - tagline : 2-3 mots affichés sous le nom ; description : phrase complète (page produits filtrée).
@@ -16,7 +17,6 @@ import concombre from '../assets/ingredients/concombre.webp';
 import concombre640 from '../assets/ingredients/concombre-640.webp';
 import collagene from '../assets/ingredients/collagene.webp';
 import collagene640 from '../assets/ingredients/collagene-640.webp';
-import { getProductById } from './products.js';
 
 export const INGREDIENTS = [
   {
@@ -56,10 +56,5 @@ export const INGREDIENTS = [
     productIds: ['vitamin-collagen-vital-cream', 'orjena-power-collagen-emulsion'],
   },
 ];
-
-// Garde uniquement les produits qui existent vraiment dans le catalogue.
-INGREDIENTS.forEach((ing) => {
-  ing.productIds = ing.productIds.filter((id) => getProductById(id));
-});
 
 export const getIngredientById = (id) => INGREDIENTS.find((i) => i.id === id);

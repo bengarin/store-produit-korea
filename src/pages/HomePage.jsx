@@ -2,7 +2,8 @@ import { Link } from 'react-router-dom';
 import { ArrowDown, ArrowRight } from 'lucide-react';
 import Header from '../components/Header.jsx';
 import SiteFooter from '../components/SiteFooter.jsx';
-import { PRODUCTS, CATALOG_IS_PLACEHOLDER } from '../data/products.js';
+import { useCatalog } from '../context/CatalogContext.jsx';
+import { STORE_CONFIG } from '../config/store.js';
 import IngredientsSection from '../components/IngredientsSection.jsx';
 import RitualSection from '../components/RitualSection.jsx';
 import BeautyBanner from '../components/BeautyBanner.jsx';
@@ -25,6 +26,7 @@ function scrollToCollection(e) {
 }
 
 export default function HomePage() {
+  const { products } = useCatalog();
 
   return (
     <>
@@ -78,14 +80,14 @@ export default function HomePage() {
               <div>
                 <p className="eyebrow">Nos essentiels</p>
                 <h2 className="section-title" id="collection-title">Les produits du moment</h2>
-                <p className="section-intro">Découvrez nos {PRODUCTS.length} soins pour une routine simple et douce au quotidien.</p>
+                <p className="section-intro">Découvrez nos {products.length} soins pour une routine simple et douce au quotidien.</p>
               </div>
               <Link to="/produits" className="text-arrow">Voir tout <ArrowRight size={16} aria-hidden="true" /></Link>
             </Reveal>
             <Reveal>
-              <ProductCarousel products={PRODUCTS} label="Les produits du moment" />
+              <ProductCarousel products={products} label="Les produits du moment" />
             </Reveal>
-            {CATALOG_IS_PLACEHOLDER && <p className="demo-note">Prix provisoires — à confirmer avant la mise en ligne.</p>}
+            {STORE_CONFIG.showDemoNotices && <p className="demo-note">Prix provisoires — à confirmer avant la mise en ligne.</p>}
           </div>
         </section>
 

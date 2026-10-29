@@ -7,15 +7,17 @@ import OrderSummary from '../components/OrderSummary.jsx';
 import ProductImage from '../components/ProductImage.jsx';
 import { useCart } from '../context/CartContext.jsx';
 import { formatPrice } from '../utils/currency.js';
-import {
-  computeTotals, resolveLines, mergeItems, loadDirectOrder, clearDirectOrder,
-  generateOrderNumber, saveLastOrder,
-} from '../utils/order.js';
+import { useToast } from '../context/ToastContext.jsx';
+import { useCatalog } from '../context/CatalogContext.jsx';
+import { computeTotals, resolveLines, mergeItems } from '../utils/pricing.js';
+import { submitOrder, loadDirectOrder, clearDirectOrder, saveLastOrder } from '../services/orderService.js';
 
 export default function CheckoutPage() {
   const [params] = useSearchParams();
   const navigate = useNavigate();
   const { items: cartItems, promoCode, clearCart } = useCart();
+  const { getProductById } = useCatalog();
+  const showToast = useToast();
   const [direct] = useState(() => (params.get('mode') === 'direct' ? loadDirectOrder() : null));
   const [includeCart, setIncludeCart] = useState(false);
   const [submitting, setSubmitting] = useState(false);
@@ -29,7 +31,7 @@ export default function CheckoutPage() {
 
   const usesCart = !isDirect || includeCart;
   const appliedPromo = usesCart ? promoCode : '';
-  const lines = useMemo(() => resolveLines(orderItems), [orderItems]);
+  const lines = useMemo(() => resolveLines(orderItems, getProductById), [orderItems, getProductById]);
   const totals = useMemo(() => computeTotals(lines, appliedPromo), [lines, appliedPromo]);
 
   if (lines.length === 0) {
@@ -51,19 +53,16 @@ export default function CheckoutPage() {
     lockRef.current = true;
     setSubmitting(true);
 
-    // Simulation d'envoi : aucune API réelle n'est appelée.
-    await new Promise((r) => setTimeout(r, 900));
-
-    const order = {
-      number: generateOrderNumber(),
-      createdAt: new Date().toISOString(),
-      customer,
-      lines: lines.map(({ product, qty }) => ({ id: product.id, name: product.displayName, price: product.price, qty })),
-      promoCode: totals.discount > 0 ? appliedPromo : '',
-      totals,
-      payment: 'cod',
-      delivery: 'home',
-    };
+    let order;
+    try {
+      order = await submitOrder({ customer, lines, promoCode: appliedPromo, totals });
+    } catch {
+      // Échec d'envoi (mode API) : on garde le formulaire rempli et on permet de réessayer.
+      lockRef.current = false;
+      setSubmitting(false);
+      showToast('La commande n’a pas pu être envoyée. Vérifiez votre connexion et réessayez.', 'info');
+      return;
+    }
     saveLastOrder(order);
     if (usesCart) clearCart();
     if (isDirect) clearDirectOrder();

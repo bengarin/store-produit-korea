@@ -2,11 +2,15 @@ import { Link } from 'react-router-dom';
 import { ArrowRight } from 'lucide-react';
 import Reveal from './Reveal.jsx';
 import { INGREDIENTS } from '../data/ingredients.js';
+import { useCatalog } from '../context/CatalogContext.jsx';
 import bg from '../assets/backgrounds/ingredients-bg.webp';
 import bg960 from '../assets/backgrounds/ingredients-bg-960.webp';
 
 function Ingredient({ ingredient, index }) {
-  const { id, name, tagline, image, productIds } = ingredient;
+  const { getProductById } = useCatalog();
+  const { id, name, tagline, image } = ingredient;
+  // Seuls les produits présents dans le catalogue comptent.
+  const productIds = ingredient.productIds.filter((pid) => getProductById(pid));
   return (
     <Reveal as="li" className="ingredient" delay={index * 90}>
       <div className="ingredient__arch">

@@ -1,6 +1,6 @@
 /**
  * 🌿 LE RITUEL NATURÉ — 3 étapes, chacune reliée à un produit RÉEL du catalogue.
- * - productId : id dans src/data/products.js
+ * - productId : id dans src/data/local/products.js
  * - Photo : le visuel « en situation » du produit (sceneImage, voir productImages.js)
  * Textes volontairement descriptifs : aucune promesse de résultat.
  */
