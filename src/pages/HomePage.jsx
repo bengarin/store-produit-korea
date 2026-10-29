@@ -1,13 +1,14 @@
-import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { ArrowDown } from 'lucide-react';
+import { ArrowDown, ArrowRight } from 'lucide-react';
 import Header from '../components/Header.jsx';
-import TrustBar from '../components/TrustBar.jsx';
 import SiteFooter from '../components/SiteFooter.jsx';
-import ProductGrid, { CategoryChips } from '../components/ProductGrid.jsx';
 import { PRODUCTS, CATALOG_IS_PLACEHOLDER } from '../data/products.js';
-import SectionDivider from '../components/SectionDivider.jsx';
 import IngredientsSection from '../components/IngredientsSection.jsx';
+import RitualSection from '../components/RitualSection.jsx';
+import BeautyBanner from '../components/BeautyBanner.jsx';
+import ProductCarousel from '../components/ProductCarousel.jsx';
+import Reassurance from '../components/Reassurance.jsx';
+import Reveal from '../components/Reveal.jsx';
 import heroImg from '../assets/hero/nature-hero-products.webp';
 import heroImg640 from '../assets/hero/nature-hero-products-640.webp';
 import heroWide from '../assets/hero/nature-hero-products-wide.webp';
@@ -24,7 +25,6 @@ function scrollToCollection(e) {
 }
 
 export default function HomePage() {
-  const [category, setCategory] = useState('all');
 
   return (
     <>
@@ -41,7 +41,6 @@ export default function HomePage() {
               <Link to={{ hash: '#collection' }} className="btn btn--primary btn--lg" onClick={scrollToCollection}>
                 Découvrir nos produits <ArrowDown size={17} />
               </Link>
-              <TrustBar className="trust--hero" />
             </div>
             {/* Visuel produit fourni : image entière, jamais étirée ; seul le mur vide du haut se fond dans le crème. */}
             <div className="hero__visual">
@@ -69,25 +68,28 @@ export default function HomePage() {
           </div>
         </section>
 
-        <TrustBar className="trust--band" />
+        <RitualSection />
+        <IngredientsSection />
+        <BeautyBanner />
 
-        <section className="section container collection" id="collection" aria-labelledby="collection-title">
-          <SectionDivider />
-          <header className="section-head">
-            <p className="eyebrow">Notre collection</p>
-            <h2 className="section-title" id="collection-title">Nos produits</h2>
-            <p className="section-intro">
-              Découvrez nos {PRODUCTS.length} soins essentiels, sélectionnés pour une routine simple et douce au quotidien.
-            </p>
-            <CategoryChips value={category} onChange={setCategory} />
-          </header>
-          <ProductGrid category={category} />
-          {CATALOG_IS_PLACEHOLDER && (
-            <p className="demo-note">Prix provisoires — à confirmer avant la mise en ligne.</p>
-          )}
+        <section className="home-section moment" id="collection" aria-labelledby="collection-title">
+          <div className="container">
+            <Reveal as="header" className="section-head section-head--split">
+              <div>
+                <p className="eyebrow">Nos essentiels</p>
+                <h2 className="section-title" id="collection-title">Les produits du moment</h2>
+                <p className="section-intro">Découvrez nos {PRODUCTS.length} soins pour une routine simple et douce au quotidien.</p>
+              </div>
+              <Link to="/produits" className="text-arrow">Voir tout <ArrowRight size={16} aria-hidden="true" /></Link>
+            </Reveal>
+            <Reveal>
+              <ProductCarousel products={PRODUCTS} label="Les produits du moment" />
+            </Reveal>
+            {CATALOG_IS_PLACEHOLDER && <p className="demo-note">Prix provisoires — à confirmer avant la mise en ligne.</p>}
+          </div>
         </section>
 
-        <IngredientsSection />
+        <Reassurance />
       </main>
       <SiteFooter />
     </>

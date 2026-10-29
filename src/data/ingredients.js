@@ -5,6 +5,7 @@
  *   l'ingrédient d'après leur nom. Laisser [] si aucun produit n'est encore associé :
  *   la carte affichera « Soins bientôt disponibles » sans lien.
  * - focus : point de cadrage horizontal de la photo dans la carte (0 % = gauche, 100 % = droite).
+ * - tagline : 2-3 mots affichés sous le nom ; description : phrase complète (page produits filtrée).
  * - Textes : descriptifs d'ambiance, sans promesse d'efficacité.
  */
 import aloe from '../assets/ingredients/aloe-vera.webp';
@@ -20,6 +21,7 @@ import { getProductById } from './products.js';
 export const INGREDIENTS = [
   {
     id: 'aloe-vera',
+    tagline: 'Fraîcheur végétale',
     name: 'Aloe Vera',
     description: 'Une touche de fraîcheur pour votre routine quotidienne.',
     productsTitle: 'Les soins à l’Aloe Vera',
@@ -28,6 +30,7 @@ export const INGREDIENTS = [
   },
   {
     id: 'yuja',
+    tagline: 'Agrume coréen',
     name: 'Yuja',
     description: 'Un ingrédient apprécié dans les routines dédiées à l’éclat du teint.',
     productsTitle: 'Les soins au Yuja',
@@ -36,6 +39,7 @@ export const INGREDIENTS = [
   },
   {
     id: 'concombre',
+    tagline: 'Fraîcheur légère',
     name: 'Concombre',
     description: 'Une sensation de fraîcheur pour un moment de soin agréable.',
     productsTitle: 'Les soins au concombre',
@@ -44,6 +48,7 @@ export const INGREDIENTS = [
   },
   {
     id: 'collagene',
+    tagline: 'Soin confort',
     name: 'Collagène',
     description: 'Un ingrédient présent dans les soins dédiés au confort et à l’apparence de la peau.',
     productsTitle: 'Les soins au collagène',

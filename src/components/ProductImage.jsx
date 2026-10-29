@@ -3,7 +3,7 @@
  *  - fit 'contain' : packshot entier sur fond crème (le blanc de la photo se fond dans le crème)
  *  - fit 'cover'   : photo d'ambiance qui remplit le cadre
  */
-export default function ProductImage({ image, eager = false, className = '' }) {
+export default function ProductImage({ image, eager = false, className = '', position }) {
   const fit = image.fit === 'cover' ? 'cover' : 'contain';
   return (
     <div className={`product-image product-image--${fit} ${className}`}>
@@ -14,6 +14,7 @@ export default function ProductImage({ image, eager = false, className = '' }) {
         decoding="async"
         width="900"
         height="900"
+        style={position ? { objectPosition: position } : undefined}
       />
     </div>
   );

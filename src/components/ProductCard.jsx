@@ -1,12 +1,12 @@
 import { memo, useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Heart, ShoppingCart, Check } from 'lucide-react';
+import { Heart, ShoppingCart, Check, Leaf } from 'lucide-react';
 import ProductImage from './ProductImage.jsx';
 import useReveal from '../hooks/useReveal.js';
 import { formatPrice } from '../utils/currency.js';
 import { CATEGORY_LABELS } from '../data/products.js';
 
-function ProductCard({ product, index = 0, isFavorite, onToggleFavorite, onAdd }) {
+function ProductCard({ product, index = 0, isFavorite, onToggleFavorite, onAdd, animate = true }) {
   const url = `/produits/${product.id}`;
   const [revealRef, visible] = useReveal();
   const [added, setAdded] = useState(false);
@@ -23,8 +23,8 @@ function ProductCard({ product, index = 0, isFavorite, onToggleFavorite, onAdd }
   return (
     <article
       ref={revealRef}
-      className={`product-card reveal ${visible ? 'is-visible' : ''}`}
-      style={{ '--reveal-delay': `${Math.min(index, 5) * 80}ms` }}
+      className={`product-card ${animate ? `reveal ${visible ? 'is-visible' : ''}` : 'is-visible'}`}
+      style={animate ? { '--reveal-delay': `${Math.min(index, 5) * 80}ms` } : undefined}
     >
       <button
         className={`fav-btn ${isFavorite ? 'is-active' : ''}`}
@@ -34,11 +34,11 @@ function ProductCard({ product, index = 0, isFavorite, onToggleFavorite, onAdd }
       >
         <Heart size={19} strokeWidth={1.6} />
       </button>
+      <span className="product-card__badge"><Leaf size={13} aria-hidden="true" />{product.categories.map((c) => CATEGORY_LABELS[c]).join(' · ')}</span>
       <Link to={url} className="product-card__media" tabIndex={-1} aria-hidden="true">
         <ProductImage image={product.cardImage} />
       </Link>
       <div className="product-card__body">
-        <p className="product-card__cat">{product.categories.map((c) => CATEGORY_LABELS[c]).join(' · ')}</p>
         <h3 className="product-card__name">
           <Link to={url}>{product.displayName}</Link>
         </h3>

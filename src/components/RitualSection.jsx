@@ -1,0 +1,57 @@
+import { Link } from 'react-router-dom';
+import { ArrowRight } from 'lucide-react';
+import Reveal from './Reveal.jsx';
+import ProductImage from './ProductImage.jsx';
+import AddToCartIcon from './AddToCartIcon.jsx';
+import { RITUAL_STEPS } from '../data/ritual.js';
+import { getProductById } from '../data/products.js';
+import { formatPrice } from '../utils/currency.js';
+
+export default function RitualSection() {
+  const steps = RITUAL_STEPS.map((s) => {
+    const product = getProductById(s.productId);
+    if (!product) return null;
+    const image = product.galleryImages.find((g) => g.kind === s.imageKind) || product.mainImage;
+    return { ...s, product, image };
+  }).filter(Boolean);
+
+  return (
+    <section className="home-section ritual" aria-labelledby="ritual-title">
+      <div className="container">
+        <Reveal as="header" className="section-head">
+          <p className="eyebrow">Votre routine beauté</p>
+          <h2 className="section-title" id="ritual-title">Le rituel NATURÉ</h2>
+          <p className="section-intro">Trois étapes simples, trois soins de notre sélection.</p>
+        </Reveal>
+
+        <ol className="ritual__steps">
+          {steps.map(({ step, title, text, product, image, imagePosition }, i) => (
+            <Reveal as="li" key={step} className="ritual-card" delay={i * 110}>
+              <div className="ritual-card__head">
+                <span className="ritual-card__num" aria-hidden="true">{step}</span>
+                <div>
+                  <h3 className="ritual-card__title"><span className="sr-only">Étape {step} : </span>{title}</h3>
+                  <p className="ritual-card__text">{text}</p>
+                </div>
+              </div>
+              <Link to={`/produits/${product.id}`} className="ritual-card__media" tabIndex={-1} aria-hidden="true">
+                <ProductImage image={image} position={imagePosition} />
+              </Link>
+              <div className="ritual-card__product">
+                <Link to={`/produits/${product.id}`} className="ritual-card__thumb" tabIndex={-1} aria-hidden="true">
+                  <ProductImage image={product.cardImage} />
+                </Link>
+                <div className="ritual-card__info">
+                  <Link to={`/produits/${product.id}`} className="ritual-card__name">{product.displayName}</Link>
+                  <span className="ritual-card__price">{formatPrice(product.price)}</span>
+                </div>
+                <AddToCartIcon product={product} />
+              </div>
+              {i < steps.length - 1 && <span className="ritual-card__arrow" aria-hidden="true"><ArrowRight size={18} /></span>}
+            </Reveal>
+          ))}
+        </ol>
+      </div>
+    </section>
+  );
+}
