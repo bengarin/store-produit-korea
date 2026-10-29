@@ -24,16 +24,19 @@ export function CategoryChips({ value, onChange, extra = null }) {
 }
 
 /** Grille produits filtrée + ajout au panier avec toast. */
-export default function ProductGrid({ category = 'all', onlyFavorites = false, emptyText }) {
+export default function ProductGrid({ category = 'all', onlyFavorites = false, ids = null, emptyText }) {
   const { addItem, favorites, toggleFavorite } = useCart();
   const showToast = useToast();
 
   const visible = useMemo(
     () =>
       PRODUCTS.filter(
-        (p) => (category === 'all' || p.categories.includes(category)) && (!onlyFavorites || favorites.includes(p.id)),
+        (p) =>
+          (category === 'all' || p.categories.includes(category)) &&
+          (!onlyFavorites || favorites.includes(p.id)) &&
+          (!ids || ids.includes(p.id)),
       ),
-    [category, onlyFavorites, favorites],
+    [category, onlyFavorites, ids, favorites],
   );
 
   const handleAdd = useCallback(

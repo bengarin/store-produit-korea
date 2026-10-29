@@ -7,6 +7,7 @@ import SiteFooter from '../components/SiteFooter.jsx';
 import ProductGrid, { CategoryChips } from '../components/ProductGrid.jsx';
 import { PRODUCTS, CATALOG_IS_PLACEHOLDER } from '../data/products.js';
 import SectionDivider from '../components/SectionDivider.jsx';
+import IngredientsSection from '../components/IngredientsSection.jsx';
 import heroImg from '../assets/hero/nature-hero-products.webp';
 import heroImg640 from '../assets/hero/nature-hero-products-640.webp';
 import heroWide from '../assets/hero/nature-hero-products-wide.webp';
@@ -85,6 +86,8 @@ export default function HomePage() {
             <p className="demo-note">Prix provisoires — à confirmer avant la mise en ligne.</p>
           )}
         </section>
+
+        <IngredientsSection />
       </main>
       <SiteFooter />
     </>

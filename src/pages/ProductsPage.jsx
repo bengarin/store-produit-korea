@@ -3,11 +3,13 @@ import Header from '../components/Header.jsx';
 import SiteFooter from '../components/SiteFooter.jsx';
 import ProductGrid, { CategoryChips } from '../components/ProductGrid.jsx';
 import { PRODUCTS, CATALOG_IS_PLACEHOLDER } from '../data/products.js';
+import { getIngredientById } from '../data/ingredients.js';
 
 export default function ProductsPage() {
   const [params, setParams] = useSearchParams();
   const category = params.get('categorie') || 'all';
   const onlyFavorites = params.get('favoris') === '1';
+  const ingredient = getIngredientById(params.get('ingredient'));
 
   const selectCategory = (id) => {
     const next = new URLSearchParams(params);
@@ -21,22 +23,25 @@ export default function ProductsPage() {
       <Header />
       <main className="container section products-page">
         <header className="section-head">
-          <p className="eyebrow">{onlyFavorites ? 'Votre sélection' : 'Notre collection'}</p>
-          <h1 className="section-title">{onlyFavorites ? 'Mes favoris' : 'Nos produits'}</h1>
+          <p className="eyebrow">{onlyFavorites ? 'Votre sélection' : ingredient ? 'Ingrédient à l’honneur' : 'Notre collection'}</p>
+          <h1 className="section-title">{onlyFavorites ? 'Mes favoris' : ingredient ? ingredient.productsTitle : 'Nos produits'}</h1>
           <p className="section-intro">
             {onlyFavorites
               ? 'Les soins que vous avez mis de côté.'
-              : `Découvrez nos ${PRODUCTS.length} soins essentiels, sélectionnés pour une routine simple et douce au quotidien.`}
+              : ingredient
+                ? ingredient.description
+                : `Découvrez nos ${PRODUCTS.length} soins essentiels, sélectionnés pour une routine simple et douce au quotidien.`}
           </p>
           <CategoryChips
             value={category}
             onChange={selectCategory}
-            extra={onlyFavorites && <Link className="chip chip--link" to="/produits">Tout le catalogue</Link>}
+            extra={(onlyFavorites || ingredient) && <Link className="chip chip--link" to="/produits">Tout le catalogue</Link>}
           />
         </header>
         <ProductGrid
           category={category}
           onlyFavorites={onlyFavorites}
+          ids={ingredient ? ingredient.productIds : null}
           emptyText={onlyFavorites ? 'Aucun favori pour le moment. Touchez le ♡ d’un produit pour l’ajouter.' : undefined}
         />
         {CATALOG_IS_PLACEHOLDER && (
