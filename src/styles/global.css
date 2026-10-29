@@ -183,7 +183,8 @@ ul, ol { padding: 0; }
 .hero .eyebrow { margin-bottom: 8px; }
 /* Photo portrait affichée de 0 % à 83 % de sa hauteur (feuillage en haut derrière le texte, produits entiers en bas).
    Décalée de 28 px pour laisser respirer le grand titre au-dessus des produits. */
-.hero__visual { position: relative; width: 100%; aspect-ratio: 941 / 1388; margin-top: 28px; }
+.hero__visual { position: relative; width: 100%; aspect-ratio: 941 / 1388; margin-top: 28px; -webkit-mask-image: linear-gradient(180deg, transparent 0, #000 110px); mask-image: linear-gradient(180deg, transparent 0, #000 110px); }
+/* ↑ Le haut de la photo se fond dans le crème : aucune ligne visible sous le header. */
 .hero__visual picture { display: block; height: 100%; }
 .hero__visual img { position: absolute; inset: 0; display: block; width: 100%; height: 100%; object-fit: cover; object-position: 50% 0%; }
 /* Voile crème derrière le texte (lisibilité) qui s'efface vers les produits, + fondu bas vers la section suivante. */
@@ -699,7 +700,7 @@ select { appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmln
   /* Desktop : grande carte arrondie, texte à gauche, produits entiers à droite (comme la référence). */
   .hero { padding: 16px var(--gutter) 0; }
   .hero__inner { position: relative; display: block; max-width: 1400px; margin-inline: auto; aspect-ratio: 1672 / 800; overflow: hidden; border-radius: 24px; border: 1px solid var(--border); }
-  .hero__visual { position: absolute; inset: 0; margin: 0; aspect-ratio: auto; }
+  .hero__visual { position: absolute; inset: 0; margin: 0; aspect-ratio: auto; -webkit-mask-image: none; mask-image: none; }
   .hero__visual::after { display: none; }
   .hero__visual picture { display: block; height: 100%; }
   .hero__visual img { height: 100%; object-fit: cover; object-position: 50% 100%; -webkit-mask-image: none; mask-image: none; }
