@@ -9,7 +9,7 @@ function CartItem({ product, qty, maxQty, onQtyChange, onRemove }) {
   return (
     <li className="cart-item">
       <Link to={`/produits/${product.id}`} className="cart-item__thumb">
-        <ProductImage image={product.images[0]} product={product} scene="tint" />
+        <ProductImage image={product.images[0]} />
       </Link>
       <div className="cart-item__info">
         <h2 className="cart-item__name">

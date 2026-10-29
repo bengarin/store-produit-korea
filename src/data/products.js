@@ -10,11 +10,13 @@
  */
 import { Droplets, Leaf, Sparkles, Sun, Citrus, Eye, Clock, Layers, FlaskConical, Hand } from 'lucide-react';
 
-import aloeImg from '../assets/products/aloe-vera-gel.svg';
-import yujaImg from '../assets/products/yuja-niacin-cream.svg';
-import patchesImg from '../assets/products/eye-patches.svg';
-import vitaminImg from '../assets/products/vitamin-collagen-cream.svg';
-import orjenaImg from '../assets/products/collagen-emulsion.svg';
+// ⚠️ Visuels TEMPORAIRES : détourés depuis la maquette de design (basse résolution,
+// textes d'étiquette approximatifs). À remplacer par vos vraies photos produits.
+import aloeImg from '../assets/products/baroness-aloe-vera-gel.webp';
+import yujaImg from '../assets/products/some-by-mi-yuja-niacin-cream.webp';
+import patchesImg from '../assets/products/biovene-eye-patches.webp';
+import vitaminImg from '../assets/products/vitamin-collagen-vital-cream.webp';
+import orjenaImg from '../assets/products/orjena-power-collagen-emulsion.webp';
 
 export const CATEGORIES = [
   { id: 'all', label: 'Tous' },
@@ -35,13 +37,13 @@ export const CATALOG_IS_PLACEHOLDER = true;
 export const PRODUCTS = [
   {
     id: 'baroness-aloe-vera-gel',
+    cardLine: "Gel à l'aloe vera, frais et léger.",
     brand: 'Baroness',
     name: 'Aloe Vera Soothing Gel',
     displayName: 'Baroness Aloe Vera Soothing Gel',
     price: 129, // [DÉMO]
     categories: ['hydratation'],
-    tint: '#E4EEDB',
-    images: [{ src: aloeImg, alt: 'Visuel provisoire du gel Baroness Aloe Vera' }],
+    images: [{ src: aloeImg, alt: 'Visuel temporaire du gel Baroness Aloe Vera' }],
     summary:
       "Gel à l'aloe vera à la texture fraîche et légère, pensé pour le visage et le corps.",
     highlights: [
@@ -68,13 +70,13 @@ export const PRODUCTS = [
   },
   {
     id: 'some-by-mi-yuja-niacin-cream',
+    cardLine: 'Crème au Yuja et à la niacinamide.',
     brand: 'SOME BY MI',
     name: 'Yuja Niacin Anti Blemish Cream',
     displayName: 'SOME BY MI Yuja Niacin Cream',
     price: 199, // [DÉMO]
     categories: ['eclat'],
-    tint: '#FBF0CF',
-    images: [{ src: yujaImg, alt: 'Visuel provisoire de la crème SOME BY MI Yuja Niacin' }],
+    images: [{ src: yujaImg, alt: 'Visuel temporaire de la crème SOME BY MI Yuja Niacin' }],
     summary:
       'Une crème formulée avec du Yuja (agrume coréen) et de la niacinamide, pour une routine axée sur l’éclat du teint.',
     highlights: [
@@ -102,13 +104,13 @@ export const PRODUCTS = [
   },
   {
     id: 'biovene-eye-patches',
+    cardLine: 'Patchs contour des yeux, tripeptide et concombre.',
     brand: 'BIOVÈNE',
     name: 'Tripeptide Cucumber Age-Defy Under Eye Patches',
     displayName: 'Biovène Eye Patches',
     price: 149, // [DÉMO]
     categories: ['anti-age'],
-    tint: '#D8F1EF',
-    images: [{ src: patchesImg, alt: 'Visuel provisoire des patchs yeux Biovène' }],
+    images: [{ src: patchesImg, alt: 'Visuel temporaire des patchs yeux Biovène' }],
     summary:
       'Patchs pour le contour des yeux associant tripeptide et concombre, pour un moment de soin rapide.',
     highlights: [
@@ -136,13 +138,13 @@ export const PRODUCTS = [
   },
   {
     id: 'vitamin-collagen-vital-cream',
+    cardLine: 'Crème riche aux vitamines et au collagène.',
     brand: 'Vitamin Collagen',
     name: 'Vital Cream',
     displayName: 'Vitamin Collagen Vital Cream',
     price: 229, // [DÉMO]
     categories: ['anti-age', 'eclat'],
-    tint: '#FBE3CF',
-    images: [{ src: vitaminImg, alt: 'Visuel provisoire de la crème Vitamin Collagen' }],
+    images: [{ src: vitaminImg, alt: 'Visuel temporaire de la crème Vitamin Collagen' }],
     summary:
       'Crème associant vitamines et collagène, pour une routine de soin riche et confortable.',
     highlights: [
@@ -170,13 +172,13 @@ export const PRODUCTS = [
   },
   {
     id: 'orjena-power-collagen-emulsion',
+    cardLine: 'Émulsion fluide au collagène.',
     brand: 'ORJENA',
     name: 'Power Collagen Emulsion',
     displayName: 'ORJENA Power Collagen Emulsion',
     price: 179, // [DÉMO]
     categories: ['hydratation', 'anti-age'],
-    tint: '#F1DDD8',
-    images: [{ src: orjenaImg, alt: "Visuel provisoire de l'émulsion ORJENA Power Collagen" }],
+    images: [{ src: orjenaImg, alt: "Visuel temporaire de l'émulsion ORJENA Power Collagen" }],
     summary:
       'Émulsion fluide au collagène, à utiliser comme étape légère de la routine coréenne.',
     highlights: [

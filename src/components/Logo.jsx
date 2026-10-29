@@ -10,8 +10,10 @@ export default function Logo({ compact = false }) {
         <path d="M20 30 C 28 28 33 22 33 14 C 26 15 21 21 20 30 Z" />
         <path d="M20 22 C 15 18 14 10 20 2 C 26 10 25 18 20 22 Z" />
       </svg>
-      <span className="logo__name">{STORE_CONFIG.brandName}</span>
-      {!compact && <span className="logo__tagline">{STORE_CONFIG.brandTagline}</span>}
+      <span className="logo__text">
+        <span className="logo__name">{STORE_CONFIG.brandName}</span>
+        {!compact && <span className="logo__tagline">{STORE_CONFIG.brandTagline}</span>}
+      </span>
     </Link>
   );
 }

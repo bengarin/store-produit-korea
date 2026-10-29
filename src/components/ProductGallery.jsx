@@ -1,20 +1,20 @@
 import { useState } from 'react';
 import ProductImage from './ProductImage.jsx';
 
-/** Grande image + vignettes. Chaque photo est déclinée en deux mises en scène. */
+/** Grande image + vignettes. Chaque photo est montrée dans plusieurs mises en scène. */
 export default function ProductGallery({ product }) {
-  const views = product.images.flatMap((image) => [
-    { image, scene: 'podium' },
-    { image, scene: 'tint' },
-    { image, scene: 'studio' },
-  ]);
+  const views = product.images.flatMap((image, i) =>
+    i === 0
+      ? [{ image, scene: 'podium' }, { image, scene: 'plain' }, { image, scene: 'duo' }]
+      : [{ image, scene: 'plain' }],
+  );
   const [active, setActive] = useState(0);
   const current = views[active];
 
   return (
     <div className="gallery">
-      <ProductImage image={current.image} product={product} scene={current.scene} eager className="gallery__main" />
-      <div className="gallery__thumbs container" role="tablist" aria-label="Photos du produit">
+      <ProductImage image={current.image} scene={current.scene} eager className="gallery__main" />
+      <div className="gallery__thumbs" role="tablist" aria-label="Photos du produit">
         {views.map((v, i) => (
           <button
             key={`${v.image.src}-${v.scene}`}
@@ -24,7 +24,7 @@ export default function ProductGallery({ product }) {
             className={`gallery__thumb ${i === active ? 'is-active' : ''}`}
             onClick={() => setActive(i)}
           >
-            <ProductImage image={v.image} product={product} scene={v.scene} />
+            <ProductImage image={v.image} scene={v.scene} />
           </button>
         ))}
       </div>

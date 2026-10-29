@@ -31,15 +31,15 @@ npm run preview  # teste la version finale en local
 
 ### Remplacer les photos produits
 
-Les visuels actuels sont des **pots stylisés provisoires** (sans logo ni texte, pour ne pas imiter un vrai emballage).
+Les visuels actuels sont **temporaires** : ils ont été détourés depuis la maquette de design (basse résolution, textes d'étiquette approximatifs). Ils ne doivent pas être utilisés pour vendre.
 
-1. Déposez vos photos dans `src/assets/products/` (format `.webp` conseillé, fond transparent ou uni, ~800×800 px).
-2. Dans `src/data/products.js`, changez l'import en haut du fichier, par exemple :
-   ```js
-   import yujaImg from '../assets/products/yuja-niacin-cream.webp';
-   ```
-3. Pour plusieurs photos dans la galerie, ajoutez des entrées dans `images: [...]`.
-4. Une fois photos, prix et textes validés, passez `CATALOG_IS_PLACEHOLDER` à `false` (cache les mentions « provisoire »).
+1. Préparez 1 packshot par produit : **fond transparent ou blanc uni**, produit centré, carré ~1000×1000 px, format `.webp` (ou `.png`).
+2. Remplacez les fichiers dans `src/assets/products/` **en gardant les mêmes noms** :
+   `baroness-aloe-vera-gel.webp`, `some-by-mi-yuja-niacin-cream.webp`, `biovene-eye-patches.webp`,
+   `vitamin-collagen-vital-cream.webp`, `orjena-power-collagen-emulsion.webp`.
+   → Rien d'autre à modifier : cartes, accueil, fiche, panier se mettent à jour.
+3. Photos supplémentaires (texture, dos du produit…) : ajoutez-les dans `images: [...]` du produit dans `src/data/products.js`.
+4. Une fois photos, prix et textes validés, passez `CATALOG_IS_PLACEHOLDER` à `false` (cache les mentions « temporaire »).
 
 ## Ce qui est provisoire (à valider avant la mise en ligne)
 

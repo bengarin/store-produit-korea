@@ -15,21 +15,23 @@ function ProductCard({ product, isFavorite, onToggleFavorite, onAdd }) {
         aria-pressed={isFavorite}
         aria-label={isFavorite ? `Retirer ${product.displayName} des favoris` : `Ajouter ${product.displayName} aux favoris`}
       >
-        <Heart size={20} strokeWidth={1.6} />
+        <Heart size={18} strokeWidth={1.6} />
       </button>
       <Link to={url} className="product-card__media" tabIndex={-1} aria-hidden="true">
-        <ProductImage image={product.images[0]} product={product} />
+        <ProductImage image={product.images[0]} />
       </Link>
       <div className="product-card__body">
         <p className="product-card__cat">{product.categories.map((c) => CATEGORY_LABELS[c]).join(' · ')}</p>
         <h3 className="product-card__name">
           <Link to={url}>{product.displayName}</Link>
         </h3>
+        <p className="product-card__line">{product.cardLine}</p>
         <p className="product-card__price">{formatPrice(product.price)}</p>
         <div className="product-card__actions">
           <Link to={url} className="btn btn--soft btn--sm">Voir détails</Link>
-          <button className="btn btn--primary btn--sm" onClick={() => onAdd(product)}>
-            <ShoppingCart size={15} /> Ajouter au panier
+          <button className="btn btn--primary btn--sm" onClick={() => onAdd(product)} aria-label={`Ajouter ${product.displayName} au panier`}>
+            <ShoppingCart size={14} aria-hidden="true" />
+            <span>Ajouter<span className="hide-xs"> au panier</span></span>
           </button>
         </div>
       </div>

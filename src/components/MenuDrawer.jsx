@@ -1,4 +1,5 @@
 import { useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { NavLink } from 'react-router-dom';
 import { X, Home, Store, Heart, ShoppingCart } from 'lucide-react';
 import Logo from './Logo.jsx';
@@ -21,7 +22,7 @@ export default function MenuDrawer({ open, onClose }) {
 
   if (!open) return null;
 
-  return (
+  return createPortal(
     <div className="drawer" role="dialog" aria-modal="true" aria-label="Menu">
       <button className="drawer__backdrop" onClick={onClose} aria-label="Fermer le menu" tabIndex={-1} />
       <nav className="drawer__panel">
@@ -44,6 +45,7 @@ export default function MenuDrawer({ open, onClose }) {
         </ul>
         <p className="drawer__note">Boutique de démonstration — les commandes sont simulées.</p>
       </nav>
-    </div>
+    </div>,
+    document.body,
   );
 }
