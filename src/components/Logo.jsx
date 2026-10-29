@@ -14,8 +14,8 @@ export default function Logo({ variant = 'compact', link = true, className = '' 
     <img
       className="logo__img"
       src={full ? logoFull : logoCompact}
-      width={full ? 700 : 440}
-      height={full ? 476 : 315}
+      width={full ? 700 : 560}
+      height={full ? 476 : 400}
       alt={`${STORE_CONFIG.brandName} — Korean & Natural Skincare`}
       decoding="async"
     />
