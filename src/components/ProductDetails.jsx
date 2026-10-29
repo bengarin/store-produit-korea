@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { FileText, Leaf, Hand, Sparkles } from 'lucide-react';
 import Accordion from './Accordion.jsx';
 import ProductImage from './ProductImage.jsx';
 
@@ -40,18 +41,30 @@ function useSections(product) {
   ];
 }
 
-/** Onglets sur ordinateur, accordéons sur mobile (sans la description, déjà affichée en haut). */
+/** Onglets sur ordinateur ; sur mobile, une carte blanche avec les 4 rubriques repliables. */
 export default function ProductDetails({ product, desktop }) {
   const sections = useSections(product);
   const [tab, setTab] = useState('description');
 
   if (!desktop) {
+    // Mobile : une seule carte blanche, 4 rubriques repliables (Description ouverte par défaut).
+    const icons = { description: FileText, ingredients: Leaf, usage: Hand, benefits: Sparkles };
+    const mobileBody = (sec) =>
+      sec.id === 'description' ? (
+        <>
+          <h3 className="pdp-card__subtitle">À propos de ce soin</h3>
+          <p>{product.summary}</p>
+          <p className="pdp-desc__meta"><strong>Type de peau :</strong> {product.skinTypes}</p>
+        </>
+      ) : sec.body;
     return (
-      <div className="pdp__accordions">
-        {sections.filter((s) => s.id !== 'description').map((s) => (
-          <Accordion key={s.id} title={s.title}>{s.body}</Accordion>
+      <section className="pdp-card" aria-label="Informations produit">
+        {sections.map((sec) => (
+          <Accordion key={sec.id} title={sec.title} icon={icons[sec.id]} defaultOpen={sec.id === 'description'}>
+            {mobileBody(sec)}
+          </Accordion>
         ))}
-      </div>
+      </section>
     );
   }
 
