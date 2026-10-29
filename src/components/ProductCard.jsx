@@ -37,7 +37,10 @@ function ProductCard({ product, index = 0, isFavorite, onToggleFavorite, onAdd, 
       </button>
       <span className="product-card__badge"><Leaf size={13} aria-hidden="true" />{product.categories.map((c) => CATEGORY_LABELS[c]).join(' · ')}</span>
       <Link to={url} className="product-card__media" tabIndex={-1} aria-hidden="true">
-        <ProductImage image={scene ? product.sceneImage : product.cardImage} />
+        <ProductImage image={scene ? product.image : product.cardImage} />
+        {scene && product.hoverImage && (
+          <ProductImage image={product.hoverImage} className="product-card__hover" />
+        )}
       </Link>
       <div className="product-card__body">
         <h3 className="product-card__name">

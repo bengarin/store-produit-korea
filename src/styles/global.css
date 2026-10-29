@@ -389,7 +389,19 @@ ul, ol { padding: 0; }
 }
 
 /* Carte « en situation » (carrousel d'accueil) : visuel produit + ingrédient, un seul bouton */
+.product-card--scene .product-card__media { position: relative; }
 .product-card--scene .product-card__media .product-image { aspect-ratio: 4 / 3; }
+/* Deuxième photo (vraie photo du même produit) superposée, révélée en fondu au survol — souris uniquement */
+.product-card--scene .product-card__media .product-card__hover { position: absolute; inset: 0; opacity: 0; transition: opacity 0.3s var(--ease); pointer-events: none; }
+.product-card--scene .product-card__hover.product-image--contain { background: #f6f0e7; }
+@media (hover: hover) and (pointer: fine) {
+  .product-card--scene .product-card__media:hover .product-card__hover { opacity: 1; }
+  .product-card--scene:hover .product-image img { transform: none; }
+  .product-card--scene .product-card__media:hover .product-image img { transform: scale(1.03); }
+}
+@media (hover: none) {
+  .product-card__hover { display: none; }
+}
 .product-card--scene .product-card__actions { grid-template-columns: minmax(0, 1fr); }
 .product-card--scene .product-card__body { padding: 16px 18px 18px; }
 .product-card--scene .product-card__price { padding-top: 10px; margin-bottom: 14px; }

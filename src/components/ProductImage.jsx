@@ -16,7 +16,7 @@ export default function ProductImage({ image, eager = false, className = '', pos
         decoding="async"
         width="900"
         height="900"
-        style={position ? { objectPosition: position } : undefined}
+        style={position || image.position ? { objectPosition: position || image.position } : undefined}
       />
     </div>
   );

@@ -5,7 +5,8 @@
  *  - cardImage     : packshot net, utilisé dans les cartes, le panier, le récapitulatif
  *  - mainImage     : première image de la fiche produit
  *  - galleryImages : toutes les images de la fiche (la 1re = mainImage)
- *  - sceneImage    : visuel « en situation » (produit + ingrédient) pour l'accueil
+ *  - sceneImage / image : visuel « en situation » (produit + ingrédient) pour l'accueil
+ *  - hoverImage    : vraie photo secondaire du même produit, affichée au survol
  *
  * `fit` :
  *  - 'contain' → packshot sur fond blanc, posé sur fond crème (rien n'est rogné)
@@ -107,6 +108,24 @@ const BASE_IMAGES = {
   ),
 };
 
+// Image au survol (carrousel d'accueil) : une VRAIE photo du même produit, prise dans sa galerie.
+// Quret n'a pas de photo d'ambiance : on montre son coffret (pot + tube).
+const HOVER_ALT_INDEX = {
+  'baroness-aloe-vera-gel': 2, // tenu en main
+  'some-by-mi-yuja-niacin-cream': 1, // avec des tranches de yuja
+  'biovene-eye-patches': 3, // pot ouvert et concombre
+  'vitamin-collagen-vital-cream': 1, // coffret pot + tube (pas de photo d'ambiance fournie)
+  'orjena-power-collagen-emulsion': 2, // tenu en main
+};
+
+// Cadrage de la photo au survol (format 4:3) pour garder la marque visible.
+const HOVER_POSITION = { 'some-by-mi-yuja-niacin-cream': '50% 88%' };
+
 export const PRODUCT_IMAGES = Object.fromEntries(
-  Object.entries(BASE_IMAGES).map(([id, imgs]) => [id, { ...imgs, sceneImage: SCENES[id] || imgs.mainImage }]),
+  Object.entries(BASE_IMAGES).map(([id, imgs]) => {
+    const image = SCENES[id] || imgs.mainImage;
+    const alt = imgs.galleryImages[HOVER_ALT_INDEX[id]];
+    const hoverImage = alt ? { ...alt, position: HOVER_POSITION[id] } : null;
+    return [id, { ...imgs, sceneImage: image, image, hoverImage }];
+  }),
 );
