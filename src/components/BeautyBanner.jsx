@@ -17,7 +17,7 @@ export default function BeautyBanner() {
             </div>
           )}
           <div className="beauty-banner__content">
-            <p className="eyebrow">Une routine tout en douceur</p>
+            <p className="eyebrow">Tout en douceur</p>
             <h2 className="beauty-banner__title" id="banner-title">Révélez votre éclat naturel</h2>
             <p className="beauty-banner__text">Des soins coréens et naturels pour accompagner votre routine, jour après jour.</p>
             <Link to="/produits" className="btn btn--primary">

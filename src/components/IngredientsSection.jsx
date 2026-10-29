@@ -43,13 +43,15 @@ export default function IngredientsSection() {
           <p className="eyebrow">Les ingrédients à l’honneur</p>
           <h2 className="section-title" id="ingredients-title">La nature au cœur de votre routine</h2>
           <p className="section-intro">Découvrez les ingrédients qui inspirent notre sélection de soins.</p>
-          <Link to="/produits" className="btn btn--primary ingredients__cta">
-            Découvrir les soins <ArrowRight size={16} aria-hidden="true" />
-          </Link>
         </Reveal>
         <ul className="ingredients__list">
           {INGREDIENTS.map((ing, i) => <Ingredient key={ing.id} ingredient={ing} index={i} />)}
         </ul>
+        <div className="ingredients__cta">
+          <Link to="/produits" className="btn btn--primary">
+            Découvrir les soins <ArrowRight size={16} aria-hidden="true" />
+          </Link>
+        </div>
       </div>
     </section>
   );

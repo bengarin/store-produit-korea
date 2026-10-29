@@ -5,6 +5,7 @@
  *  - cardImage     : packshot net, utilisé dans les cartes, le panier, le récapitulatif
  *  - mainImage     : première image de la fiche produit
  *  - galleryImages : toutes les images de la fiche (la 1re = mainImage)
+ *  - sceneImage    : visuel « en situation » (produit + ingrédient) pour l'accueil
  *
  * `fit` :
  *  - 'contain' → packshot sur fond blanc, posé sur fond crème (rien n'est rogné)
@@ -39,13 +40,32 @@ import orjPackshot from '../assets/products/orjena-power-collagen-emulsion/packs
 import orjBox from '../assets/products/orjena-power-collagen-emulsion/box.webp';
 import orjInHand from '../assets/products/orjena-power-collagen-emulsion/in-hand.webp';
 
+// Visuels « en situation » : packshot réel détouré posé sur la photo de son ingrédient (rituel, carrousel d'accueil).
+import aloeScene from '../assets/scenes/baroness-aloe-vera-gel.webp';
+import aloeScene640 from '../assets/scenes/baroness-aloe-vera-gel-640.webp';
+import yujaScene from '../assets/scenes/some-by-mi-yuja-niacin-cream.webp';
+import yujaScene640 from '../assets/scenes/some-by-mi-yuja-niacin-cream-640.webp';
+import bioScene from '../assets/scenes/biovene-eye-patches.webp';
+import bioScene640 from '../assets/scenes/biovene-eye-patches-640.webp';
+import vitScene from '../assets/scenes/vitamin-collagen-vital-cream.webp';
+import vitScene640 from '../assets/scenes/vitamin-collagen-vital-cream-640.webp';
+import orjScene from '../assets/scenes/orjena-power-collagen-emulsion.webp';
+import orjScene640 from '../assets/scenes/orjena-power-collagen-emulsion-640.webp';
+
 const img = (src, alt, kind, fit = 'contain') => ({ src, alt, kind, fit });
+const SCENES = {
+  'baroness-aloe-vera-gel': { src: aloeScene, src640: aloeScene640, alt: 'Baroness Aloe Vera Soothing Gel parmi des feuilles d’aloe vera', kind: 'scene', fit: 'cover' },
+  'some-by-mi-yuja-niacin-cream': { src: yujaScene, src640: yujaScene640, alt: 'SOME BY MI Yuja Niacin Cream entourée de fruits de yuja', kind: 'scene', fit: 'cover' },
+  'biovene-eye-patches': { src: bioScene, src640: bioScene640, alt: 'Patchs BIOVÈNE entourés de rondelles de concombre', kind: 'scene', fit: 'cover' },
+  'vitamin-collagen-vital-cream': { src: vitScene, src640: vitScene640, alt: 'Crème Quret Vitamin Collagen et son tube près d’une texture crème', kind: 'scene', fit: 'cover' },
+  'orjena-power-collagen-emulsion': { src: orjScene, src640: orjScene640, alt: 'Flacon ORJENA Power Collagen Emulsion près d’une texture crème', kind: 'scene', fit: 'cover' },
+};
 
 function entry(gallery) {
   return { cardImage: gallery[0], mainImage: gallery[0], galleryImages: gallery };
 }
 
-export const PRODUCT_IMAGES = {
+const BASE_IMAGES = {
   'baroness-aloe-vera-gel': entry(
     [
       img(aloePackshot, 'Pot Baroness Aloe Vera Soothing Gel, vue de face', 'packshot'),
@@ -86,3 +106,7 @@ export const PRODUCT_IMAGES = {
     ],
   ),
 };
+
+export const PRODUCT_IMAGES = Object.fromEntries(
+  Object.entries(BASE_IMAGES).map(([id, imgs]) => [id, { ...imgs, sceneImage: SCENES[id] || imgs.mainImage }]),
+);

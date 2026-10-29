@@ -68,7 +68,7 @@ export default function ProductCarousel({ products, label = 'Produits' }) {
       <div className="carousel__track" ref={track} onScroll={onScroll} tabIndex={0}>
         {products.map((p, i) => (
           <div className="carousel__slide" key={p.id} role="group" aria-roledescription="diapositive" aria-label={`${i + 1} sur ${products.length}`}>
-            <ProductCard product={p} animate={false} isFavorite={favorites.includes(p.id)} onToggleFavorite={toggleFavorite} onAdd={handleAdd} />
+            <ProductCard product={p} variant="scene" animate={false} isFavorite={favorites.includes(p.id)} onToggleFavorite={toggleFavorite} onAdd={handleAdd} />
           </div>
         ))}
       </div>

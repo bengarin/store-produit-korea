@@ -6,7 +6,8 @@ import useReveal from '../hooks/useReveal.js';
 import { formatPrice } from '../utils/currency.js';
 import { CATEGORY_LABELS } from '../data/products.js';
 
-function ProductCard({ product, index = 0, isFavorite, onToggleFavorite, onAdd, animate = true }) {
+function ProductCard({ product, index = 0, isFavorite, onToggleFavorite, onAdd, animate = true, variant = 'default' }) {
+  const scene = variant === 'scene';
   const url = `/produits/${product.id}`;
   const [revealRef, visible] = useReveal();
   const [added, setAdded] = useState(false);
@@ -23,7 +24,7 @@ function ProductCard({ product, index = 0, isFavorite, onToggleFavorite, onAdd, 
   return (
     <article
       ref={revealRef}
-      className={`product-card ${animate ? `reveal ${visible ? 'is-visible' : ''}` : 'is-visible'}`}
+      className={`product-card ${scene ? 'product-card--scene' : ''} ${animate ? `reveal ${visible ? 'is-visible' : ''}` : 'is-visible'}`}
       style={animate ? { '--reveal-delay': `${Math.min(index, 5) * 80}ms` } : undefined}
     >
       <button
@@ -36,7 +37,7 @@ function ProductCard({ product, index = 0, isFavorite, onToggleFavorite, onAdd, 
       </button>
       <span className="product-card__badge"><Leaf size={13} aria-hidden="true" />{product.categories.map((c) => CATEGORY_LABELS[c]).join(' · ')}</span>
       <Link to={url} className="product-card__media" tabIndex={-1} aria-hidden="true">
-        <ProductImage image={product.cardImage} />
+        <ProductImage image={scene ? product.sceneImage : product.cardImage} />
       </Link>
       <div className="product-card__body">
         <h3 className="product-card__name">
@@ -45,7 +46,7 @@ function ProductCard({ product, index = 0, isFavorite, onToggleFavorite, onAdd, 
         <p className="product-card__line">{product.cardLine}</p>
         <p className="product-card__price">{formatPrice(product.price)}</p>
         <div className="product-card__actions">
-          <Link to={url} className="btn btn--soft">Voir détails</Link>
+          {!scene && <Link to={url} className="btn btn--soft">Voir détails</Link>}
           <button
             className={`btn btn--primary ${added ? 'is-added' : ''}`}
             onClick={handleAdd}
