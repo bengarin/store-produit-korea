@@ -173,20 +173,21 @@ ul, ol { padding: 0; }
    Accueil — hero
    ========================================================================== */
 .hero { position: relative; background: var(--bg); }
-.hero__inner { display: flex; flex-direction: column; max-width: 560px; margin-inline: auto; }
-.hero__copy { position: relative; z-index: 2; padding: clamp(20px, 6vw, 32px) var(--gutter) 0; }
-.hero h1 { font-family: var(--font-serif); font-weight: 600; font-size: clamp(31px, 9.4vw, 42px); line-height: 1.02; letter-spacing: -0.01em; color: var(--text); text-wrap: balance; }
-.hero__text { margin: var(--s-3) 0 var(--s-4); font-size: 14.5px; line-height: 1.5; color: var(--text-2); max-width: 330px; }
-.hero .btn { min-height: 46px; padding-inline: 20px; font-size: 15px; }
-.hero h1 { color: var(--green-deep); }
-/* Mobile : cadre limité à la bande des produits (38 % → 88 % de la hauteur de l'image, ratio 941×836).
-   Le mur vide du haut et le sol du bas sont hors cadre ; les emballages restent entiers.
-   Le haut du cadre remonte sous le CTA et se fond dans le crème du texte. */
-.hero__visual { position: relative; width: 100%; aspect-ratio: 941 / 836; margin-top: -22px; }
+/* Mobile : texte et photo dans le même cadre (comme la référence) — la photo passe derrière le texte. */
+.hero__inner { display: grid; max-width: 560px; margin-inline: auto; }
+.hero__copy, .hero__visual { grid-area: 1 / 1; }
+.hero__copy { position: relative; z-index: 2; align-self: start; padding: 22px var(--gutter) 0; }
+.hero h1 { font-family: var(--font-serif); font-weight: 600; font-size: clamp(28px, 8vw, 38px); line-height: 1.04; letter-spacing: -0.01em; color: var(--green-deep); text-wrap: balance; }
+.hero__text { max-width: 320px; margin: 10px 0 16px; font-size: 14px; line-height: 1.5; color: var(--text-2); }
+.hero .btn { min-height: 44px; padding-inline: 18px; font-size: 14.5px; }
+.hero .eyebrow { margin-bottom: 8px; }
+/* Photo portrait affichée de 6 % à 83 % de sa hauteur : produits entiers, mur vide et sol en trop hors cadre. */
+.hero__visual { position: relative; width: 100%; aspect-ratio: 941 / 1287; }
 .hero__visual picture { display: block; height: 100%; }
-.hero__visual img { position: absolute; inset: 0; display: block; width: 100%; height: 100%; object-fit: cover; object-position: 50% 76%; }
-.hero__visual::before { content: ''; position: absolute; inset: 0 0 auto; z-index: 1; height: 34%; pointer-events: none; background: linear-gradient(180deg, var(--bg) 0%, rgba(250, 246, 239, 0.85) 35%, rgba(250, 246, 239, 0) 100%); }
-.hero__visual::after { content: ''; position: absolute; inset: auto 0 0; z-index: 1; height: 14%; pointer-events: none; background: linear-gradient(0deg, var(--bg) 0%, rgba(250, 246, 239, 0) 100%); }
+.hero__visual img { position: absolute; inset: 0; display: block; width: 100%; height: 100%; object-fit: cover; object-position: 50% 26%; }
+/* Voile crème derrière le texte (lisibilité) qui s'efface vers les produits, + fondu bas vers la section suivante. */
+.hero__visual::before { content: ''; position: absolute; inset: 0 0 auto; z-index: 1; height: 50%; pointer-events: none; background: linear-gradient(180deg, rgba(250, 246, 239, 0.82) 0%, rgba(250, 246, 239, 0.6) 55%, rgba(250, 246, 239, 0) 100%); }
+.hero__visual::after { content: ''; position: absolute; inset: auto 0 0; z-index: 1; height: 6%; pointer-events: none; background: linear-gradient(0deg, var(--bg) 0%, rgba(250, 246, 239, 0) 100%); }
 
 /* Tablette : l'image (560 px max) ne couvre pas toute la largeur → bords latéraux adoucis. */
 @media (min-width: 561px) and (max-width: 999px) {
@@ -694,18 +695,19 @@ select { appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmln
   /* Desktop : le visuel paysage occupe toute la largeur (max 1600 px) ; le texte se pose
      sur la zone vide de gauche (mur + feuilles floues), les produits restent entiers à droite.
      Seule une fine bande de feuillage en haut (≈ 12 %) est hors cadre. */
-  .hero { background: var(--bg); }
-  .hero__inner { position: relative; display: block; max-width: 1600px; margin-inline: auto; aspect-ratio: 1672 / 830; }
-  .hero { overflow: hidden; }
+  /* Desktop : grande carte arrondie, texte à gauche, produits entiers à droite (comme la référence). */
+  .hero { padding: 16px var(--gutter) 0; }
+  .hero__inner { position: relative; display: block; max-width: 1400px; margin-inline: auto; aspect-ratio: 1672 / 800; overflow: hidden; border-radius: 24px; border: 1px solid var(--border); }
   .hero__visual { position: absolute; inset: 0; margin: 0; aspect-ratio: auto; }
   .hero__visual::after { display: none; }
   .hero__visual picture { display: block; height: 100%; }
-  .hero__visual img { height: 100%; object-fit: cover; object-position: 50% 100%; }
-  .hero__visual::before { inset: 0 auto 0 0; width: 50%; height: auto; background: linear-gradient(90deg, rgba(250, 246, 239, 0.9) 0%, rgba(250, 246, 239, 0.72) 50%, rgba(250, 246, 239, 0) 100%); }
-  /* Texte aligné sur la grille du site (même bord gauche que le logo), arrêté avant les produits (≈ 38 % de l'image). */
-  .hero__copy { --copy-left: max(var(--gutter), calc((100% - var(--max-w)) / 2 + var(--gutter))); position: absolute; z-index: 2; top: 50%; left: var(--copy-left); width: calc(35% - var(--copy-left)); min-width: 300px; padding: 0; transform: translateY(-50%); }
-  .hero h1 { font-size: clamp(34px, 3.25vw, 54px); }
-  .hero__text { max-width: 420px; font-size: clamp(14.5px, 1.1vw, 17px); }
+  .hero__visual img { height: 100%; object-fit: cover; object-position: 50% 100%; -webkit-mask-image: none; mask-image: none; }
+  .hero__visual::before { inset: 0 auto 0 0; width: 48%; height: auto; background: linear-gradient(90deg, rgba(250, 246, 239, 0.88) 0%, rgba(250, 246, 239, 0.7) 55%, rgba(250, 246, 239, 0) 100%); }
+  /* Texte arrêté à 35 % de la largeur : le premier produit commence vers 37 %. */
+  .hero__copy { position: absolute; z-index: 2; top: 50%; left: 5.5%; width: 29.5%; padding: 0; transform: translateY(-50%); }
+  .hero h1 { font-size: clamp(34px, 3.3vw, 52px); }
+  .hero__text { max-width: 400px; margin: 14px 0 22px; font-size: clamp(14.5px, 1.1vw, 17px); }
+  .hero .btn { min-height: 50px; padding-inline: 24px; font-size: 15.5px; }
 
   .product-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 28px; }
   .product-card__media .product-image { aspect-ratio: 1 / 0.9; }
@@ -720,11 +722,6 @@ select { appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmln
 }
 
 @media (min-width: 1200px) {
-}
-
-/* Au-delà de 1600 px : le visuel reste centré, ses bords se fondent dans le crème. */
-@media (min-width: 1601px) {
-  .hero__visual img { -webkit-mask-image: linear-gradient(90deg, transparent 0%, #000 6%, #000 94%, transparent 100%); mask-image: linear-gradient(90deg, transparent 0%, #000 6%, #000 94%, transparent 100%); }
 }
 
 @media (prefers-reduced-motion: reduce) {
