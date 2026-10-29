@@ -5,7 +5,6 @@
  *  - cardImage     : packshot net, utilisé dans les cartes, le panier, le récapitulatif
  *  - mainImage     : première image de la fiche produit
  *  - galleryImages : toutes les images de la fiche (la 1re = mainImage)
- *  - heroImage     : version détourée (fond transparent) pour la composition de l'accueil
  *
  * `fit` :
  *  - 'contain' → packshot sur fond blanc, posé sur fond crème (rien n'est rogné)
@@ -19,36 +18,31 @@
 import aloePackshot from '../assets/products/baroness-aloe-vera-gel/packshot.webp';
 import aloeSplash from '../assets/products/baroness-aloe-vera-gel/splash.webp';
 import aloeInHand from '../assets/products/baroness-aloe-vera-gel/in-hand.webp';
-import aloeCutout from '../assets/products/baroness-aloe-vera-gel/cutout.webp';
 // SOME BY MI Yuja Niacin Anti Blemish Cream
 import yujaPackshot from '../assets/products/some-by-mi-yuja-niacin-cream/packshot.webp';
 import yujaLifestyle from '../assets/products/some-by-mi-yuja-niacin-cream/lifestyle.webp';
 import yujaTexture from '../assets/products/some-by-mi-yuja-niacin-cream/texture.webp';
 import yujaInUse from '../assets/products/some-by-mi-yuja-niacin-cream/in-use.webp';
-import yujaCutout from '../assets/products/some-by-mi-yuja-niacin-cream/cutout.webp';
 // BIOVÈNE Tripeptide Cucumber Age-Defy Under Eye Patches
 import bioPackshot from '../assets/products/biovene-eye-patches/packshot.webp';
 import bioTexture from '../assets/products/biovene-eye-patches/texture.webp';
 import bioBox from '../assets/products/biovene-eye-patches/box.webp';
 import bioLifestyle from '../assets/products/biovene-eye-patches/lifestyle.webp';
 import bioLifestyleBox from '../assets/products/biovene-eye-patches/lifestyle-box.webp';
-import bioCutout from '../assets/products/biovene-eye-patches/cutout.webp';
 // Quret Vitamin Collagen Vital Cream
 import vitPackshot from '../assets/products/vitamin-collagen-vital-cream/packshot.webp';
 import vitSetBox from '../assets/products/vitamin-collagen-vital-cream/set-box.webp';
 import vitTube from '../assets/products/vitamin-collagen-vital-cream/tube.webp';
 import vitTubeBox from '../assets/products/vitamin-collagen-vital-cream/tube-box.webp';
-import vitCutout from '../assets/products/vitamin-collagen-vital-cream/cutout.webp';
 // ORJENA Power Collagen Emulsion
 import orjPackshot from '../assets/products/orjena-power-collagen-emulsion/packshot.webp';
 import orjBox from '../assets/products/orjena-power-collagen-emulsion/box.webp';
 import orjInHand from '../assets/products/orjena-power-collagen-emulsion/in-hand.webp';
-import orjCutout from '../assets/products/orjena-power-collagen-emulsion/cutout.webp';
 
 const img = (src, alt, kind, fit = 'contain') => ({ src, alt, kind, fit });
 
-function entry(gallery, heroSrc) {
-  return { cardImage: gallery[0], mainImage: gallery[0], galleryImages: gallery, heroImage: { src: heroSrc, alt: '' } };
+function entry(gallery) {
+  return { cardImage: gallery[0], mainImage: gallery[0], galleryImages: gallery };
 }
 
 export const PRODUCT_IMAGES = {
@@ -58,7 +52,6 @@ export const PRODUCT_IMAGES = {
       img(aloeSplash, 'Pot Baroness Aloe Vera entouré de feuilles d’aloe vera', 'ingredient'),
       img(aloeInHand, 'Pot Baroness Aloe Vera Soothing Gel tenu en main', 'in-hand', 'cover'),
     ],
-    aloeCutout,
   ),
   'some-by-mi-yuja-niacin-cream': entry(
     [
@@ -67,7 +60,6 @@ export const PRODUCT_IMAGES = {
       img(yujaTexture, 'Texture de la crème SOME BY MI Yuja Niacin', 'texture', 'cover'),
       img(yujaInUse, 'Application de la crème SOME BY MI Yuja Niacin sur la joue', 'in-use', 'cover'),
     ],
-    yujaCutout,
   ),
   'biovene-eye-patches': entry(
     [
@@ -77,7 +69,6 @@ export const PRODUCT_IMAGES = {
       img(bioLifestyle, 'Pot de patchs BIOVÈNE ouvert avec des rondelles de concombre', 'lifestyle', 'cover'),
       img(bioLifestyleBox, 'Pot et boîte BIOVÈNE avec des rondelles de concombre', 'lifestyle', 'cover'),
     ],
-    bioCutout,
   ),
   'vitamin-collagen-vital-cream': entry(
     [
@@ -86,7 +77,6 @@ export const PRODUCT_IMAGES = {
       img(vitTube, 'Tube Quret Vitamin Collagen Vital Cream', 'packshot'),
       img(vitTubeBox, 'Tube Quret Vitamin Collagen Vital Cream et sa boîte', 'packaging'),
     ],
-    vitCutout,
   ),
   'orjena-power-collagen-emulsion': entry(
     [
@@ -94,6 +84,5 @@ export const PRODUCT_IMAGES = {
       img(orjBox, 'Flacon ORJENA Power Collagen Emulsion et sa boîte', 'packaging'),
       img(orjInHand, 'Flacon ORJENA Power Collagen Emulsion tenu en main', 'in-hand'),
     ],
-    orjCutout,
   ),
 };

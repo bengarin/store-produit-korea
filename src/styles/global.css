@@ -171,24 +171,23 @@ ul, ol { padding: 0; }
 /* ==========================================================================
    Accueil — hero
    ========================================================================== */
-.hero { position: relative; overflow: hidden; height: min(177.7vw, 780px); background: #f1e7d8; isolation: isolate; }
-/* Le média garde le ratio exact de la photo et reste collé en bas : le podium ne bouge jamais. */
-.hero__media { position: absolute; left: 0; right: 0; bottom: 0; aspect-ratio: 941 / 1672; z-index: -1; }
-.hero__bg { width: 100%; height: 100%; object-fit: cover; }
-.hero__media::after { content: ''; position: absolute; inset: 0 0 auto; height: 55%; background: linear-gradient(180deg, rgba(250, 246, 239, 0.88) 0%, rgba(250, 246, 239, 0.55) 60%, rgba(250, 246, 239, 0) 100%); }
-.hero__product { position: absolute; z-index: 1; height: auto; filter: drop-shadow(0 10px 12px rgba(80, 60, 30, 0.2)); }
-/* Mobile : left/width en % de la largeur, bottom en % de la hauteur de la photo. */
-.p-yuja { left: 25%; width: 29%; bottom: 23%; }
-.p-orjena { left: 57%; width: 11%; bottom: 22.5%; }
-.p-aloe { left: 3%; width: 30%; bottom: 11%; }
-.p-vitamin { left: 61%; width: 34%; bottom: 10.5%; }
-.p-biovene { left: 33%; width: 28%; bottom: 8.5%; }
-
-.hero__content { position: relative; padding-top: clamp(24px, 7vw, 40px); }
-.hero__copy { max-width: 400px; }
+.hero { position: relative; overflow: hidden; background: linear-gradient(180deg, var(--bg) 0%, var(--bg) 40%, #f1e1cc 100%); }
+.hero__inner { display: flex; flex-direction: column; max-width: 560px; margin-inline: auto; }
+.hero__copy { position: relative; z-index: 2; padding: clamp(24px, 7vw, 40px) var(--gutter) 0; }
 .hero h1 { font-family: var(--font-serif); font-weight: 600; font-size: clamp(31px, 9.6vw, 42px); line-height: 1.02; letter-spacing: -0.01em; color: var(--text); text-wrap: balance; }
 .hero__text { margin: var(--s-4) 0 var(--s-5); font-size: 14.5px; color: var(--text-2); max-width: 330px; }
 .hero .btn { padding-inline: 22px; }
+/* Mobile : l'image entière (ratio 941×1672) passe sous le texte.
+   Son tiers haut n'est qu'un mur vide : on le remonte sous le texte et on le fond dans le crème.
+   Les produits commencent à ~45 % de la hauteur de l'image → toujours sous le bouton. */
+.hero__visual { --w: min(100vw, 560px); position: relative; width: 100%; margin-top: calc(var(--w) * -0.6); }
+.hero__visual img { display: block; width: 100%; height: auto; object-fit: contain; }
+.hero__visual::before { content: ''; position: absolute; inset: 0 0 auto; z-index: 1; height: 47%; pointer-events: none; background: linear-gradient(180deg, var(--bg) 0%, rgba(250, 246, 239, 0.94) 38%, rgba(250, 246, 239, 0) 100%); }
+
+/* Tablette : l'image (560 px max) ne couvre pas toute la largeur → bords latéraux adoucis. */
+@media (min-width: 561px) and (max-width: 999px) {
+  .hero__visual img { -webkit-mask-image: linear-gradient(90deg, transparent 0%, #000 10%, #000 90%, transparent 100%); mask-image: linear-gradient(90deg, transparent 0%, #000 10%, #000 90%, transparent 100%); }
+}
 
 /* ---------- Bandeau de réassurance ---------- */
 .trust { list-style: none; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--s-2); }
@@ -424,20 +423,6 @@ select { appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmln
    Tablette (≥ 700px)
    ========================================================================== */
 @media (min-width: 700px) {
-  .hero { height: min(56.28vw, 640px); }
-  .hero__media { aspect-ratio: 1672 / 941; }
-  .hero__media::after { inset: 0 auto 0 0; width: 62%; height: auto; background: linear-gradient(90deg, rgba(250, 246, 239, 0.9) 0%, rgba(250, 246, 239, 0.72) 55%, rgba(250, 246, 239, 0) 100%); }
-  .hero__content { height: 100%; display: flex; align-items: center; padding-top: 0; }
-  .hero__copy { max-width: min(46%, 520px); }
-  .hero h1 { font-size: clamp(34px, 4.7vw, 60px); }
-  .hero__text { max-width: 420px; font-size: clamp(14px, 1.35vw, 16.5px); }
-  /* Desktop : positions sur le double podium de droite. */
-  .p-yuja { left: 60%; width: 10.5%; bottom: 33.5%; }
-  .p-orjena { left: 74.5%; width: 4.4%; bottom: 33%; }
-  .p-aloe { left: 50%; width: 12%; bottom: 16.5%; }
-  .p-biovene { left: 62.5%; width: 12%; bottom: 14%; }
-  .p-vitamin { left: 74%; width: 13.5%; bottom: 16.5%; }
-
   .trust--band { padding-block: var(--s-8); }
   .trust--band .trust__item { font-size: var(--fs-sm); }
 
@@ -492,6 +477,15 @@ select { appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmln
   .site-nav a:hover, .site-nav a.active { color: var(--green-deep); }
   .site-nav a.active::after { content: ''; position: absolute; left: 0; right: 0; bottom: 0; height: 1.5px; background: var(--green); }
 
+  .hero { background: var(--bg); }
+  .hero__inner { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 0.92fr); align-items: center; gap: clamp(32px, 4vw, 64px); max-width: var(--max-w); padding: var(--s-8) var(--gutter); }
+  .hero__copy { padding: 0; }
+  .hero h1 { font-size: clamp(40px, 4.4vw, 60px); }
+  .hero__text { max-width: 440px; font-size: 16.5px; }
+  /* Desktop : cadre aux proportions de la zone produits ; seul le mur vide du haut est hors cadre. */
+  .hero__visual { margin: 0; aspect-ratio: 941 / 1060; }
+  .hero__visual img { height: 100%; object-fit: cover; object-position: 50% 92%; -webkit-mask-image: linear-gradient(180deg, transparent 0%, #000 16%, #000 90%, transparent 100%), linear-gradient(90deg, transparent 0%, #000 12%, #000 92%, transparent 100%); -webkit-mask-composite: source-in; mask-image: linear-gradient(180deg, transparent 0%, #000 16%, #000 90%, transparent 100%), linear-gradient(90deg, transparent 0%, #000 12%, #000 92%, transparent 100%); mask-composite: intersect; }
+  .hero__visual::before { display: none; }
   .trust--hero { display: grid; grid-template-columns: repeat(3, auto); justify-content: start; gap: var(--s-8); margin-top: var(--s-8); }
   .trust--hero .trust__icon { width: 42px; height: 42px; }
   .trust--band { display: none; }

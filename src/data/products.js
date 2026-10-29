@@ -194,7 +194,7 @@ export const PRODUCTS = [
   },
 ];
 
-// Rattache les photos à chaque produit (cardImage, mainImage, galleryImages, heroImage).
+// Rattache les photos à chaque produit (cardImage, mainImage, galleryImages).
 PRODUCTS.forEach((p) => Object.assign(p, PRODUCT_IMAGES[p.id]));
 
 export const getProductById = (id) => PRODUCTS.find((p) => p.id === id);

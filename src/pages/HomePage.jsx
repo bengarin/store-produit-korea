@@ -6,17 +6,8 @@ import TrustBar from '../components/TrustBar.jsx';
 import SiteFooter from '../components/SiteFooter.jsx';
 import ProductGrid, { CategoryChips } from '../components/ProductGrid.jsx';
 import { PRODUCTS, CATALOG_IS_PLACEHOLDER } from '../data/products.js';
-import heroPortrait from '../assets/backgrounds/podium-portrait.webp';
-import heroWide from '../assets/backgrounds/podium-wide.webp';
-
-// Ordre d'affichage sur le podium (de l'arrière vers l'avant).
-const STAGE = [
-  ['some-by-mi-yuja-niacin-cream', 'p-yuja'],
-  ['orjena-power-collagen-emulsion', 'p-orjena'],
-  ['baroness-aloe-vera-gel', 'p-aloe'],
-  ['vitamin-collagen-vital-cream', 'p-vitamin'],
-  ['biovene-eye-patches', 'p-biovene'],
-];
+import heroImg from '../assets/hero/nature-hero-products.webp';
+import heroImg640 from '../assets/hero/nature-hero-products-640.webp';
 
 export default function HomePage() {
   const [category, setCategory] = useState('all');
@@ -26,18 +17,7 @@ export default function HomePage() {
       <Header />
       <main>
         <section className="hero" aria-labelledby="hero-title">
-          {/* Le média garde le ratio exact de la photo : les produits restent alignés sur le podium. */}
-          <div className="hero__media" aria-hidden="true">
-            <picture>
-              <source media="(min-width: 700px)" srcSet={heroWide} width="1672" height="941" />
-              <img className="hero__bg" src={heroPortrait} alt="" width="941" height="1672" fetchpriority="high" />
-            </picture>
-            {STAGE.map(([id, cls]) => {
-              const p = PRODUCTS.find((x) => x.id === id);
-              return p ? <img key={id} className={`hero__product ${cls}`} src={p.heroImage.src} alt="" decoding="async" /> : null;
-            })}
-          </div>
-          <div className="hero__content container">
+          <div className="hero__inner">
             <div className="hero__copy">
               <p className="eyebrow">Révélez votre éclat naturel</p>
               <h1 id="hero-title">Des soins doux pour une peau plus belle chaque jour</h1>
@@ -48,6 +28,19 @@ export default function HomePage() {
                 Découvrir nos produits <ArrowDown size={17} />
               </Link>
               <TrustBar className="trust--hero" />
+            </div>
+            {/* Visuel produit fourni : image entière, jamais étirée ; seul le mur vide du haut se fond dans le crème. */}
+            <div className="hero__visual">
+              <img
+                src={heroImg}
+                srcSet={`${heroImg640} 640w, ${heroImg} 941w`}
+                sizes="(min-width: 900px) 46vw, (min-width: 600px) 520px, 100vw"
+                width="941"
+                height="1672"
+                alt="Les cinq soins NATURÉ sur des socles en pierre : gel Baroness Aloe Vera, crème SOME BY MI Yuja Niacin, émulsion ORJENA Power Collagen, patchs BIOVÈNE et crème Quret Vitamin Collagen"
+                fetchpriority="high"
+                decoding="async"
+              />
             </div>
           </div>
         </section>

@@ -26,7 +26,8 @@ npm run preview  # teste la version finale en local
 | **Prix des produits**                   | `src/data/products.js`                    | `price` de chaque produit               |
 | **Textes produits** (ingrédients, etc.) | `src/data/products.js`                    | `summary`, `ingredients`, `usage`…      |
 | **Photos des produits**                 | `src/assets/products/` + `products.js`    | voir ci-dessous                         |
-| **Fonds (podium, feuilles)**            | `src/assets/backgrounds/`                 | remplacer les fichiers                  |
+| **Visuel de l'accueil**                 | `src/assets/hero/`                        | `nature-hero-products.webp` (+ version 640 px) |
+| **Feuilles (page confirmation)**        | `src/assets/backgrounds/`                 | remplacer les fichiers                  |
 | **Couleurs / typo / arrondis**          | `src/styles/global.css`                   | variables en haut du fichier (`:root`)  |
 
 ### Photos produits
@@ -38,7 +39,6 @@ Les vraies photos sont rangées **un dossier par produit** dans `src/assets/prod
 | `cardImage` | packshot des cartes, du panier et du récapitulatif |
 | `mainImage` | première image de la fiche produit |
 | `galleryImages` | toutes les vues de la fiche (packshot, boîte, texture, ambiance…) |
-| `heroImage` | version détourée (`cutout.webp`) pour la composition de l'accueil |
 
 Chaque image a un `fit` : `contain` (packshot sur fond blanc, posé sur fond crème, rien n'est rogné) ou `cover` (photo d'ambiance qui remplit le cadre).
 
