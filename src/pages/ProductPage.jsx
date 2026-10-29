@@ -110,7 +110,7 @@ export default function ProductPage() {
             {CATALOG_IS_PLACEHOLDER && (
               <p className="pdp__note">
                 <Info size={13} aria-hidden="true" />
-                Contenu et visuel indicatifs : vérifiez la composition sur l’emballage.
+                Description indicative : vérifiez la composition sur l’emballage.
               </p>
             )}
 

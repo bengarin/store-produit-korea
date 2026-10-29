@@ -178,11 +178,11 @@ ul, ol { padding: 0; }
 .hero__media::after { content: ''; position: absolute; inset: 0 0 auto; height: 55%; background: linear-gradient(180deg, rgba(250, 246, 239, 0.88) 0%, rgba(250, 246, 239, 0.55) 60%, rgba(250, 246, 239, 0) 100%); }
 .hero__product { position: absolute; z-index: 1; height: auto; filter: drop-shadow(0 10px 12px rgba(80, 60, 30, 0.2)); }
 /* Mobile : left/width en % de la largeur, bottom en % de la hauteur de la photo. */
-.p-yuja { left: 30%; width: 31%; bottom: 19.8%; }
-.p-orjena { left: 57%; width: 38%; bottom: 18.6%; }
-.p-aloe { left: 3%; width: 35%; bottom: 10.8%; }
-.p-vitamin { left: 60%; width: 33%; bottom: 10.4%; }
-.p-biovene { left: 31%; width: 35%; bottom: 7.6%; }
+.p-yuja { left: 25%; width: 29%; bottom: 23%; }
+.p-orjena { left: 57%; width: 11%; bottom: 22.5%; }
+.p-aloe { left: 3%; width: 30%; bottom: 11%; }
+.p-vitamin { left: 61%; width: 34%; bottom: 10.5%; }
+.p-biovene { left: 33%; width: 28%; bottom: 8.5%; }
 
 .hero__content { position: relative; padding-top: clamp(24px, 7vw, 40px); }
 .hero__copy { max-width: 400px; }
@@ -245,16 +245,14 @@ ul, ol { padding: 0; }
   .pdp__add { font-size: 14px; gap: 6px; }
 }
 
-/* ---------- Packshots ---------- */
-.product-image { position: relative; overflow: hidden; display: grid; place-items: center; background-color: var(--surface-2); background-size: cover; background-repeat: no-repeat; }
-.product-image img { width: 100%; height: 100%; object-fit: contain; padding: 9%; transition: transform 0.4s var(--ease); }
-.product-image--plain { background: linear-gradient(180deg, #fbf7f1 0%, var(--surface-2) 100%); }
-.product-image--podium, .product-image--duo { place-items: initial; }
-.product-image--podium { background-position: 58% 60%; }
-.product-image--podium img, .product-image--duo img { position: absolute; padding: 0; height: auto; width: 46%; transform: translateX(-50%); filter: drop-shadow(0 10px 10px rgba(80, 60, 30, 0.2)); }
-.product-image--podium img { left: 57%; bottom: 20%; }
-.product-image--duo { background-position: 68% 70%; }
-.product-image--duo img { left: 58%; bottom: 22%; }
+/* ---------- Photos produits ---------- */
+/* contain : packshot sur fond blanc → "multiply" fond le blanc dans le crème, rien n'est rogné.
+   cover   : photo d'ambiance / texture → remplit le cadre. */
+.product-image { position: relative; overflow: hidden; background: var(--surface-2); }
+.product-image img { display: block; width: 100%; height: 100%; transition: transform 0.4s var(--ease); }
+.product-image--contain { background: #f6f0e7; }
+.product-image--contain img { object-fit: contain; padding: 4%; mix-blend-mode: multiply; }
+.product-image--cover img { object-fit: cover; object-position: center; }
 .product-card:hover .product-image img { transform: scale(1.03); }
 
 /* ==========================================================================
@@ -266,15 +264,14 @@ ul, ol { padding: 0; }
 
 /* Galerie */
 .gallery__main { aspect-ratio: 1 / 0.9; }
-.gallery__main.product-image--podium img, .gallery__main.product-image--duo img { width: 54%; }
-.gallery__main.product-image--plain img { padding: 16%; }
+.gallery__main.product-image--contain img { padding: 5%; }
 .gallery__thumbs { display: flex; gap: var(--s-2); padding: 10px var(--gutter) 0; overflow-x: auto; scrollbar-width: none; }
 .gallery__thumbs::-webkit-scrollbar { display: none; }
 .gallery__thumb { flex: none; width: 56px; height: 56px; border-radius: var(--r-sm); overflow: hidden; border: 1px solid var(--border); opacity: 0.72; transition: opacity 0.2s, border-color 0.2s, box-shadow 0.2s; }
 .gallery__thumb:hover { opacity: 1; }
 .gallery__thumb.is-active { opacity: 1; border-color: var(--green); box-shadow: inset 0 0 0 1px var(--green); }
 .gallery__thumb .product-image { width: 100%; height: 100%; }
-.gallery__thumb .product-image--plain img { padding: 8%; }
+.gallery__thumb .product-image--contain img { padding: 2%; }
 
 /* Contrôles posés sur l'image */
 .pdp__controls { position: absolute; inset: 0 0 auto; z-index: 2; display: flex; justify-content: space-between; padding: calc(10px + env(safe-area-inset-top)) max(10px, calc(var(--gutter) - 6px)) 0; pointer-events: none; }
@@ -332,7 +329,7 @@ ul, ol { padding: 0; }
 .cart-item { display: flex; gap: var(--s-4); padding: var(--s-5) 0; border-bottom: 1px solid var(--border); }
 .cart-item__thumb { flex: none; width: 84px; height: 84px; border-radius: var(--r); overflow: hidden; border: 1px solid var(--border); }
 .cart-item__thumb .product-image { width: 100%; height: 100%; }
-.cart-item__thumb .product-image img { padding: 6%; }
+.cart-item__thumb .product-image--contain img { padding: 2%; }
 .cart-item__info { flex: 1; min-width: 0; }
 .cart-item__name { font-size: var(--fs-md); font-weight: 600; line-height: 1.3; }
 .cart-item__row { display: flex; flex-wrap: wrap; align-items: center; gap: var(--s-1) var(--s-2); margin-top: var(--s-2); }
@@ -378,7 +375,7 @@ select { appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmln
 .recap__list { list-style: none; display: grid; gap: var(--s-3); }
 .recap__list li { display: flex; align-items: center; gap: var(--s-3); font-size: 14px; }
 .recap__thumb { flex: none; width: 52px; height: 52px; border-radius: var(--r-sm); border: 1px solid var(--border); }
-.recap__thumb img { padding: 6%; }
+.recap__thumb .product-image--contain img, .recap__thumb.product-image--contain img { padding: 2%; }
 .recap__name { flex: 1; min-width: 0; display: grid; font-weight: 500; line-height: 1.3; }
 .recap__name small { color: var(--muted); font-weight: 400; font-size: 12.5px; }
 .recap .summary { border-top: 0; padding-top: 0; }
@@ -435,11 +432,11 @@ select { appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmln
   .hero h1 { font-size: clamp(34px, 4.7vw, 60px); }
   .hero__text { max-width: 420px; font-size: clamp(14px, 1.35vw, 16.5px); }
   /* Desktop : positions sur le double podium de droite. */
-  .p-yuja { left: 59%; width: 12.5%; bottom: 31.5%; }
-  .p-orjena { left: 71%; width: 14%; bottom: 31%; }
-  .p-aloe { left: 49%; width: 15%; bottom: 15%; }
-  .p-biovene { left: 61%; width: 15%; bottom: 12.5%; }
-  .p-vitamin { left: 73.5%; width: 14%; bottom: 15%; }
+  .p-yuja { left: 60%; width: 10.5%; bottom: 33.5%; }
+  .p-orjena { left: 74.5%; width: 4.4%; bottom: 33%; }
+  .p-aloe { left: 50%; width: 12%; bottom: 16.5%; }
+  .p-biovene { left: 62.5%; width: 12%; bottom: 14%; }
+  .p-vitamin { left: 74%; width: 13.5%; bottom: 16.5%; }
 
   .trust--band { padding-block: var(--s-8); }
   .trust--band .trust__item { font-size: var(--fs-sm); }

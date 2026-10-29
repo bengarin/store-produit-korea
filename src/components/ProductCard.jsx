@@ -18,7 +18,7 @@ function ProductCard({ product, isFavorite, onToggleFavorite, onAdd }) {
         <Heart size={18} strokeWidth={1.6} />
       </button>
       <Link to={url} className="product-card__media" tabIndex={-1} aria-hidden="true">
-        <ProductImage image={product.images[0]} />
+        <ProductImage image={product.cardImage} />
       </Link>
       <div className="product-card__body">
         <p className="product-card__cat">{product.categories.map((c) => CATEGORY_LABELS[c]).join(' · ')}</p>

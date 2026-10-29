@@ -1,33 +1,30 @@
 import { useState } from 'react';
 import ProductImage from './ProductImage.jsx';
 
-/** Grande image + vignettes. Chaque photo est montrée dans plusieurs mises en scène. */
+/** Grande image + vignettes cliquables (packshot, emballage, texture, ambiance…). */
 export default function ProductGallery({ product }) {
-  const views = product.images.flatMap((image, i) =>
-    i === 0
-      ? [{ image, scene: 'podium' }, { image, scene: 'plain' }, { image, scene: 'duo' }]
-      : [{ image, scene: 'plain' }],
-  );
+  const images = product.galleryImages;
   const [active, setActive] = useState(0);
-  const current = views[active];
 
   return (
     <div className="gallery">
-      <ProductImage image={current.image} scene={current.scene} eager className="gallery__main" />
-      <div className="gallery__thumbs" role="tablist" aria-label="Photos du produit">
-        {views.map((v, i) => (
-          <button
-            key={`${v.image.src}-${v.scene}`}
-            role="tab"
-            aria-selected={i === active}
-            aria-label={`Photo ${i + 1}`}
-            className={`gallery__thumb ${i === active ? 'is-active' : ''}`}
-            onClick={() => setActive(i)}
-          >
-            <ProductImage image={v.image} scene={v.scene} />
-          </button>
-        ))}
-      </div>
+      <ProductImage image={images[active]} eager className="gallery__main" />
+      {images.length > 1 && (
+        <div className="gallery__thumbs" role="tablist" aria-label="Photos du produit">
+          {images.map((image, i) => (
+            <button
+              key={image.src}
+              role="tab"
+              aria-selected={i === active}
+              aria-label={`Photo ${i + 1} : ${image.alt}`}
+              className={`gallery__thumb ${i === active ? 'is-active' : ''}`}
+              onClick={() => setActive(i)}
+            >
+              <ProductImage image={image} />
+            </button>
+          ))}
+        </div>
+      )}
     </div>
   );
 }

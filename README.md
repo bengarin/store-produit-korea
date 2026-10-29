@@ -29,23 +29,27 @@ npm run preview  # teste la version finale en local
 | **Fonds (podium, feuilles)**            | `src/assets/backgrounds/`                 | remplacer les fichiers                  |
 | **Couleurs / typo / arrondis**          | `src/styles/global.css`                   | variables en haut du fichier (`:root`)  |
 
-### Remplacer les photos produits
+### Photos produits
 
-Les visuels actuels sont **temporaires** : ils ont été détourés depuis la maquette de design (basse résolution, textes d'étiquette approximatifs). Ils ne doivent pas être utilisés pour vendre.
+Les vraies photos sont rangées **un dossier par produit** dans `src/assets/products/<id>/` et déclarées dans **`src/data/productImages.js`** :
 
-1. Préparez 1 packshot par produit : **fond transparent ou blanc uni**, produit centré, carré ~1000×1000 px, format `.webp` (ou `.png`).
-2. Remplacez les fichiers dans `src/assets/products/` **en gardant les mêmes noms** :
-   `baroness-aloe-vera-gel.webp`, `some-by-mi-yuja-niacin-cream.webp`, `biovene-eye-patches.webp`,
-   `vitamin-collagen-vital-cream.webp`, `orjena-power-collagen-emulsion.webp`.
-   → Rien d'autre à modifier : cartes, accueil, fiche, panier se mettent à jour.
-3. Photos supplémentaires (texture, dos du produit…) : ajoutez-les dans `images: [...]` du produit dans `src/data/products.js`.
-4. Une fois photos, prix et textes validés, passez `CATALOG_IS_PLACEHOLDER` à `false` (cache les mentions « temporaire »).
+| Champ | Rôle |
+|---|---|
+| `cardImage` | packshot des cartes, du panier et du récapitulatif |
+| `mainImage` | première image de la fiche produit |
+| `galleryImages` | toutes les vues de la fiche (packshot, boîte, texture, ambiance…) |
+| `heroImage` | version détourée (`cutout.webp`) pour la composition de l'accueil |
+
+Chaque image a un `fit` : `contain` (packshot sur fond blanc, posé sur fond crème, rien n'est rogné) ou `cover` (photo d'ambiance qui remplit le cadre).
+
+Pour remplacer une photo : écrasez le fichier `.webp` en gardant son nom. Pour en ajouter une : déposez le fichier dans le dossier du produit, importez-le dans `productImages.js` et ajoutez-le à `galleryImages`.
 
 ## Ce qui est provisoire (à valider avant la mise en ligne)
 
 - **Prix** : valeurs de démonstration (129 / 199 / 149 / 229 / 179 DH).
 - **Frais de livraison** : 20 DH (démo).
 - **Code promo** `NATURE10` (−10 %) : démo, à supprimer ou remplacer.
+- **Photos** : vos photos réelles (archive `produit.rar`), recadrées et converties en WebP.
 - **Textes produits** : rédigés à partir du nom du produit uniquement. Ingrédients complets, mode d'emploi et types de peau **à reprendre de l'emballage officiel**. Aucune allégation médicale.
 - **Notes / avis clients** de la maquette : volontairement **non affichés** (pas de faux avis).
 

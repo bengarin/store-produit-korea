@@ -34,7 +34,7 @@ export default function HomePage() {
             </picture>
             {STAGE.map(([id, cls]) => {
               const p = PRODUCTS.find((x) => x.id === id);
-              return p ? <img key={id} className={`hero__product ${cls}`} src={p.images[0].src} alt="" width="480" height="480" /> : null;
+              return p ? <img key={id} className={`hero__product ${cls}`} src={p.heroImage.src} alt="" decoding="async" /> : null;
             })}
           </div>
           <div className="hero__content container">
@@ -65,7 +65,7 @@ export default function HomePage() {
           </div>
           <ProductGrid category={category} />
           {CATALOG_IS_PLACEHOLDER && (
-            <p className="demo-note">Visuels et prix temporaires — à remplacer par les photos et tarifs officiels.</p>
+            <p className="demo-note">Prix provisoires — à confirmer avant la mise en ligne.</p>
           )}
         </section>
       </main>

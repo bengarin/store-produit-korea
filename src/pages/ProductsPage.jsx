@@ -42,7 +42,7 @@ export default function ProductsPage() {
           emptyText={onlyFavorites ? 'Aucun favori pour le moment. Touchez le ♡ d’un produit pour l’ajouter.' : undefined}
         />
         {CATALOG_IS_PLACEHOLDER && (
-          <p className="demo-note">Visuels et prix temporaires — à remplacer par les photos et tarifs officiels.</p>
+          <p className="demo-note">Prix provisoires — à confirmer avant la mise en ligne.</p>
         )}
       </main>
       <SiteFooter />

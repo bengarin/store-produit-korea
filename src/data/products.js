@@ -2,21 +2,15 @@
  * 🧴 CATALOGUE PRODUITS (données locales de démonstration)
  *
  * - Prix : valeurs PROVISOIRES [DÉMO] → modifiez `price` (en DH).
- * - Photos : remplacez les imports ci-dessous par vos vraies photos
- *   (déposez-les dans src/assets/products/, format .webp conseillé).
+ * - Photos : voir src/data/productImages.js (un dossier par produit dans
+ *   src/assets/products/<id>/).
  * - Textes : contenu INDICATIF basé sur le nom du produit. À valider avec
  *   l'emballage / la fiche officielle de la marque avant la mise en ligne.
  *   Aucune allégation médicale ou dermatologique n'est faite ici.
  */
 import { Droplets, Leaf, Sparkles, Sun, Citrus, Eye, Clock, Layers, FlaskConical, Hand } from 'lucide-react';
 
-// ⚠️ Visuels TEMPORAIRES : détourés depuis la maquette de design (basse résolution,
-// textes d'étiquette approximatifs). À remplacer par vos vraies photos produits.
-import aloeImg from '../assets/products/baroness-aloe-vera-gel.webp';
-import yujaImg from '../assets/products/some-by-mi-yuja-niacin-cream.webp';
-import patchesImg from '../assets/products/biovene-eye-patches.webp';
-import vitaminImg from '../assets/products/vitamin-collagen-vital-cream.webp';
-import orjenaImg from '../assets/products/orjena-power-collagen-emulsion.webp';
+import { PRODUCT_IMAGES } from './productImages.js';
 
 export const CATEGORIES = [
   { id: 'all', label: 'Tous' },
@@ -43,7 +37,6 @@ export const PRODUCTS = [
     displayName: 'Baroness Aloe Vera Soothing Gel',
     price: 129, // [DÉMO]
     categories: ['hydratation'],
-    images: [{ src: aloeImg, alt: 'Visuel temporaire du gel Baroness Aloe Vera' }],
     summary:
       "Gel à l'aloe vera à la texture fraîche et légère, pensé pour le visage et le corps.",
     highlights: [
@@ -76,7 +69,6 @@ export const PRODUCTS = [
     displayName: 'SOME BY MI Yuja Niacin Cream',
     price: 199, // [DÉMO]
     categories: ['eclat'],
-    images: [{ src: yujaImg, alt: 'Visuel temporaire de la crème SOME BY MI Yuja Niacin' }],
     summary:
       'Une crème formulée avec du Yuja (agrume coréen) et de la niacinamide, pour une routine axée sur l’éclat du teint.',
     highlights: [
@@ -110,7 +102,6 @@ export const PRODUCTS = [
     displayName: 'Biovène Eye Patches',
     price: 149, // [DÉMO]
     categories: ['anti-age'],
-    images: [{ src: patchesImg, alt: 'Visuel temporaire des patchs yeux Biovène' }],
     summary:
       'Patchs pour le contour des yeux associant tripeptide et concombre, pour un moment de soin rapide.',
     highlights: [
@@ -139,12 +130,11 @@ export const PRODUCTS = [
   {
     id: 'vitamin-collagen-vital-cream',
     cardLine: 'Crème riche aux vitamines et au collagène.',
-    brand: 'Vitamin Collagen',
-    name: 'Vital Cream',
-    displayName: 'Vitamin Collagen Vital Cream',
+    brand: 'Quret', // marque lisible sur l'emballage
+    name: 'Vitamin Collagen Vital Cream',
+    displayName: 'Quret Vitamin Collagen Vital Cream',
     price: 229, // [DÉMO]
     categories: ['anti-age', 'eclat'],
-    images: [{ src: vitaminImg, alt: 'Visuel temporaire de la crème Vitamin Collagen' }],
     summary:
       'Crème associant vitamines et collagène, pour une routine de soin riche et confortable.',
     highlights: [
@@ -178,7 +168,6 @@ export const PRODUCTS = [
     displayName: 'ORJENA Power Collagen Emulsion',
     price: 179, // [DÉMO]
     categories: ['hydratation', 'anti-age'],
-    images: [{ src: orjenaImg, alt: "Visuel temporaire de l'émulsion ORJENA Power Collagen" }],
     summary:
       'Émulsion fluide au collagène, à utiliser comme étape légère de la routine coréenne.',
     highlights: [
@@ -204,5 +193,8 @@ export const PRODUCTS = [
     skinTypes: "À confirmer selon la fiche officielle du produit.",
   },
 ];
+
+// Rattache les photos à chaque produit (cardImage, mainImage, galleryImages, heroImage).
+PRODUCTS.forEach((p) => Object.assign(p, PRODUCT_IMAGES[p.id]));
 
 export const getProductById = (id) => PRODUCTS.find((p) => p.id === id);

@@ -80,7 +80,7 @@ export default function CheckoutPage() {
             <ul className="recap__list">
               {lines.map(({ product, qty, lineTotal }) => (
                 <li key={product.id}>
-                  <ProductImage image={product.images[0]} className="recap__thumb" />
+                  <ProductImage image={product.cardImage} className="recap__thumb" />
                   <span className="recap__name">{product.displayName}<small>{qty} × {formatPrice(product.price)}</small></span>
                   <strong>{formatPrice(lineTotal)}</strong>
                 </li>

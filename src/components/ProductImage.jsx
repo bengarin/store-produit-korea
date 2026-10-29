@@ -1,23 +1,19 @@
-import podiumImg from '../assets/backgrounds/podium-single.webp';
-import duoImg from '../assets/backgrounds/podium-duo.webp';
-
-const SCENES = { podium: podiumImg, duo: duoImg };
-
 /**
- * Packshot produit (object-fit: contain) posé sur un fond.
- * scene = 'plain' (crème uni) | 'podium' | 'duo' (fonds pierre & feuilles)
+ * Affiche une photo produit avec le bon traitement :
+ *  - fit 'contain' : packshot entier sur fond crème (le blanc de la photo se fond dans le crème)
+ *  - fit 'cover'   : photo d'ambiance qui remplit le cadre
  */
-export default function ProductImage({ image, scene = 'plain', eager = false, className = '' }) {
-  const bg = SCENES[scene];
+export default function ProductImage({ image, eager = false, className = '' }) {
+  const fit = image.fit === 'cover' ? 'cover' : 'contain';
   return (
-    <div className={`product-image product-image--${scene} ${className}`} style={bg ? { backgroundImage: `url(${bg})` } : undefined}>
+    <div className={`product-image product-image--${fit} ${className}`}>
       <img
         src={image.src}
         alt={image.alt}
         loading={eager ? 'eager' : 'lazy'}
         decoding="async"
-        width="480"
-        height="480"
+        width="900"
+        height="900"
       />
     </div>
   );
