@@ -26,7 +26,7 @@ npm run preview  # teste la version finale en local
 | **Prix des produits**                   | `src/data/products.js`                    | `price` de chaque produit               |
 | **Textes produits** (ingrédients, etc.) | `src/data/products.js`                    | `summary`, `ingredients`, `usage`…      |
 | **Photos des produits**                 | `src/assets/products/` + `products.js`    | voir ci-dessous                         |
-| **Visuel de l'accueil**                 | `src/assets/hero/`                        | `nature-hero-products.webp` (+ version 640 px) |
+| **Visuel de l'accueil**                 | `src/assets/hero/`                        | mobile : `nature-hero-products.webp` (+ 640 px) · desktop : `nature-hero-products-wide.webp` (+ 1280 px) |
 | **Feuilles (page confirmation)**        | `src/assets/backgrounds/`                 | remplacer les fichiers                  |
 | **Couleurs / typo / arrondis**          | `src/styles/global.css`                   | variables en haut du fichier (`:root`)  |
 

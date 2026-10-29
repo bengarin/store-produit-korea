@@ -477,18 +477,19 @@ select { appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmln
   .site-nav a:hover, .site-nav a.active { color: var(--green-deep); }
   .site-nav a.active::after { content: ''; position: absolute; left: 0; right: 0; bottom: 0; height: 1.5px; background: var(--green); }
 
+  /* Desktop : le visuel paysage occupe toute la largeur (max 1600 px) ; le texte se pose
+     sur la zone vide de gauche (mur + feuilles floues), les produits restent entiers à droite.
+     Seule une fine bande de feuillage en haut (≈ 12 %) est hors cadre. */
   .hero { background: var(--bg); }
-  .hero__inner { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 0.92fr); align-items: center; gap: clamp(32px, 4vw, 64px); max-width: var(--max-w); padding: var(--s-8) var(--gutter); }
-  .hero__copy { padding: 0; }
-  .hero h1 { font-size: clamp(40px, 4.4vw, 60px); }
-  .hero__text { max-width: 440px; font-size: 16.5px; }
-  /* Desktop : cadre aux proportions de la zone produits ; seul le mur vide du haut est hors cadre. */
-  .hero__visual { margin: 0; aspect-ratio: 941 / 1060; }
-  .hero__visual img { height: 100%; object-fit: cover; object-position: 50% 92%; -webkit-mask-image: linear-gradient(180deg, transparent 0%, #000 16%, #000 90%, transparent 100%), linear-gradient(90deg, transparent 0%, #000 12%, #000 92%, transparent 100%); -webkit-mask-composite: source-in; mask-image: linear-gradient(180deg, transparent 0%, #000 16%, #000 90%, transparent 100%), linear-gradient(90deg, transparent 0%, #000 12%, #000 92%, transparent 100%); mask-composite: intersect; }
-  .hero__visual::before { display: none; }
-  .trust--hero { display: grid; grid-template-columns: repeat(3, auto); justify-content: start; gap: var(--s-8); margin-top: var(--s-8); }
-  .trust--hero .trust__icon { width: 42px; height: 42px; }
-  .trust--band { display: none; }
+  .hero__inner { position: relative; display: block; max-width: 1600px; margin-inline: auto; aspect-ratio: 1672 / 830; }
+  .hero__visual { position: absolute; inset: 0; margin: 0; }
+  .hero__visual picture { display: block; height: 100%; }
+  .hero__visual img { height: 100%; object-fit: cover; object-position: 50% 100%; }
+  .hero__visual::before { inset: 0 auto 0 0; width: 50%; height: auto; background: linear-gradient(90deg, rgba(250, 246, 239, 0.9) 0%, rgba(250, 246, 239, 0.72) 50%, rgba(250, 246, 239, 0) 100%); }
+  /* Texte aligné sur la grille du site (même bord gauche que le logo), arrêté avant les produits (≈ 38 % de l'image). */
+  .hero__copy { --copy-left: max(var(--gutter), calc((100% - var(--max-w)) / 2 + var(--gutter))); position: absolute; z-index: 2; top: 50%; left: var(--copy-left); width: calc(35% - var(--copy-left)); min-width: 300px; padding: 0; transform: translateY(-50%); }
+  .hero h1 { font-size: clamp(34px, 3.25vw, 54px); }
+  .hero__text { max-width: 420px; font-size: clamp(14.5px, 1.1vw, 17px); }
 
   .product-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
   .checkout-page { max-width: 1040px; }
@@ -498,7 +499,15 @@ select { appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmln
 }
 
 @media (min-width: 1200px) {
+  .trust--hero { display: grid; grid-template-columns: repeat(3, auto); justify-content: start; gap: var(--s-8); margin-top: var(--s-8); }
+  .trust--hero .trust__icon { width: 42px; height: 42px; }
+  .trust--band { display: none; }
   .product-grid { grid-template-columns: repeat(5, minmax(0, 1fr)); }
+}
+
+/* Au-delà de 1600 px : le visuel reste centré, ses bords se fondent dans le crème. */
+@media (min-width: 1601px) {
+  .hero__visual img { -webkit-mask-image: linear-gradient(90deg, transparent 0%, #000 6%, #000 94%, transparent 100%); mask-image: linear-gradient(90deg, transparent 0%, #000 6%, #000 94%, transparent 100%); }
 }
 
 @media (prefers-reduced-motion: reduce) {

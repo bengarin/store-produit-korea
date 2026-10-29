@@ -8,6 +8,8 @@ import ProductGrid, { CategoryChips } from '../components/ProductGrid.jsx';
 import { PRODUCTS, CATALOG_IS_PLACEHOLDER } from '../data/products.js';
 import heroImg from '../assets/hero/nature-hero-products.webp';
 import heroImg640 from '../assets/hero/nature-hero-products-640.webp';
+import heroWide from '../assets/hero/nature-hero-products-wide.webp';
+import heroWide1280 from '../assets/hero/nature-hero-products-wide-1280.webp';
 
 export default function HomePage() {
   const [category, setCategory] = useState('all');
@@ -31,16 +33,26 @@ export default function HomePage() {
             </div>
             {/* Visuel produit fourni : image entière, jamais étirée ; seul le mur vide du haut se fond dans le crème. */}
             <div className="hero__visual">
-              <img
-                src={heroImg}
-                srcSet={`${heroImg640} 640w, ${heroImg} 941w`}
-                sizes="(min-width: 900px) 46vw, (min-width: 600px) 520px, 100vw"
-                width="941"
-                height="1672"
-                alt="Les cinq soins NATURÉ sur des socles en pierre : gel Baroness Aloe Vera, crème SOME BY MI Yuja Niacin, émulsion ORJENA Power Collagen, patchs BIOVÈNE et crème Quret Vitamin Collagen"
-                fetchpriority="high"
-                decoding="async"
-              />
+              <picture>
+                {/* Desktop (≥ 1000 px) : visuel paysage fourni ; mobile : visuel portrait inchangé. */}
+                <source
+                  media="(min-width: 1000px)"
+                  srcSet={`${heroWide1280} 1280w, ${heroWide} 1672w`}
+                  sizes="min(100vw, 1600px)"
+                  width="1672"
+                  height="941"
+                />
+                <img
+                  src={heroImg}
+                  srcSet={`${heroImg640} 640w, ${heroImg} 941w`}
+                  sizes="(min-width: 900px) 46vw, (min-width: 600px) 520px, 100vw"
+                  width="941"
+                  height="1672"
+                  alt="Les cinq soins NATURÉ sur des socles en pierre : gel Baroness Aloe Vera, crème SOME BY MI Yuja Niacin, émulsion ORJENA Power Collagen, patchs BIOVÈNE et crème Quret Vitamin Collagen"
+                  fetchpriority="high"
+                  decoding="async"
+                />
+              </picture>
             </div>
           </div>
         </section>
