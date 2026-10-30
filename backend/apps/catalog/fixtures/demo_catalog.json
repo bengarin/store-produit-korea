@@ -1,0 +1,455 @@
+{
+  "source": "src/data/local",
+  "categories": [
+    {
+      "slug": "hydratation",
+      "name": "Hydratation",
+      "position": 0
+    },
+    {
+      "slug": "anti-age",
+      "name": "Anti-âge",
+      "position": 1
+    },
+    {
+      "slug": "eclat",
+      "name": "Éclat",
+      "position": 2
+    }
+  ],
+  "products": [
+    {
+      "slug": "baroness-aloe-vera-gel",
+      "position": 0,
+      "brand": "Baroness",
+      "name": "Aloe Vera Soothing Gel",
+      "displayName": "Baroness Aloe Vera Soothing Gel",
+      "cardLine": "Gel à l'aloe vera, frais et léger.",
+      "price": 129,
+      "categories": [
+        "hydratation"
+      ],
+      "summary": "Gel à l'aloe vera à la texture fraîche et légère, pensé pour le visage et le corps.",
+      "highlights": [
+        {
+          "icon": "leaf",
+          "label": "À l'aloe vera"
+        },
+        {
+          "icon": "droplets",
+          "label": "Texture gel"
+        },
+        {
+          "icon": "hand",
+          "label": "Visage & corps"
+        },
+        {
+          "icon": "sun",
+          "label": "Usage quotidien"
+        }
+      ],
+      "ingredients": [
+        "Aloe vera (ingrédient principal indiqué dans le nom du produit)",
+        "Liste INCI complète : à reprendre de l'emballage officiel"
+      ],
+      "usage": [
+        "Appliquer une petite quantité sur une peau propre.",
+        "Masser légèrement jusqu'à absorption.",
+        "Suivre les indications de l'emballage."
+      ],
+      "benefits": [
+        "Sensation de fraîcheur à l’application",
+        "Texture légère, non grasse au toucher",
+        "Format polyvalent visage et corps"
+      ],
+      "skinTypes": "À confirmer selon la fiche officielle du produit.",
+      "gallery": [
+        {
+          "file": "src/assets/products/baroness-aloe-vera-gel/packshot.webp",
+          "file640": null,
+          "alt": "Pot Baroness Aloe Vera Soothing Gel, vue de face",
+          "kind": "packshot",
+          "fit": "contain"
+        },
+        {
+          "file": "src/assets/products/baroness-aloe-vera-gel/splash.webp",
+          "file640": null,
+          "alt": "Pot Baroness Aloe Vera entouré de feuilles d’aloe vera",
+          "kind": "ingredient",
+          "fit": "contain"
+        },
+        {
+          "file": "src/assets/products/baroness-aloe-vera-gel/in-hand.webp",
+          "file640": null,
+          "alt": "Pot Baroness Aloe Vera Soothing Gel tenu en main",
+          "kind": "in-hand",
+          "fit": "cover"
+        }
+      ],
+      "scene": {
+        "file": "src/assets/scenes/baroness-aloe-vera-gel.webp",
+        "file640": "src/assets/scenes/baroness-aloe-vera-gel-640.webp",
+        "alt": "Baroness Aloe Vera Soothing Gel parmi des feuilles d’aloe vera",
+        "kind": "scene",
+        "fit": "cover"
+      },
+      "hover": {
+        "galleryIndex": 2,
+        "position": ""
+      }
+    },
+    {
+      "slug": "some-by-mi-yuja-niacin-cream",
+      "position": 1,
+      "brand": "SOME BY MI",
+      "name": "Yuja Niacin Anti Blemish Cream",
+      "displayName": "SOME BY MI Yuja Niacin Cream",
+      "cardLine": "Crème au Yuja et à la niacinamide.",
+      "price": 199,
+      "categories": [
+        "eclat"
+      ],
+      "summary": "Une crème formulée avec du Yuja (agrume coréen) et de la niacinamide, pour une routine axée sur l’éclat du teint.",
+      "highlights": [
+        {
+          "icon": "citrus",
+          "label": "Extrait de Yuja"
+        },
+        {
+          "icon": "flask",
+          "label": "Niacinamide"
+        },
+        {
+          "icon": "sparkles",
+          "label": "Routine éclat"
+        },
+        {
+          "icon": "sun",
+          "label": "Usage quotidien"
+        }
+      ],
+      "ingredients": [
+        "Extrait de Yuja (citron coréen)",
+        "Niacinamide",
+        "Liste INCI complète : à reprendre de l'emballage officiel"
+      ],
+      "usage": [
+        "Après le nettoyage et le tonique, prélever une petite quantité.",
+        "Appliquer sur le visage en évitant le contour des yeux.",
+        "Faire pénétrer par légers tapotements."
+      ],
+      "benefits": [
+        "S’intègre dans une routine orientée éclat",
+        "Texture crème confortable",
+        "Associe Yuja et niacinamide"
+      ],
+      "skinTypes": "À confirmer selon la fiche officielle du produit.",
+      "gallery": [
+        {
+          "file": "src/assets/products/some-by-mi-yuja-niacin-cream/packshot.webp",
+          "file640": null,
+          "alt": "Pot SOME BY MI Yuja Niacin Anti Blemish Cream, vue de face",
+          "kind": "packshot",
+          "fit": "contain"
+        },
+        {
+          "file": "src/assets/products/some-by-mi-yuja-niacin-cream/lifestyle.webp",
+          "file640": null,
+          "alt": "Crème SOME BY MI Yuja Niacin avec des tranches de yuja",
+          "kind": "lifestyle",
+          "fit": "cover"
+        },
+        {
+          "file": "src/assets/products/some-by-mi-yuja-niacin-cream/texture.webp",
+          "file640": null,
+          "alt": "Texture de la crème SOME BY MI Yuja Niacin",
+          "kind": "texture",
+          "fit": "cover"
+        },
+        {
+          "file": "src/assets/products/some-by-mi-yuja-niacin-cream/in-use.webp",
+          "file640": null,
+          "alt": "Application de la crème SOME BY MI Yuja Niacin sur la joue",
+          "kind": "in-use",
+          "fit": "cover"
+        }
+      ],
+      "scene": {
+        "file": "src/assets/scenes/some-by-mi-yuja-niacin-cream.webp",
+        "file640": "src/assets/scenes/some-by-mi-yuja-niacin-cream-640.webp",
+        "alt": "SOME BY MI Yuja Niacin Cream entourée de fruits de yuja",
+        "kind": "scene",
+        "fit": "cover"
+      },
+      "hover": {
+        "galleryIndex": 1,
+        "position": "50% 88%"
+      }
+    },
+    {
+      "slug": "biovene-eye-patches",
+      "position": 2,
+      "brand": "BIOVÈNE",
+      "name": "Tripeptide Cucumber Age-Defy Under Eye Patches",
+      "displayName": "Biovène Eye Patches",
+      "cardLine": "Patchs contour des yeux, tripeptide et concombre.",
+      "price": 149,
+      "categories": [
+        "anti-age"
+      ],
+      "summary": "Patchs pour le contour des yeux associant tripeptide et concombre, pour un moment de soin rapide.",
+      "highlights": [
+        {
+          "icon": "eye",
+          "label": "Contour des yeux"
+        },
+        {
+          "icon": "flask",
+          "label": "Tripeptide"
+        },
+        {
+          "icon": "leaf",
+          "label": "Concombre"
+        },
+        {
+          "icon": "clock",
+          "label": "Pose rapide"
+        }
+      ],
+      "ingredients": [
+        "Tripeptide",
+        "Extrait de concombre",
+        "Liste INCI complète : à reprendre de l'emballage officiel"
+      ],
+      "usage": [
+        "Sur une peau propre et sèche, placer un patch sous chaque œil.",
+        "Laisser poser le temps indiqué sur l'emballage.",
+        "Retirer et faire pénétrer le reste de produit du bout des doigts."
+      ],
+      "benefits": [
+        "Geste simple pour le contour des yeux",
+        "Sensation de fraîcheur",
+        "Format pratique à garder dans sa routine"
+      ],
+      "skinTypes": "À confirmer selon la fiche officielle du produit.",
+      "gallery": [
+        {
+          "file": "src/assets/products/biovene-eye-patches/packshot.webp",
+          "file640": null,
+          "alt": "Pot de patchs yeux BIOVÈNE Age-Defy avec spatule",
+          "kind": "packshot",
+          "fit": "contain"
+        },
+        {
+          "file": "src/assets/products/biovene-eye-patches/texture.webp",
+          "file640": null,
+          "alt": "Patchs yeux BIOVÈNE vus de dessus dans leur pot",
+          "kind": "texture",
+          "fit": "contain"
+        },
+        {
+          "file": "src/assets/products/biovene-eye-patches/box.webp",
+          "file640": null,
+          "alt": "Boîte des patchs BIOVÈNE Tripeptide Cucumber Under Eye Patches",
+          "kind": "packaging",
+          "fit": "contain"
+        },
+        {
+          "file": "src/assets/products/biovene-eye-patches/lifestyle.webp",
+          "file640": null,
+          "alt": "Pot de patchs BIOVÈNE ouvert avec des rondelles de concombre",
+          "kind": "lifestyle",
+          "fit": "cover"
+        },
+        {
+          "file": "src/assets/products/biovene-eye-patches/lifestyle-box.webp",
+          "file640": null,
+          "alt": "Pot et boîte BIOVÈNE avec des rondelles de concombre",
+          "kind": "lifestyle",
+          "fit": "cover"
+        }
+      ],
+      "scene": {
+        "file": "src/assets/scenes/biovene-eye-patches.webp",
+        "file640": "src/assets/scenes/biovene-eye-patches-640.webp",
+        "alt": "Patchs BIOVÈNE entourés de rondelles de concombre",
+        "kind": "scene",
+        "fit": "cover"
+      },
+      "hover": {
+        "galleryIndex": 3,
+        "position": ""
+      }
+    },
+    {
+      "slug": "vitamin-collagen-vital-cream",
+      "position": 3,
+      "brand": "Quret",
+      "name": "Vitamin Collagen Vital Cream",
+      "displayName": "Quret Vitamin Collagen Vital Cream",
+      "cardLine": "Crème riche aux vitamines et au collagène.",
+      "price": 229,
+      "categories": [
+        "anti-age",
+        "eclat"
+      ],
+      "summary": "Crème associant vitamines et collagène, pour une routine de soin riche et confortable.",
+      "highlights": [
+        {
+          "icon": "sparkles",
+          "label": "Vitamines"
+        },
+        {
+          "icon": "layers",
+          "label": "Collagène"
+        },
+        {
+          "icon": "droplets",
+          "label": "Texture crème"
+        },
+        {
+          "icon": "sun",
+          "label": "Matin & soir"
+        }
+      ],
+      "ingredients": [
+        "Vitamines (selon le nom du produit)",
+        "Collagène",
+        "Liste INCI complète : à reprendre de l'emballage officiel"
+      ],
+      "usage": [
+        "Appliquer en dernière étape de la routine, matin et/ou soir.",
+        "Masser du centre du visage vers l’extérieur.",
+        "Suivre les indications de l'emballage."
+      ],
+      "benefits": [
+        "Texture riche et confortable",
+        "Associe vitamines et collagène",
+        "Convient comme crème de fin de routine"
+      ],
+      "skinTypes": "À confirmer selon la fiche officielle du produit.",
+      "gallery": [
+        {
+          "file": "src/assets/products/vitamin-collagen-vital-cream/packshot.webp",
+          "file640": null,
+          "alt": "Pot Quret Vitamin Collagen Vital Cream et son tube",
+          "kind": "packshot",
+          "fit": "contain"
+        },
+        {
+          "file": "src/assets/products/vitamin-collagen-vital-cream/set-box.webp",
+          "file640": null,
+          "alt": "Coffret Quret Vitamin Collagen Vital Cream avec pot et tube",
+          "kind": "packaging",
+          "fit": "contain"
+        },
+        {
+          "file": "src/assets/products/vitamin-collagen-vital-cream/tube.webp",
+          "file640": null,
+          "alt": "Tube Quret Vitamin Collagen Vital Cream",
+          "kind": "packshot",
+          "fit": "contain"
+        },
+        {
+          "file": "src/assets/products/vitamin-collagen-vital-cream/tube-box.webp",
+          "file640": null,
+          "alt": "Tube Quret Vitamin Collagen Vital Cream et sa boîte",
+          "kind": "packaging",
+          "fit": "contain"
+        }
+      ],
+      "scene": {
+        "file": "src/assets/scenes/vitamin-collagen-vital-cream.webp",
+        "file640": "src/assets/scenes/vitamin-collagen-vital-cream-640.webp",
+        "alt": "Crème Quret Vitamin Collagen et son tube près d’une texture crème",
+        "kind": "scene",
+        "fit": "cover"
+      },
+      "hover": {
+        "galleryIndex": 1,
+        "position": ""
+      }
+    },
+    {
+      "slug": "orjena-power-collagen-emulsion",
+      "position": 4,
+      "brand": "ORJENA",
+      "name": "Power Collagen Emulsion",
+      "displayName": "ORJENA Power Collagen Emulsion",
+      "cardLine": "Émulsion fluide au collagène.",
+      "price": 179,
+      "categories": [
+        "hydratation",
+        "anti-age"
+      ],
+      "summary": "Émulsion fluide au collagène, à utiliser comme étape légère de la routine coréenne.",
+      "highlights": [
+        {
+          "icon": "layers",
+          "label": "Collagène"
+        },
+        {
+          "icon": "droplets",
+          "label": "Texture fluide"
+        },
+        {
+          "icon": "hand",
+          "label": "Facile à étaler"
+        },
+        {
+          "icon": "sun",
+          "label": "Usage quotidien"
+        }
+      ],
+      "ingredients": [
+        "Collagène (selon le nom du produit)",
+        "Liste INCI complète : à reprendre de l'emballage officiel"
+      ],
+      "usage": [
+        "Après le tonique, verser une petite quantité dans la paume.",
+        "Appliquer sur le visage et le cou.",
+        "Faire pénétrer par légers tapotements."
+      ],
+      "benefits": [
+        "Texture émulsion légère",
+        "Se superpose facilement aux autres soins",
+        "Étape simple de la routine coréenne"
+      ],
+      "skinTypes": "À confirmer selon la fiche officielle du produit.",
+      "gallery": [
+        {
+          "file": "src/assets/products/orjena-power-collagen-emulsion/packshot.webp",
+          "file640": null,
+          "alt": "Flacon ORJENA Power Collagen Emulsion, vue de face",
+          "kind": "packshot",
+          "fit": "contain"
+        },
+        {
+          "file": "src/assets/products/orjena-power-collagen-emulsion/box.webp",
+          "file640": null,
+          "alt": "Flacon ORJENA Power Collagen Emulsion et sa boîte",
+          "kind": "packaging",
+          "fit": "contain"
+        },
+        {
+          "file": "src/assets/products/orjena-power-collagen-emulsion/in-hand.webp",
+          "file640": null,
+          "alt": "Flacon ORJENA Power Collagen Emulsion tenu en main",
+          "kind": "in-hand",
+          "fit": "contain"
+        }
+      ],
+      "scene": {
+        "file": "src/assets/scenes/orjena-power-collagen-emulsion.webp",
+        "file640": "src/assets/scenes/orjena-power-collagen-emulsion-640.webp",
+        "alt": "Flacon ORJENA Power Collagen Emulsion près d’une texture crème",
+        "kind": "scene",
+        "fit": "cover"
+      },
+      "hover": {
+        "galleryIndex": 2,
+        "position": ""
+      }
+    }
+  ]
+}

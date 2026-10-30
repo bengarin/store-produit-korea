@@ -10,7 +10,8 @@ Format d'erreur unique de l'API :
 
 import logging
 
-from django.http import JsonResponse
+from django.core.exceptions import PermissionDenied as DjangoPermissionDenied
+from django.http import Http404, JsonResponse
 from rest_framework import exceptions, status
 from rest_framework.response import Response
 from rest_framework.views import exception_handler
@@ -28,6 +29,7 @@ MESSAGES = {
     "parse_error": "Requête mal formée.",
     "throttled": "Trop de requêtes. Réessayez dans quelques instants.",
     "csrf_failed": "Jeton CSRF manquant ou invalide. Rechargez la page.",
+    "conflict": "Action impossible dans l'état actuel.",
     "server_error": "Erreur interne. Réessayez plus tard.",
 }
 
@@ -66,10 +68,17 @@ def api_exception_handler(exc, context):
             response.data = error_body("validation_error", message)
         return response
 
-    code = getattr(exc, "default_code", "error")
+    if isinstance(exc, Http404):
+        code = "not_found"
+    elif isinstance(exc, DjangoPermissionDenied):
+        code = "permission_denied"
+    else:
+        code = getattr(exc, "default_code", "error")
     if isinstance(exc, exceptions.PermissionDenied) and "CSRF" in str(exc.detail):
         code = "csrf_failed"
     custom_message = None
+    if response.status_code == 409:  # Conflict : le message métier est utile tel quel
+        custom_message = str(exc.detail)
     if isinstance(exc, exceptions.Throttled) and exc.wait:
         custom_message = f"Trop de requêtes. Réessayez dans {int(exc.wait) + 1} s."
     response.data = error_body(code, custom_message)

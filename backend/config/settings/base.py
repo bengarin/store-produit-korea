@@ -33,6 +33,8 @@ INSTALLED_APPS = [
     "apps.core",
     "apps.accounts",
     "apps.audit",
+    "apps.media_library",
+    "apps.catalog",
 ]
 
 MIDDLEWARE = [
@@ -144,6 +146,8 @@ REST_FRAMEWORK = {
         "login": env.str("THROTTLE_LOGIN", default="10/min"),
     },
     "UNAUTHENTICATED_USER": "django.contrib.auth.models.AnonymousUser",
+    # Les prix sortent en nombres JSON (129.0), comme dans le front actuel, et non en chaînes.
+    "COERCE_DECIMAL_TO_STRING": False,
 }
 
 # --- Langue, fuseau horaire ---------------------------------------------
@@ -153,6 +157,20 @@ USE_I18N = True
 USE_TZ = True
 
 STATIC_URL = "static/"
+
+# --- Médias (images produits) -------------------------------------------
+# Développement : disque local (backend/media/, ignoré par git).
+# Production : stockage externe à brancher ici (ex. django-storages S3/R2) — phase de mise en ligne.
+MEDIA_URL = "/media/"
+MEDIA_ROOT = env.path("MEDIA_ROOT", default=BASE_DIR / "media")
+STORAGES = {
+    "default": {"BACKEND": "django.core.files.storage.FileSystemStorage"},
+    "staticfiles": {"BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage"},
+}
+MEDIA_MAX_UPLOAD_BYTES = env.int("MEDIA_MAX_UPLOAD_MB", default=10) * 1024 * 1024
+MEDIA_MAX_SIDE = 6000  # px : au-delà, l'image est refusée
+MEDIA_STORED_MAX_SIDE = 1600  # px : taille maximale conservée après ré-encodage
+FILE_UPLOAD_PERMISSIONS = 0o644
 
 # --- Journalisation ------------------------------------------------------
 LOGGING = {

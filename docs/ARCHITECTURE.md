@@ -484,3 +484,9 @@ Ordre choisi pour **vendre le plus tôt possible**. Durées non estimées tant q
 | 30/10/2026 | (proposé) Sessions + CSRF, pas de JWT | Même domaine, plus sûr | — | — |
 | 30/10/2026 | (proposé) Thème en JSON versionné, sections en liste blanche | Publication atomique, pas de code arbitraire | — | — |
 | 30/10/2026 | Phase 0 livrée : Django 5.2 LTS, DRF, MySQL 8.4 (Docker), 5 rôles, sessions + CSRF, audit, `/api/v1/health` | Fondations sécurisées avant le catalogue | Phase 1 : catalogue | [À définir] |
+| 30/10/2026 | Phase 1 livrée : catalogue, médias, API admin + publique, import des 5 produits | Le backend devient la source des données produit | Valider, puis phase 2 (commandes) | [À définir] |
+| 30/10/2026 | Image principale = 1re image de la galerie (pas de champ séparé) ; image « en situation » hors galerie | Plus simple, comme Shopify ; reproduit le front | — | — |
+| 30/10/2026 | Médias : champs `file` + `file_640` au lieu d'un JSON de déclinaisons | Typé, plus simple | — | — |
+| 30/10/2026 | Suppression produit : refusée si actif (archiver d'abord) ou s'il est référencé hors catalogue (commandes) | Jamais de perte d'historique | Phase 2 : lignes de commande en PROTECT | — |
+| 30/10/2026 | API publique : `stock` = null, `inStock` booléen | Ne pas publier les quantités | — | — |
+| 30/10/2026 | `vite.config.js` : relais `/api` et `/media` vers Django en développement | Même origine, sans CORS | — | — |

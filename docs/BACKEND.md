@@ -1,15 +1,17 @@
 # Préparation du Backend — Ma Petite Corée
 
-> État actuel : **aucun backend**. Le site fonctionne avec des données locales
-> (`src/data/local/`) et les commandes sont **simulées**. Ce document décrit ce que
-> le futur backend devra fournir pour que le front-end s'y branche sans refonte.
+> État actuel : le backend Django existe (`backend/`). **Catalogue livré (phase 1)** :
+> `GET /products`, `/products/{slug}`, `/categories` sous `/api/v1/store` — conformes à ce contrat
+> (vérifié par `node scripts/check-api-contract.mjs` et `backend/tests/test_public_api.py`).
+> **Pas encore livrés** : `/config`, `/promo-codes/validate`, `/orders` (phase 2). Tant qu'ils manquent,
+> le site doit rester en mode local en production.
 
 ## 1. Comment le front choisit sa source de données
 
 | Variable (`.env`)       | Valeur          | Effet                                                              |
 |-------------------------|-----------------|--------------------------------------------------------------------|
 | `VITE_API_BASE_URL`     | vide (défaut)   | Mode **local** : catalogue de `src/data/local/`, commandes simulées |
-| `VITE_API_BASE_URL`     | `https://…/api` | Mode **API** : catalogue et commandes passent par le backend       |
+| `VITE_API_BASE_URL`     | `/api/v1/store` | Mode **API** : catalogue (et plus tard commandes) via le backend   |
 | `VITE_API_TIMEOUT_MS`   | `10000`         | Délai max d'une requête                                            |
 
 ⚠️ Toute variable `VITE_*` est **publique** (copiée dans le JavaScript envoyé au navigateur).
@@ -62,14 +64,21 @@ Les composants n'importent jamais les données brutes directement.
 | `usage`        | string[]                     | non         | rubrique Conseils d'utilisation (étapes)      |
 | `benefits`     | string[]                     | non         | rubrique Bienfaits                            |
 | `skinTypes`    | string                       | non         | « Type de peau »                              |
-| `stock`        | number \| null               | non         | prévu (pas encore affiché)                    |
+| `stock`        | null                         | non         | toujours `null` : la quantité exacte n'est pas publiée |
+| `inStock`      | boolean                      | non         | au moins une variante disponible (ajouté en phase 1) |
+| `compareAtPrice` | number \| null             | non         | prix barré de la variante par défaut (phase 1) |
+| `variants`     | `{id, title, price, compareAtPrice, available, isDefault, options}[]` | non | variantes (phase 1, jamais le coût) |
+| `seo`          | `{title, description, image}` | non        | métadonnées SEO (phase 1)                     |
+| `descriptionHtml` | string (HTML assaini)     | non         | description longue (phase 1)                  |
 | `cardImage`    | Image                        | oui         | cartes, panier, récapitulatif                 |
 | `mainImage`    | Image                        | oui         | 1re image de la fiche                         |
 | `galleryImages`| Image[]                      | oui         | galerie de la fiche                           |
 | `sceneImage`   | Image                        | non         | section « Le rituel » de l'accueil             |
 | `hoverImage`   | Image                        | non         | 2e photo au survol (carrousel)                |
 
-**Image** : `{ src: string (URL), src640?: string, alt: string, fit: 'contain' | 'cover', position?: string }`
+**Image** : `{ src: string (URL), src640?: string, alt: string, kind: string, fit: 'contain' | 'cover', position?: string }`
+
+`id` = `slug` (le panier, les favoris et les liens du front utilisent cet identifiant : il doit rester stable).
 (`fit: contain` = packshot fond blanc ; `cover` = photo d'ambiance).
 
 ### Category — `GET /categories` → `{ items: Category[] }`
