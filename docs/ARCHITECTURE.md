@@ -490,3 +490,9 @@ Ordre choisi pour **vendre le plus tôt possible**. Durées non estimées tant q
 | 30/10/2026 | Suppression produit : refusée si actif (archiver d'abord) ou s'il est référencé hors catalogue (commandes) | Jamais de perte d'historique | Phase 2 : lignes de commande en PROTECT | — |
 | 30/10/2026 | API publique : `stock` = null, `inStock` booléen | Ne pas publier les quantités | — | — |
 | 30/10/2026 | `vite.config.js` : relais `/api` et `/media` vers Django en développement | Même origine, sans CORS | — | — |
+| 30/10/2026 | Phase 2 livrée : stock réel + historique, commandes COD transactionnelles, clients, livraison, codes promo, facture, export Excel ; formulaire de commande branché | Vendre réellement | Valider, saisir le stock réel, puis phase 3 | [À définir] |
+| 30/10/2026 | Stock « non renseigné » (NULL) distinct de 0 ; non commandable tant qu'il n'est pas saisi | Ne jamais inventer de stock | Saisie par `inventory/adjust` | — |
+| 30/10/2026 | Stock modifiable uniquement par mouvement (plus par l'API variantes) | Historique complet en ajout seul | — | — |
+| 30/10/2026 | Annulation = remise en stock + code promo libéré ; retour = remise en stock sauf `restock: false` | Règles de statut explicites | — | — |
+| 30/10/2026 | Total dépensé client = commandes livrées (argent encaissé) ; nb commandes = non annulées | Chiffres exacts en COD | — | — |
+| 30/10/2026 | « Autre ville » acceptée via la zone par défaut (même tarif) | Reproduit le formulaire actuel | — | — |

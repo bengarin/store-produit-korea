@@ -1,0 +1,33 @@
+{
+  "source": "src/config/store.js",
+  "brandName": "Ma Petite Corée",
+  "whatsappNumber": "",
+  "deliveryFee": 20,
+  "freeDeliveryThreshold": null,
+  "cities": [
+    "Casablanca",
+    "Rabat",
+    "Marrakech",
+    "Fès",
+    "Tanger",
+    "Agadir",
+    "Meknès",
+    "Oujda",
+    "Kénitra",
+    "Tétouan",
+    "Salé",
+    "Témara",
+    "Mohammedia",
+    "El Jadida",
+    "Safi",
+    "Béni Mellal",
+    "Nador",
+    "Khouribga",
+    "Settat",
+    "Laâyoune"
+  ],
+  "promoCodes": {
+    "NATURE10": 10
+  },
+  "maxQtyPerLine": 20
+}

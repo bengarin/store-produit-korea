@@ -1,10 +1,10 @@
 # Préparation du Backend — Ma Petite Corée
 
-> État actuel : le backend Django existe (`backend/`). **Catalogue livré (phase 1)** :
-> `GET /products`, `/products/{slug}`, `/categories` sous `/api/v1/store` — conformes à ce contrat
-> (vérifié par `node scripts/check-api-contract.mjs` et `backend/tests/test_public_api.py`).
-> **Pas encore livrés** : `/config`, `/promo-codes/validate`, `/orders` (phase 2). Tant qu'ils manquent,
-> le site doit rester en mode local en production.
+> État actuel : le backend Django existe (`backend/`). Toutes les routes de ce contrat sont livrées sous
+> `/api/v1/store` : catalogue (phase 1) et `/config`, `/promo-codes/validate`, `/orders` (phase 2).
+> Contrat vérifié par `node scripts/check-api-contract.mjs` et les tests `backend/tests/`.
+> Avant une mise en ligne en mode API : renseigner le stock réel et régler la limitation de débit derrière le proxy
+> (voir `backend/README.md`, « Limites connues »).
 
 ## 1. Comment le front choisit sa source de données
 
@@ -84,26 +84,35 @@ Les composants n'importent jamais les données brutes directement.
 ### Category — `GET /categories` → `{ items: Category[] }`
 `{ id: 'hydratation', label: 'Hydratation' }` — l'option « Tous » est ajoutée par l'interface.
 
-### StoreConfig — `GET /config` (public)
-`{ deliveryFee, freeDeliveryThreshold, whatsappNumber, cities }` — **sans** les codes promo.
+### StoreConfig — `GET /config` (public, livré phase 2)
+`{ brandName, whatsappNumber, deliveryFee, freeDeliveryThreshold, cities, allowOtherCity, maxQtyPerLine }`
+— **sans** les codes promo. En mode API, le front l'utilise pour les villes, la livraison et WhatsApp.
 
-### Commande — `POST /orders`
-Corps envoyé par le front (voir `buildOrderRequest`) :
+### Commande — `POST /orders` (livré phase 2)
+En-tête obligatoire : `Idempotency-Key: <UUID>` (généré par le navigateur, réutilisé pour un nouvel essai de la
+même commande après une coupure réseau ⇒ jamais de double commande).
 ```json
 {
-  "customer": { "fullName": "…", "phone": "+2126XXXXXXXX", "city": "Casablanca", "address": "…" },
-  "items": [{ "productId": "baroness-aloe-vera-gel", "qty": 2 }],
-  "promoCode": "CODE" ,
+  "customer": { "fullName": "…", "phone": "06 12 34 56 78", "city": "Casablanca", "address": "…" },
+  "items": [{ "productId": "baroness-aloe-vera-gel", "variantId": null, "qty": 2 }],
+  "promoCode": "CODE",
   "paymentMethod": "cod",
-  "deliveryMethod": "home"
+  "deliveryMethod": "home",
+  "website": ""
 }
 ```
-Réponse attendue : `{ "number": "…", "createdAt": "ISO-8601", "totals": { "itemCount", "subtotal", "discount", "delivery", "total" } }`
+Réponses :
+- `201` (ou `200` si la même clé est renvoyée) : `{ number, createdAt, status, promoCode, totals: { itemCount, subtotal, discount, delivery, total }, items: [...] }` — aucune donnée personnelle ;
+- `409 insufficient_stock` : `error.items = [{ productId, variantId, name, requested, available, reason: "stock_unknown" | "out_of_stock" | "insufficient" }]` ;
+- `400 validation_error` : `error.fields` (ex. `customer.phone`, `promoCode`, `items`) ;
+- `409 too_many_orders`, `409 idempotency_mismatch`, `429 throttled`.
 
-Le front n'envoie **aucun prix** : seulement des identifiants et des quantités.
+Le front n'envoie **aucun prix** : seulement des identifiants et des quantités. Les totaux affichés dans le
+navigateur sont indicatifs ; la confirmation affiche les totaux renvoyés par le serveur.
 
-### Code promo — `POST /promo-codes/validate` (prévu)
-`{ code }` → `{ valid: boolean, percent?: number }`. Aujourd'hui la vérification est locale (démo `NATURE10`).
+### Code promo — `POST /promo-codes/validate` (livré phase 2)
+`{ code, items: [{ productId, qty }] }` → `{ valid: true, code, type: "percentage" | "fixed_amount" | "free_shipping", value, minSubtotal, discount }`
+ou `{ valid: false, message }`. Le code est revérifié à la commande (dates, limites d'utilisation).
 
 ## 4. Règles de sécurité pour le backend
 

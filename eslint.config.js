@@ -26,5 +26,5 @@ export default [
       'react/no-unknown-property': ['error', { ignore: ['fetchpriority'] }],
     },
   },
-  { files: ['vite.config.js', 'eslint.config.js'], languageOptions: { globals: globals.node } },
+  { files: ['vite.config.js', 'eslint.config.js', 'scripts/**/*.mjs'], languageOptions: { globals: globals.node } },
 ];

@@ -82,6 +82,8 @@ def api_exception_handler(exc, context):
     if isinstance(exc, exceptions.Throttled) and exc.wait:
         custom_message = f"Trop de requêtes. Réessayez dans {int(exc.wait) + 1} s."
     response.data = error_body(code, custom_message)
+    if getattr(exc, "problems", None):  # ex. articles en rupture : détail exploitable par le front
+        response.data["error"]["items"] = exc.problems
     return response
 
 

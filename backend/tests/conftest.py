@@ -7,6 +7,21 @@ from apps.accounts.roles import Role
 PASSWORD = "Un-Mot-De-Passe-Solide-2026"
 
 
+@pytest.fixture(autouse=True)
+def _role_groups(request, django_db_blocker):
+    """
+    Les tests de concurrence (transaction=True) vident la base à la fin, y compris les 5 groupes créés
+    par la migration 0002. On les recrée avant chaque test qui utilise la base.
+    """
+    if request.node.get_closest_marker("django_db") is None and "db" not in request.fixturenames:
+        return
+    from django.contrib.auth.models import Group
+
+    with django_db_blocker.unblock():
+        for role in Role:
+            Group.objects.get_or_create(name=role.value)
+
+
 @pytest.fixture
 def client():
     """Client API qui vérifie le CSRF comme un vrai navigateur."""
@@ -121,3 +136,50 @@ def product(db, category, media):
         return p
 
     return _product
+
+
+# --- Outils commandes (phase 2) ----------------------------------------------
+import uuid  # noqa: E402
+
+
+@pytest.fixture
+def shop(db):
+    """Boutique minimale : zone « Maroc » 20 DH (accepte les autres villes), Casablanca et Rabat."""
+    from decimal import Decimal
+
+    from apps.shipping.models import City, ShippingZone
+    from apps.store_settings.models import StoreSettings
+
+    StoreSettings.load()
+    zone = ShippingZone.objects.create(name="Maroc", fee=Decimal("20"), is_default=True)
+    City.objects.create(name="Casablanca", zone=zone, position=0)
+    City.objects.create(name="Rabat", zone=zone, position=1)
+    return zone
+
+
+@pytest.fixture
+def sellable(product, shop):
+    """Produit ACTIF avec un stock réel donné."""
+    from apps.catalog.models import Variant
+
+    def _sellable(slug="creme-test", stock=10, price="129.00", **variant_fields):
+        p = product(slug=slug, status="active", price=price)
+        Variant.objects.filter(product=p).update(stock_quantity=stock, **variant_fields)
+        return p
+
+    return _sellable
+
+
+def order_payload(items, *, phone="06 12 34 56 78", city="Casablanca", promo=None, name="Salma Benali", **extra):
+    return {
+        "customer": {"fullName": name, "phone": phone, "city": city, "address": "12 rue des Orangers, Maarif"},
+        "items": [{"productId": slug, "qty": qty} for slug, qty in items],
+        "promoCode": promo,
+        "paymentMethod": "cod",
+        "deliveryMethod": "home",
+        **extra,
+    }
+
+
+def post_order(client, payload, key=None):
+    return client.post("/api/v1/store/orders", payload, format="json", HTTP_IDEMPOTENCY_KEY=key or str(uuid.uuid4()))

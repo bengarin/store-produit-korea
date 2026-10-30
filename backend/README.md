@@ -4,8 +4,11 @@
   journal d'audit, format d'erreur commun, `/api/v1/health`, tests et lint.
 - **Phase 1** (catalogue) : produits, catégories, options/variantes, images et médiathèque, SEO, statuts,
   API admin et API publique compatible avec le front, import des 5 produits de démonstration.
+- **Phase 2** (commandes et clients) : stock réel par variante + historique des mouvements, commande en paiement à
+  la livraison (transaction, verrouillage du stock, anti-doublon), clients, livraison, codes promo, statuts,
+  facture imprimable, export Excel ; le formulaire de commande du site est branché sur l'API.
 
-Pas encore de commandes, de tableau de bord ni d'éditeur de thème (phases suivantes, voir `docs/ARCHITECTURE.md`).
+Pas encore de tableau de bord ni d'éditeur de thème (phases suivantes, voir `docs/ARCHITECTURE.md`).
 
 ## Prérequis
 
@@ -40,8 +43,10 @@ python manage.py migrate
 # 5. Créer votre compte Propriétaire (le mot de passe est demandé, masqué)
 python manage.py create_staff_user --email vous@exemple.ma --role owner
 
-# 6. Importer les 5 produits de démonstration (images comprises)
+# 6. Importer les 5 produits de démonstration (images comprises) et la configuration actuelle du site
+#    (villes, frais de livraison 20 DH, code de démo NATURE10, WhatsApp)
 python manage.py import_demo_catalog
+python manage.py import_store_config
 
 # 7. Lancer l'API
 python manage.py runserver
@@ -49,7 +54,7 @@ python manage.py runserver
 #    → http://127.0.0.1:8000/api/v1/store/products
 ```
 
-### Voir la boutique alimentée par MySQL (phase 1)
+### Voir la boutique alimentée par MySQL
 
 Dans un second terminal, à la racine du dépôt :
 
@@ -58,9 +63,17 @@ VITE_API_BASE_URL=/api/v1/store npm run dev     # http://localhost:5173
 node scripts/check-api-contract.mjs             # doit afficher « DIFFERENCES 0 »
 ```
 
-Vite relaie `/api` et `/media` vers Django (`vite.config.js`). Sans `VITE_API_BASE_URL`, le site reste en mode local.
-⚠️ La **commande** ne fonctionne pas encore en mode API (`POST /orders` arrive en phase 2) : ne pas mettre en ligne
-le mode API avant la phase 2.
+Vite relaie `/api` et `/media` vers Django (`vite.config.js`). Sans `VITE_API_BASE_URL`, le site reste en mode
+démo local (commandes simulées), exactement comme avant.
+
+⚠️ **Stock** : les produits importés ont un stock **non renseigné** et ne peuvent donc PAS être commandés
+(message « momentanément indisponible »). Renseignez le stock réel de chaque variante :
+
+```bash
+# Exemple : 12 unités comptées pour la variante n° 3 (identifiants : GET /api/v1/admin/inventory)
+curl … POST /api/v1/admin/inventory/adjust  {"variantId": 3, "mode": "set", "quantity": 12, "reason": "initial_count"}
+```
+(L'écran d'administration arrivera en phase 3 ; d'ici là, cet appel se fait avec une session admin.)
 
 Arrêter MySQL : `docker compose --env-file backend/.env stop` (les données sont conservées dans le volume `mysql-data`).
 
@@ -124,6 +137,47 @@ Par défaut, **toute vue est fermée** (membre de l'équipe requis) ; une vue pu
 Jamais exposés : coût, quantité de stock exacte (`stock: null`, mais `inStock` et `variants[].available`),
 brouillons, produits archivés, catégories masquées.
 
+### Commande (publique) — `/api/v1/store/`
+
+| Méthode | Route | Notes |
+|---|---|---|
+| GET | `/config` | `{brandName, whatsappNumber, deliveryFee, freeDeliveryThreshold, cities, allowOtherCity, maxQtyPerLine}` — jamais les codes promo |
+| POST | `/promo-codes/validate` `{code, items:[{productId, qty}]}` | `{valid, code, type, value, minSubtotal, discount}` ou `{valid:false, message}` — 30/h par IP |
+| POST | `/orders` + en-tête **`Idempotency-Key`** | 201 créée · 200 même commande renvoyée (double envoi) · 409 `insufficient_stock` (détail dans `error.items`) — 10/h par IP et 5/h par téléphone |
+
+Corps de `/orders` : `{customer:{fullName, phone, city, address}, items:[{productId, variantId?, qty}], promoCode, paymentMethod:"cod", deliveryMethod:"home", website:""}`
+(`website` = champ piège : rempli ⇒ refus). **Aucun montant envoyé par le navigateur n'est lu** : prix, remise et
+livraison sont recalculés depuis MySQL. La réponse ne contient aucune donnée personnelle.
+
+**Création d'une commande (une seule transaction)** : validation → verrouillage des variantes (`SELECT … FOR UPDATE`,
+dans l'ordre des id) → contrôle du stock (stock non renseigné = non commandable, sauf « vente sans stock »)
+→ recalcul des prix, du code promo (verrouillé) et de la livraison → numéro unique `MPC-AAAA-NNNNNN` → lignes avec
+copie figée (nom, variante, SKU, prix, coût) → mouvements de stock → client (téléphone E.164) et adresse.
+
+**Statuts** : `pending → confirmed → shipped → delivered` ; `pending|confirmed → cancelled` ;
+`shipped|delivered → returned`. Annulation = remise en stock systématique et code promo libéré ; retour = remise en
+stock par défaut (`"restock": false` si produits abîmés) ; livrée ⇒ payée ; retournée après livraison ⇒ remboursée.
+Statistiques client recalculées depuis la base : commandes = non annulées, total dépensé = commandes livrées.
+
+### Commandes, clients, stock, réglages (administration) — `/api/v1/admin/`
+
+| Méthode | Route | Rôles (lecture / écriture) |
+|---|---|---|
+| GET | `/orders` (`?status=`, `?payment=`, `?from=AAAA-MM-JJ&to=`, `?city=`, `?search=` n°/téléphone/nom, `?customer=`) | O A M N |
+| GET, PATCH | `/orders/{id}` (PATCH : `internalNote`) | O A M N / O A M |
+| POST | `/orders/{id}/status` `{status, note, restock}` | O A M |
+| GET | `/orders/{id}/invoice` (HTML imprimable) · `/orders/export.xlsx` (mêmes filtres) | O A M N |
+| GET, PATCH | `/customers` (`?search=`, `?ordering=`) · `/customers/{id}` (+ commandes, adresses) | O A M N / O A M |
+| GET | `/inventory` (`?state=unknown|low|out_of_stock`, `?search=`) | 5 rôles |
+| POST | `/inventory/adjust` `{variantId, mode:"set"|"delta", quantity, reason, note}` | O A M |
+| GET | `/inventory/movements` (`?variant=`, `?product=`, `?reason=`, `?order=`, `?from=&to=`) | 5 rôles |
+| GET, POST, PATCH, DELETE | `/coupons`, `/coupons/{id}` | O A M N / O A |
+| GET, POST, PATCH | `/shipping/zones`, `/shipping/cities` (+ `/{id}`) | O A M N / O A |
+| GET, PATCH | `/settings` (WhatsApp, mentions légales de facture, limites) | O A M N / O A |
+
+L'Éditeur de contenu n'a pas accès aux commandes ni aux clients (données personnelles).
+Le coût d'achat des lignes de commande suit la même règle que le catalogue (O, A, Analyste).
+
 ### Catalogue (administration) — `/api/v1/admin/`
 
 | Méthode | Route | Rôle |
@@ -161,7 +215,8 @@ Erreurs (toujours le même format) :
 Codes : `validation_error`, `parse_error`, `not_authenticated`, `authentication_failed`, `permission_denied`,
 `csrf_failed`, `account_locked`, `not_found`, `method_not_allowed`, `throttled`, `service_unavailable`, `server_error`,
 `conflict` et ses variantes (`product_active`, `product_in_use`, `category_in_use`, `media_in_use`, `last_variant`,
-`variant_in_use`, `option_in_use`).
+`variant_in_use`, `option_in_use`, `insufficient_stock`, `idempotency_mismatch`, `too_many_orders`,
+`invalid_transition`, `coupon_in_use`).
 
 ## Sécurité en place
 
@@ -171,12 +226,19 @@ Codes : `validation_error`, `parse_error`, `not_authenticated`, `authentication_
 - Message d'échec identique que le compte existe ou non ; nouvelle session à chaque connexion.
 - Journal d'audit en ajout seul : connexions, échecs, verrouillages, déconnexions, changements de mot de passe, création d'utilisateurs. Les mots de passe et jetons sont masqués automatiquement.
 - Aucun secret dans le dépôt : `backend/.env` est ignoré par git.
+- Commande publique : limitation par IP et par téléphone, champ piège, clé d'idempotence, validation du téléphone,
+  de la ville, des produits actifs, des variantes et des quantités ; totaux toujours recalculés par le serveur.
+- Export Excel : les textes saisis par les clients commençant par `=`, `+`, `-`, `@` sont neutralisés (pas d'injection
+  de formule). Facture : toutes les données sont échappées (pas d'injection HTML).
 
 ## Limites connues (à traiter plus tard)
 
-- Stock réel des 5 produits inconnu : importés avec « suivre le stock » désactivé. À renseigner avant la phase 2.
-- Journal des mouvements de stock (entrées/sorties) : prévu avec les commandes (phase 2) ; en attendant, chaque
-  modification de stock est tracée dans le journal d'audit.
+- **Stock réel des 5 produits non renseigné** : ils ne sont pas commandables tant qu'il n'est pas saisi.
+- **Limitation de débit derrière un proxy/CDN** : l'adresse lue est `REMOTE_ADDR`. Derrière un proxy, TOUS les
+  visiteurs partageraient la même limite (120 requêtes/min sur le catalogue, 10 commandes/heure) : à configurer
+  (lecture fiable de `X-Forwarded-For`) AVANT la mise en ligne.
+- Facture : mentions légales (ICE, RC, IF) à compléter dans les réglages — [À VÉRIFIER avec un comptable].
+- Une adresse e-mail client n'est pas demandée (pas d'e-mail de confirmation pour l'instant).
 - Médias stockés sur le disque local (`backend/media/`) ; stockage externe (S3/R2) à brancher à la mise en ligne.
 
 - Limitation de débit stockée en mémoire locale : en production avec plusieurs processus, il faudra un cache partagé (ex. Redis).

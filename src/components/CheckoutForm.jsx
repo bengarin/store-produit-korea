@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Truck, HandCoins, Lock, Loader2 } from 'lucide-react';
-import { STORE_CONFIG } from '../config/store.js';
+import { useCatalog } from '../context/CatalogContext.jsx';
+import { ORDERS_ARE_SIMULATED } from '../services/orderService.js';
 import { formatPrice } from '../utils/currency.js';
 import { normalizeMoroccanPhone } from '../utils/phone.js';
 
@@ -32,8 +33,11 @@ function Field({ id, label, error, children }) {
   );
 }
 
-export default function CheckoutForm({ deliveryFee, submitting, onSubmit, children }) {
+export default function CheckoutForm({ deliveryFee, submitting, onSubmit, alert = null, children }) {
+  const { config } = useCatalog();
+  const allowOtherCity = config.allowOtherCity !== false;
   const [values, setValues] = useState(EMPTY);
+  const [honeypot, setHoneypot] = useState('');
   const [errors, setErrors] = useState({});
   const [touched, setTouched] = useState({});
 
@@ -62,12 +66,15 @@ export default function CheckoutForm({ deliveryFee, submitting, onSubmit, childr
       document.getElementById(Object.keys(found)[0])?.focus();
       return;
     }
-    onSubmit({
-      fullName: values.fullName.trim(),
-      phone: normalizeMoroccanPhone(values.phone),
-      city: values.city === 'autre' ? values.otherCity.trim() : values.city,
-      address: values.address.trim(),
-    });
+    onSubmit(
+      {
+        fullName: values.fullName.trim(),
+        phone: normalizeMoroccanPhone(values.phone),
+        city: values.city === 'autre' ? values.otherCity.trim() : values.city,
+        address: values.address.trim(),
+      },
+      { website: honeypot },
+    );
   };
 
   return (
@@ -85,8 +92,8 @@ export default function CheckoutForm({ deliveryFee, submitting, onSubmit, childr
         <Field id="city" label="Ville" error={err('city')}>
           <select id="city" value={values.city} onChange={update('city')} onBlur={blur('city')} {...a11y('city')}>
             <option value="" disabled>Choisir votre ville</option>
-            {STORE_CONFIG.cities.map((c) => <option key={c} value={c}>{c}</option>)}
-            <option value="autre">Autre ville…</option>
+            {config.cities.map((c) => <option key={c} value={c}>{c}</option>)}
+            {allowOtherCity && <option value="autre">Autre ville…</option>}
           </select>
         </Field>
         {values.city === 'autre' && (
@@ -126,11 +133,27 @@ export default function CheckoutForm({ deliveryFee, submitting, onSubmit, childr
 
       {children}
 
+      {/* Champ piège anti-robots (mode API) : invisible et ignoré par les humains et les lecteurs d'écran. */}
+      {!ORDERS_ARE_SIMULATED && (
+        <div className="hp-field" aria-hidden="true">
+          <label htmlFor="website">Ne pas remplir</label>
+          <input id="website" name="website" tabIndex={-1} autoComplete="off" value={honeypot}
+            onChange={(e) => setHoneypot(e.target.value)} />
+        </div>
+      )}
+
+      {alert}
+
       <div className="sticky-actions">
         <button type="submit" className="btn btn--primary btn--lg btn--block" disabled={submitting} aria-busy={submitting}>
           {submitting ? (<><Loader2 size={18} className="spin" /> Envoi en cours…</>) : 'Confirmer la commande'}
         </button>
-        <p className="secure-note"><Lock size={13} /> Démo : aucune donnée n’est envoyée, tout reste dans votre navigateur.</p>
+        <p className="secure-note">
+          <Lock size={13} />{' '}
+          {ORDERS_ARE_SIMULATED
+            ? 'Démo : aucune donnée n’est envoyée, tout reste dans votre navigateur.'
+            : 'Vos informations servent uniquement à préparer et livrer votre commande.'}
+        </p>
       </div>
     </form>
   );

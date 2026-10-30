@@ -32,7 +32,7 @@ export async function request(path, { method = 'GET', body, signal, headers = {}
     });
     const isJson = res.headers.get('content-type')?.includes('application/json');
     const data = isJson ? await res.json() : null;
-    if (!res.ok) throw new ApiError(data?.message || `Erreur ${res.status}`, { status: res.status, data });
+    if (!res.ok) throw new ApiError(data?.error?.message || data?.message || `Erreur ${res.status}`, { status: res.status, data });
     return data;
   } catch (err) {
     if (err instanceof ApiError) throw err;

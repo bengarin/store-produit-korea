@@ -143,11 +143,13 @@ class Command(BaseCommand):
         product.hover_image = gallery[hover["galleryIndex"]] if hover else None
         product.hover_image_position = (hover or {}).get("position", "")
 
-        # Variante par défaut. Stock réel inconnu [DONNÉES MANQUANTES] : suivi désactivé en attendant.
-        variant = product.variants.filter(is_default=True).first() or Variant(product=product, is_default=True)
+        # Variante par défaut. Le stock n'est JAMAIS inventé : il reste « non renseigné » (NULL) à la création,
+        # et une mise à jour (--update) ne touche pas au stock existant (il se modifie par mouvement de stock).
+        variant = product.variants.filter(is_default=True).first()
+        if variant is None:
+            variant = Variant(product=product, is_default=True, stock_quantity=None, track_inventory=True)
         variant.title = services.DEFAULT_VARIANT_TITLE
         variant.price = Decimal(str(p["price"]))
-        variant.track_inventory = False
         variant.save()
 
         errors = services.activation_errors(product)

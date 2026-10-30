@@ -4,6 +4,7 @@ lu par src/services/productService.js → normalizeProduct).
 """
 
 import json
+from decimal import Decimal
 from pathlib import Path
 
 import pytest
@@ -97,9 +98,9 @@ def test_produits_identiques_au_catalogue_local(client, imported):
 
 @pytest.mark.django_db
 def test_donnees_sensibles_jamais_publiques(client, imported):
-    Variant.objects.update(cost=55, stock_quantity=7)
+    Variant.objects.update(cost=Decimal("4321.57"), stock_quantity=7)
     raw = client.get(f"{STORE}/products").content.decode()
-    assert '"cost"' not in raw and "55" not in raw
+    assert '"cost"' not in raw and "4321" not in raw
     first = client.get(f"{STORE}/products").json()["items"][0]
     assert first["stock"] is None and first["inStock"] is True
     assert set(first["variants"][0]) == {"id", "title", "price", "compareAtPrice", "available", "isDefault", "options"}

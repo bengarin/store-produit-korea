@@ -222,7 +222,8 @@ class Variant(Timestamped):
     price = models.DecimalField("prix (DH)", max_digits=10, decimal_places=2)
     compare_at_price = models.DecimalField("prix barré (DH)", max_digits=10, decimal_places=2, null=True, blank=True)
     cost = models.DecimalField("coût (DH) — jamais public", max_digits=10, decimal_places=2, null=True, blank=True)
-    stock_quantity = models.IntegerField("stock", default=0)
+    # NULL = stock NON RENSEIGNÉ (jamais inventé). Se modifie uniquement par un mouvement de stock (app inventory).
+    stock_quantity = models.IntegerField("stock", null=True, blank=True, default=None)
     track_inventory = models.BooleanField("suivre le stock", default=True)
     allow_backorder = models.BooleanField("vendre sans stock", default=False)
     low_stock_threshold = models.PositiveIntegerField("seuil d'alerte", default=5)
@@ -246,7 +247,8 @@ class Variant(Timestamped):
                 name="variant_compare_at_gt_price",
             ),
             models.CheckConstraint(
-                condition=Q(stock_quantity__gte=0) | Q(allow_backorder=True), name="variant_stock_gte_0"
+                condition=Q(stock_quantity__isnull=True) | Q(stock_quantity__gte=0) | Q(allow_backorder=True),
+                name="variant_stock_gte_0",
             ),
         ]
 
@@ -254,8 +256,20 @@ class Variant(Timestamped):
         return f"{self.product.public_name} — {self.title or 'Par défaut'}"
 
     @property
+    def stock_known(self):
+        return self.stock_quantity is not None
+
+    def available_quantity(self):
+        """Quantité commandable : None = illimitée (stock non suivi ou vente sans stock), 0 si inconnue."""
+        if not self.track_inventory or self.allow_backorder:
+            return None
+        return max(self.stock_quantity or 0, 0)
+
+    @property
     def is_available(self):
-        return not self.track_inventory or self.allow_backorder or self.stock_quantity > 0
+        """Commandable maintenant. Stock non renseigné = NON commandable (sauf vente sans stock)."""
+        available = self.available_quantity()
+        return available is None or available > 0
 
 
 class VariantOptionValue(models.Model):

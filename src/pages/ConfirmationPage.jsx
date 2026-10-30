@@ -3,10 +3,12 @@ import { Link } from 'react-router-dom';
 import { Check, Heart, MessageCircle, Info } from 'lucide-react';
 import { loadLastOrder, buildWhatsAppLink, ORDERS_ARE_SIMULATED } from '../services/orderService.js';
 import { formatPrice } from '../utils/currency.js';
+import { useCatalog } from '../context/CatalogContext.jsx';
 
 export default function ConfirmationPage() {
   const [order] = useState(loadLastOrder);
   const [showWaHelp, setShowWaHelp] = useState(false);
+  const { config } = useCatalog();
 
   if (!order) {
     return (
@@ -21,7 +23,7 @@ export default function ConfirmationPage() {
   }
 
   const { totals } = order;
-  const waLink = buildWhatsAppLink(order.number);
+  const waLink = buildWhatsAppLink(order.number, config);
 
   return (
     <main className="confirmation">
@@ -66,7 +68,11 @@ export default function ConfirmationPage() {
           {showWaHelp && (
             <p className="config-hint" role="note">
               <Info size={15} />
-              <span>Numéro WhatsApp non configuré. Renseignez <code>whatsappNumber</code> dans <code>src/config/store.js</code>.</span>
+              {ORDERS_ARE_SIMULATED ? (
+                <span>Numéro WhatsApp non configuré. Renseignez <code>whatsappNumber</code> dans <code>src/config/store.js</code>.</span>
+              ) : (
+                <span>Le suivi WhatsApp n’est pas encore disponible : nous vous contacterons par téléphone pour confirmer votre commande.</span>
+              )}
             </p>
           )}
         </div>

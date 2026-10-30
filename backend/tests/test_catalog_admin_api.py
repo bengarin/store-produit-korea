@@ -203,15 +203,19 @@ def test_activation_exige_des_variantes_completes(api, product):
 
 
 @pytest.mark.django_db
-def test_regles_de_prix_et_de_stock(api, product):
+def test_regles_de_prix_et_stock_en_lecture_seule(api, product):
     v = product().variants.get()
     url = f"/api/v1/admin/variants/{v.pk}"
     assert api.patch(url, {"compareAtPrice": "100"}, format="json").status_code == 400
     assert api.patch(url, {"compareAtPrice": "159.90"}, format="json").json()["compareAtPrice"] == 159.9
-    assert api.patch(url, {"stockQuantity": -2}, format="json").status_code == 400
-    ok = api.patch(url, {"stockQuantity": -2, "allowBackorder": True}, format="json")
-    assert ok.status_code == 200 and ok.json()["stockQuantity"] == -2
     assert api.patch(url, {"price": "12.345"}, format="json").status_code == 400  # 2 décimales max
+    # Le stock ne se modifie JAMAIS ici (seulement par un mouvement de stock tracé).
+    response = api.patch(url, {"stockQuantity": 999}, format="json")
+    assert response.status_code == 200 and response.json()["stockQuantity"] == 10
+    created = api.post(
+        P, {"brand": "B", "name": "Nouveau", "variant": {"price": "10", "stockQuantity": 50}}, format="json"
+    ).json()
+    assert created["variants"][0]["stockQuantity"] is None  # jamais de stock inventé
 
 
 @pytest.mark.django_db

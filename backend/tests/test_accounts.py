@@ -6,16 +6,16 @@ from apps.accounts.models import User
 from apps.accounts.roles import Role
 
 
+def test_la_migration_cree_exactement_les_5_roles():
+    import importlib
+
+    migration = importlib.import_module("apps.accounts.migrations.0002_create_roles")
+    assert sorted(migration.ROLES) == sorted(Role.values) and len(Role.values) == 5
+
+
 @pytest.mark.django_db
-def test_les_5_roles_existent_apres_migration():
-    assert set(Group.objects.values_list("name", flat=True)) >= {
-        "owner",
-        "admin",
-        "order_manager",
-        "content_editor",
-        "analyst",
-    }
-    assert len(Role.values) == 5
+def test_les_5_roles_existent():
+    assert set(Group.objects.values_list("name", flat=True)) >= set(Role.values)
 
 
 @pytest.mark.django_db

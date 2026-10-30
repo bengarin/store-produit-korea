@@ -11,15 +11,15 @@ import { computeTotals, resolveLines } from '../utils/pricing.js';
 import { clearDirectOrder } from '../services/orderService.js';
 
 export default function CartPage() {
-  const { items, count, setQty, removeItem, clearCart, promoCode, applyPromo, removePromo, maxQty } = useCart();
-  const { getProductById } = useCatalog();
+  const { items, count, setQty, removeItem, clearCart, promo, promoCode, applyPromo, removePromo, maxQty } = useCart();
+  const { getProductById, config } = useCatalog();
   const showToast = useToast();
   const navigate = useNavigate();
   const [code, setCode] = useState('');
   const [promoError, setPromoError] = useState('');
 
   const lines = useMemo(() => resolveLines(items, getProductById), [items, getProductById]);
-  const totals = useMemo(() => computeTotals(lines, promoCode), [lines, promoCode]);
+  const totals = useMemo(() => computeTotals(lines, promo, config), [lines, promo, config]);
 
   const handleRemove = useCallback(
     (product) => {
@@ -36,15 +36,16 @@ export default function CartPage() {
     }
   };
 
-  const handlePromo = (e) => {
+  const handlePromo = async (e) => {
     e.preventDefault();
     if (!code.trim()) return setPromoError('Saisissez un code promo.');
-    if (applyPromo(code)) {
+    const result = await applyPromo(code);
+    if (result.ok) {
       setPromoError('');
       setCode('');
       showToast('Code promo appliqué');
     } else {
-      setPromoError('Ce code promo n’est pas valide.');
+      setPromoError(result.message);
     }
   };
 

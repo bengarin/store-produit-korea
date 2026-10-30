@@ -1,0 +1,93 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>Facture {{ order.number }} — {{ settings.brand_name }}</title>
+<style>
+  :root { --ink: #1e2a24; --muted: #5d6b63; --line: #e2dccf; --green: #1f4d3a; }
+  * { box-sizing: border-box; }
+  body { margin: 0; padding: 32px; font: 14px/1.5 system-ui, -apple-system, "Segoe UI", sans-serif; color: var(--ink); background: #fff; }
+  .page { max-width: 780px; margin: 0 auto; }
+  header { display: flex; justify-content: space-between; gap: 24px; border-bottom: 2px solid var(--green); padding-bottom: 16px; }
+  h1 { margin: 0 0 4px; font-size: 22px; color: var(--green); }
+  .muted { color: var(--muted); font-size: 12.5px; }
+  .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin: 24px 0; }
+  h2 { font-size: 13px; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); margin: 0 0 6px; }
+  table { width: 100%; border-collapse: collapse; }
+  th, td { padding: 8px 6px; border-bottom: 1px solid var(--line); text-align: left; vertical-align: top; }
+  th { font-size: 12px; color: var(--muted); font-weight: 600; }
+  td.num, th.num { text-align: right; white-space: nowrap; }
+  .totals { margin-left: auto; width: 300px; margin-top: 16px; }
+  .totals td { border: 0; padding: 4px 6px; }
+  .totals .grand td { font-size: 16px; font-weight: 700; border-top: 2px solid var(--green); padding-top: 8px; }
+  footer { margin-top: 32px; padding-top: 12px; border-top: 1px solid var(--line); }
+  .print { margin: 0 0 16px; }
+  @media print { body { padding: 0; } .print { display: none; } }
+</style>
+</head>
+<body>
+<div class="page">
+  <p class="print"><button onclick="window.print()">Imprimer</button></p>
+  <header>
+    <div>
+      <h1>{{ settings.legal_name|default:settings.brand_name }}</h1>
+      {% if settings.legal_address %}<div class="muted">{{ settings.legal_address|linebreaksbr }}</div>{% endif %}
+      <div class="muted">
+        {% if settings.ice %}ICE : {{ settings.ice }} · {% endif %}{% if settings.rc %}RC : {{ settings.rc }} · {% endif %}{% if settings.if_number %}IF : {{ settings.if_number }}{% endif %}
+      </div>
+      {% if settings.contact_phone or settings.contact_email %}<div class="muted">{{ settings.contact_phone }} {{ settings.contact_email }}</div>{% endif %}
+    </div>
+    <div style="text-align:right">
+      <h1>Facture</h1>
+      <div><strong>{{ order.number }}</strong></div>
+      <div class="muted">Date : {{ placed_at|date:"d/m/Y" }}</div>
+      <div class="muted">Statut : {{ order.get_status_display }}</div>
+    </div>
+  </header>
+
+  <div class="grid">
+    <section>
+      <h2>Livraison</h2>
+      <div><strong>{{ order.ship_full_name }}</strong></div>
+      <div>{{ order.ship_address }}</div>
+      <div>{{ order.ship_city_label }}</div>
+      <div>{{ order.ship_phone }}</div>
+    </section>
+    <section>
+      <h2>Paiement</h2>
+      <div>{{ order.get_payment_method_display }}</div>
+      <div class="muted">{{ order.get_payment_status_display }}</div>
+    </section>
+  </div>
+
+  <table>
+    <thead><tr><th>Produit</th><th>SKU</th><th class="num">Prix unitaire</th><th class="num">Qté</th><th class="num">Total</th></tr></thead>
+    <tbody>
+    {% for item in items %}
+      <tr>
+        <td>{{ item.product_name }}{% if item.variant_title and item.variant_title != "Par défaut" %}<div class="muted">{{ item.variant_title }}</div>{% endif %}</td>
+        <td>{{ item.sku|default:"—" }}</td>
+        <td class="num">{{ item.unit_price|floatformat:2 }} DH</td>
+        <td class="num">{{ item.quantity }}</td>
+        <td class="num">{{ item.line_total|floatformat:2 }} DH</td>
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+
+  <table class="totals">
+    <tr><td>Sous-total</td><td class="num">{{ order.subtotal|floatformat:2 }} DH</td></tr>
+    {% if order.discount_total %}<tr><td>Remise{% if order.coupon_code %} ({{ order.coupon_code }}){% endif %}</td><td class="num">−{{ order.discount_total|floatformat:2 }} DH</td></tr>{% endif %}
+    <tr><td>Livraison</td><td class="num">{% if order.shipping_fee %}{{ order.shipping_fee|floatformat:2 }} DH{% else %}Offerte{% endif %}</td></tr>
+    <tr class="grand"><td>Total</td><td class="num">{{ order.total|floatformat:2 }} DH</td></tr>
+  </table>
+
+  <footer class="muted">
+    {{ settings.invoice_footer|default:"Merci pour votre commande." }}
+    {% if not settings.ice %}<br>Mentions légales (ICE, RC, IF) à compléter dans les réglages de la boutique.{% endif %}
+  </footer>
+</div>
+</body>
+</html>

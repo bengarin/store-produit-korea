@@ -15,5 +15,13 @@ export function loadCart() {
 }
 export const saveCart = (items) => writeJSON(safeLocal(), STORAGE_KEYS.cart, items);
 
-export const loadPromoCode = () => readJSON(safeLocal(), STORAGE_KEYS.promo, '');
-export const savePromoCode = (code) => writeJSON(safeLocal(), STORAGE_KEYS.promo, code);
+/**
+ * Code promo appliqué : { code, type, value, minSubtotal } ou null.
+ * (Ancien format : simple chaîne « NATURE10 », relu puis converti par CartContext.)
+ */
+export function loadPromo() {
+  const raw = readJSON(safeLocal(), STORAGE_KEYS.promo, null);
+  if (typeof raw === 'string') return raw ? { code: raw, legacy: true } : null;
+  return raw && typeof raw.code === 'string' && typeof raw.type === 'string' ? raw : null;
+}
+export const savePromo = (promo) => writeJSON(safeLocal(), STORAGE_KEYS.promo, promo);

@@ -6,8 +6,10 @@ urlpatterns = [
     path("api/v1/", include("apps.core.urls")),
     path("api/v1/admin/auth/", include("apps.accounts.urls")),
     path("api/v1/admin/", include("apps.catalog.urls_admin")),
+    path("api/v1/admin/", include("apps.orders.urls_admin")),
     # Boutique publique : chemins attendus par src/api/endpoints.js
     path("api/v1/store/", include("apps.catalog.urls_public")),
+    path("api/v1/store/", include("apps.orders.urls_public")),
 ]
 
 if settings.DEBUG:  # en développement uniquement ; en production les médias sont servis par le stockage

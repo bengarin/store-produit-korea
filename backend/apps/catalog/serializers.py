@@ -113,9 +113,8 @@ class VariantSerializer(serializers.ModelSerializer):
     )
     cost = serializers.DecimalField(max_digits=10, decimal_places=2, allow_null=True, required=False, min_value=0)
     price = serializers.DecimalField(max_digits=10, decimal_places=2, min_value=0)
-    stockQuantity = serializers.IntegerField(
-        source="stock_quantity", required=False, min_value=-100000, max_value=1_000_000
-    )
+    # Lecture seule : le stock change UNIQUEMENT par un mouvement de stock (POST /admin/inventory/adjust).
+    stockQuantity = serializers.IntegerField(source="stock_quantity", read_only=True, allow_null=True)
     trackInventory = serializers.BooleanField(source="track_inventory", required=False)
     allowBackorder = serializers.BooleanField(source="allow_backorder", required=False)
     lowStockThreshold = serializers.IntegerField(source="low_stock_threshold", required=False, min_value=0)
@@ -181,10 +180,12 @@ class VariantSerializer(serializers.ModelSerializer):
         compare = attrs.get("compare_at_price", getattr(self.instance, "compare_at_price", None))
         if compare is not None and price is not None and compare <= price:
             raise serializers.ValidationError({"compareAtPrice": ["Le prix barré doit être supérieur au prix."]})
-        stock = attrs.get("stock_quantity", getattr(self.instance, "stock_quantity", 0))
+        stock = getattr(self.instance, "stock_quantity", None)
         backorder = attrs.get("allow_backorder", getattr(self.instance, "allow_backorder", False))
-        if stock < 0 and not backorder:
-            raise serializers.ValidationError({"stockQuantity": ["Le stock ne peut pas être négatif."]})
+        if stock is not None and stock < 0 and not backorder:
+            raise serializers.ValidationError(
+                {"allowBackorder": ["Stock négatif : régularisez le stock avant de désactiver la vente sans stock."]}
+            )
         return attrs
 
 
@@ -237,7 +238,11 @@ class ProductListSerializer(serializers.ModelSerializer):
         return default.price if default else None
 
     def get_totalStock(self, product):
-        return sum(v.stock_quantity for v in self._variants(product) if v.track_inventory)
+        """Somme des stocks connus ; None si au moins une variante suivie n'a pas de stock renseigné."""
+        tracked = [v for v in self._variants(product) if v.track_inventory]
+        if any(v.stock_quantity is None for v in tracked):
+            return None
+        return sum(v.stock_quantity for v in tracked)
 
     def get_variantCount(self, product):
         return len(self._variants(product))

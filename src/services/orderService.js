@@ -13,6 +13,16 @@ import { STORAGE_KEYS } from './storageKeys.js';
 /** true tant que les commandes ne sont pas réellement transmises. */
 export const ORDERS_ARE_SIMULATED = DATA_SOURCE === 'local';
 
+/**
+ * Vérifie un code promo auprès du serveur (mode API) pour le panier donné.
+ * Retourne { ok: true, promo } ou { ok: false, message }.
+ */
+export async function validatePromo(code, items) {
+  const res = await api.post(ENDPOINTS.promoValidate, { code, items: items.map(({ id, qty }) => ({ productId: id, qty })) });
+  if (!res.valid) return { ok: false, message: res.message };
+  return { ok: true, promo: { code: res.code, type: res.type, value: res.value, minSubtotal: res.minSubtotal } };
+}
+
 /** Corps envoyé au backend : uniquement des identifiants et quantités (pas de prix de confiance). */
 export function buildOrderRequest({ customer, lines, promoCode }) {
   return {
@@ -33,7 +43,7 @@ function localOrderNumber() {
  * Envoie la commande. Retourne l'objet affiché sur la page de confirmation.
  * `preview` = lignes et totaux calculés côté navigateur (affichage en mode local).
  */
-export async function submitOrder({ customer, lines, promoCode, totals }) {
+export async function submitOrder({ customer, lines, promoCode, totals, idempotencyKey, website = '' }) {
   const request = buildOrderRequest({ customer, lines, promoCode });
   const summary = {
     customer,
@@ -44,8 +54,11 @@ export async function submitOrder({ customer, lines, promoCode, totals }) {
   };
 
   if (DATA_SOURCE === 'api') {
-    const res = await api.post(ENDPOINTS.orders, request);
-    return { ...summary, number: res.number, createdAt: res.createdAt, totals: res.totals || totals };
+    // `website` = champ piège invisible (vide pour un humain) ; Idempotency-Key = anti double commande.
+    const res = await api.post(ENDPOINTS.orders, { ...request, website }, {
+      headers: { 'Idempotency-Key': idempotencyKey },
+    });
+    return { ...summary, number: res.number, createdAt: res.createdAt, totals: res.totals, promoCode: res.promoCode };
   }
 
   await new Promise((r) => setTimeout(r, 900)); // simulation d'envoi

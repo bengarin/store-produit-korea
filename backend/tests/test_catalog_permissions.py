@@ -41,7 +41,7 @@ def test_creation_et_modification(staff, product, role):
         (api.post("/api/v1/admin/products", {"brand": "B", "name": f"N {role}"}, format="json"), 201),
         (api.patch(f"/api/v1/admin/products/{p.pk}", {"cardLine": "x"}, format="json"), 200),
         (api.post(f"/api/v1/admin/products/{p.pk}/status", {"status": "active"}, format="json"), 200),
-        (api.patch(f"/api/v1/admin/variants/{variant.pk}", {"stockQuantity": 3}, format="json"), 200),
+        (api.patch(f"/api/v1/admin/variants/{variant.pk}", {"lowStockThreshold": 3}, format="json"), 200),
         (api.post("/api/v1/admin/categories", {"name": f"Cat {role}"}, format="json"), 201),
         (api.post("/api/v1/admin/media", {"file": upload()}, format="multipart"), 201),
     ]
