@@ -8,7 +8,10 @@
   la livraison (transaction, verrouillage du stock, anti-doublon), clients, livraison, codes promo, statuts,
   facture imprimable, export Excel ; le formulaire de commande du site est branché sur l'API.
 
-Pas encore de tableau de bord ni d'éditeur de thème (phases suivantes, voir `docs/ARCHITECTURE.md`).
+- **Phase 3** (administration) : interface React sous `/admin` (tableau de bord, commandes, clients, stock,
+  réglages) + `GET /api/v1/admin/analytics/overview`.
+
+Pas encore d'éditeur de produits (phase 4) ni d'éditeur de thème (phase 6) — voir `docs/ARCHITECTURE.md`.
 
 ## Prérequis
 
@@ -66,14 +69,14 @@ node scripts/check-api-contract.mjs             # doit afficher « DIFFERENCES 0
 Vite relaie `/api` et `/media` vers Django (`vite.config.js`). Sans `VITE_API_BASE_URL`, le site reste en mode
 démo local (commandes simulées), exactement comme avant.
 
-⚠️ **Stock** : les produits importés ont un stock **non renseigné** et ne peuvent donc PAS être commandés
-(message « momentanément indisponible »). Renseignez le stock réel de chaque variante :
+### Administration (phase 3)
 
-```bash
-# Exemple : 12 unités comptées pour la variante n° 3 (identifiants : GET /api/v1/admin/inventory)
-curl … POST /api/v1/admin/inventory/adjust  {"variantId": 3, "mode": "set", "quantity": 12, "reason": "initial_count"}
-```
-(L'écran d'administration arrivera en phase 3 ; d'ici là, cet appel se fait avec une session admin.)
+Avec le même `npm run dev` (mode API) : **http://localhost:5173/admin** → connexion avec le compte créé par
+`create_staff_user`. Pour utiliser l'admin alors que la boutique publique reste en mode démo :
+`VITE_ADMIN_API_BASE_URL=/api/v1/admin npm run dev`.
+
+⚠️ **Stock** : les produits importés ont un stock **non renseigné** et ne peuvent donc PAS être commandés.
+Dans l'admin : **Stock → « Saisie d'inventaire »** pour saisir les quantités réelles de toutes les variantes.
 
 Arrêter MySQL : `docker compose --env-file backend/.env stop` (les données sont conservées dans le volume `mysql-data`).
 
@@ -174,6 +177,11 @@ Statistiques client recalculées depuis la base : commandes = non annulées, tot
 | GET, POST, PATCH, DELETE | `/coupons`, `/coupons/{id}` | O A M N / O A |
 | GET, POST, PATCH | `/shipping/zones`, `/shipping/cities` (+ `/{id}`) | O A M N / O A |
 | GET, PATCH | `/settings` (WhatsApp, mentions légales de facture, limites) | O A M N / O A |
+| GET | `/analytics/overview?from=AAAA-MM-JJ&to=AAAA-MM-JJ` (tableau de bord, 30 jours par défaut, 366 max) | O A M N |
+
+Définitions du tableau de bord (période = date de commande, heure du Maroc) : **chiffre d'affaires encaissé** =
+total des commandes livrées ; **ventes** = commandes hors annulées et retournées ; **panier moyen** = ventes / nombre
+de ces commandes. Une correction de stock « manuelle » exige une note.
 
 L'Éditeur de contenu n'a pas accès aux commandes ni aux clients (données personnelles).
 Le coût d'achat des lignes de commande suit la même règle que le catalogue (O, A, Analyste).

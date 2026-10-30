@@ -2,13 +2,16 @@ import { lazy, Suspense } from 'react';
 import { Routes, Route, Link } from 'react-router-dom';
 import HomePage from './pages/HomePage.jsx';
 import ScrollToTop from './components/ScrollToTop.jsx';
-import { useCatalog } from './context/CatalogContext.jsx';
+import { CatalogProvider, useCatalog } from './context/CatalogContext.jsx';
+import { CartProvider } from './context/CartContext.jsx';
 
 const ProductsPage = lazy(() => import('./pages/ProductsPage.jsx'));
 const ProductPage = lazy(() => import('./pages/ProductPage.jsx'));
 const CartPage = lazy(() => import('./pages/CartPage.jsx'));
 const CheckoutPage = lazy(() => import('./pages/CheckoutPage.jsx'));
 const ConfirmationPage = lazy(() => import('./pages/ConfirmationPage.jsx'));
+// Administration : chargée à part, uniquement quand on visite /admin (n'alourdit pas la boutique).
+const AdminApp = lazy(() => import('./admin/AdminApp.jsx'));
 
 function NotFound() {
   return (
@@ -35,10 +38,20 @@ function CatalogGate({ children }) {
   return <div className="page-loading" aria-label="Chargement du catalogue" />;
 }
 
-export default function App() {
+/** Boutique publique. Catalogue et panier ne sont chargés qu'ici (jamais dans l'administration). */
+function Storefront() {
+  return (
+    <CatalogProvider>
+      <CartProvider>
+        <StorefrontRoutes />
+      </CartProvider>
+    </CatalogProvider>
+  );
+}
+
+function StorefrontRoutes() {
   return (
     <div className="app">
-      <ScrollToTop />
       <CatalogGate>
       <Suspense fallback={<div className="page-loading" aria-label="Chargement" />}>
         <Routes>
@@ -53,5 +66,24 @@ export default function App() {
       </Suspense>
       </CatalogGate>
     </div>
+  );
+}
+
+export default function App() {
+  return (
+    <>
+      <ScrollToTop />
+      <Routes>
+        <Route
+          path="/admin/*"
+          element={(
+            <Suspense fallback={<div className="page-loading" aria-label="Chargement" />}>
+              <AdminApp />
+            </Suspense>
+          )}
+        />
+        <Route path="*" element={<Storefront />} />
+      </Routes>
+    </>
   );
 }

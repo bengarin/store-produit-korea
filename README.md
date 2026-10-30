@@ -25,6 +25,7 @@ Aucun secret ne doit être mis dans ces variables : elles sont visibles dans le 
 
 Le dossier `backend/` contient l'API (Django + MySQL). Démarrage local : voir **`backend/README.md`**.
 Le site fonctionne toujours seul, avec ses données locales, tant que `VITE_API_BASE_URL` n'est pas défini.
+L'administration (`/admin` : commandes, clients, stock, réglages) nécessite le backend — voir `backend/README.md`.
 
 ## Où modifier quoi ?
 

@@ -496,3 +496,7 @@ Ordre choisi pour **vendre le plus tôt possible**. Durées non estimées tant q
 | 30/10/2026 | Annulation = remise en stock + code promo libéré ; retour = remise en stock sauf `restock: false` | Règles de statut explicites | — | — |
 | 30/10/2026 | Total dépensé client = commandes livrées (argent encaissé) ; nb commandes = non annulées | Chiffres exacts en COD | — | — |
 | 30/10/2026 | « Autre ville » acceptée via la zone par défaut (même tarif) | Reproduit le formulaire actuel | — | — |
+| 30/10/2026 | Phase 3 livrée : admin React (/admin) — tableau de bord, commandes, clients, stock, réglages | Gérer la boutique sans toucher au code | Valider, saisir le stock réel, puis phase 4 | [À définir] |
+| 30/10/2026 | Admin sur mesure, sans nouvelle dépendance (graphique SVG maison) | Pas de dépendance inutile, design de la marque | — | — |
+| 30/10/2026 | Catalogue et panier chargés seulement sur la boutique, pas dans l'admin | L'admin ne consomme plus la limite anti-abus publique | — | — |
+| 30/10/2026 | Droits affichés dans l'interface = simple masquage ; le serveur décide | Pas de logique métier dupliquée | — | — |

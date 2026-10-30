@@ -33,6 +33,7 @@ class InventoryItemSerializer(serializers.ModelSerializer):
     trackInventory = serializers.BooleanField(source="track_inventory")
     allowBackorder = serializers.BooleanField(source="allow_backorder")
     state = serializers.SerializerMethodField()
+    productImage = serializers.SerializerMethodField()
 
     class Meta:
         model = Variant
@@ -42,6 +43,7 @@ class InventoryItemSerializer(serializers.ModelSerializer):
             "productSlug",
             "productName",
             "productStatus",
+            "productImage",
             "title",
             "sku",
             "stockQuantity",
@@ -53,6 +55,10 @@ class InventoryItemSerializer(serializers.ModelSerializer):
 
     def get_state(self, v):
         return stock_state(v)
+
+    def get_productImage(self, v):
+        first = v.product.images.filter(in_gallery=True).select_related("media").order_by("position", "id").first()
+        return (first.media.url_640 or first.media.url) if first else None
 
 
 class InventoryListView(generics.ListAPIView):
@@ -92,6 +98,11 @@ class AdjustSerializer(serializers.Serializer):
     quantity = serializers.IntegerField(min_value=-100000, max_value=100000)
     reason = serializers.ChoiceField(choices=sorted(StockMovement.MANUAL_REASONS))
     note = serializers.CharField(max_length=255, required=False, allow_blank=True, default="")
+
+    def validate(self, attrs):
+        if attrs["reason"] == "manual_adjustment" and not attrs["note"].strip():
+            raise serializers.ValidationError({"note": ["Expliquez la raison de cette correction manuelle."]})
+        return attrs
 
 
 class MovementSerializer(serializers.ModelSerializer):

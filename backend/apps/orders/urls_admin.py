@@ -1,5 +1,6 @@
 from django.urls import path
 
+from apps.analytics import views as analytics_views
 from apps.customers import views as customer_views
 from apps.inventory import views as inventory_views
 from apps.promotions import views as promo_views
@@ -26,4 +27,5 @@ urlpatterns = [
     path("shipping/cities", shipping_views.CityListCreateView.as_view(), name="admin-cities"),
     path("shipping/cities/<int:pk>", shipping_views.CityDetailView.as_view(), name="admin-city"),
     path("settings", settings_views.SettingsView.as_view(), name="admin-settings"),
+    path("analytics/overview", analytics_views.OverviewView.as_view(), name="admin-analytics-overview"),
 ]
