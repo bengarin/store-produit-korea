@@ -16,6 +16,10 @@ const CustomersPage = lazy(() => import('./pages/CustomersPage.jsx'));
 const CustomerDetailPage = lazy(() => import('./pages/CustomerDetailPage.jsx'));
 const InventoryPage = lazy(() => import('./pages/InventoryPage.jsx'));
 const SettingsPage = lazy(() => import('./pages/SettingsPage.jsx'));
+const ProductsPage = lazy(() => import('./pages/ProductsPage.jsx'));
+const ProductNewPage = lazy(() => import('./pages/ProductNewPage.jsx'));
+const ProductEditPage = lazy(() => import('./pages/ProductEditPage.jsx'));
+const ProductPreviewPage = lazy(() => import('./pages/ProductPreviewPage.jsx'));
 
 /** Page réservée à certains rôles (le serveur refuse de toute façon). */
 function Allow({ perm, children }) {
@@ -48,6 +52,16 @@ function AdminRoutes() {
   }
   return (
     <Routes>
+      {/* Aperçu : hors du cadre de l'admin, avec les styles de la boutique uniquement (fidélité). */}
+      <Route path="preview/products/:id" element={<RequireAuth><ProductPreviewPage /></RequireAuth>} />
+      <Route path="*" element={<div className="adm-root"><AdminShellRoutes /></div>} />
+    </Routes>
+  );
+}
+
+function AdminShellRoutes() {
+  return (
+    <Routes>
       <Route path="login" element={<LoginPage />} />
       <Route element={<RequireAuth><Layout /></RequireAuth>}>
         <Route index element={<Home />} />
@@ -58,6 +72,9 @@ function AdminRoutes() {
         <Route path="customers/:id" element={<Allow perm="viewCustomers"><CustomerDetailPage /></Allow>} />
         <Route path="inventory" element={<Allow perm="viewInventory"><InventoryPage /></Allow>} />
         <Route path="settings" element={<SettingsPage />} />
+        <Route path="products" element={<Allow perm="viewProducts"><ProductsPage /></Allow>} />
+        <Route path="products/new" element={<Allow perm="editProducts"><ProductNewPage /></Allow>} />
+        <Route path="products/:id" element={<Allow perm="viewProducts"><ProductEditPage /></Allow>} />
         <Route path="*" element={<Home />} />
       </Route>
     </Routes>
@@ -80,12 +97,10 @@ export default function AdminApp() {
 
   if (!ADMIN_API_READY) return <NotConfigured />;
   return (
-    <div className="adm-root">
-      <AuthProvider>
-        <Suspense fallback={<PageLoader />}>
-          <AdminRoutes />
-        </Suspense>
-      </AuthProvider>
-    </div>
+    <AuthProvider>
+      <Suspense fallback={<div className="adm-root"><PageLoader /></div>}>
+        <AdminRoutes />
+      </Suspense>
+    </AuthProvider>
   );
 }

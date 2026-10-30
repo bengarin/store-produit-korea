@@ -313,6 +313,16 @@ Rôles : **O**wner · **A**dmin · **M** Order Manager · **E** Content Editor �
 4. **Enregistrement** : bouton explicite + avertissement « modifications non enregistrées » ; verrou optimiste (`updated_at`) pour éviter d'écraser le travail d'un collègue.
 5. Actions : dupliquer, archiver (jamais supprimer un produit déjà commandé), voir sur la boutique.
 
+**Livré en phase 4 (écarts assumés par rapport au plan ci-dessus)** :
+- Sans nouvelle dépendance : éditeur de texte maison (gras, italique, titres, listes, liens https) au lieu de TipTap ;
+  glisser-déposer natif + flèches au lieu de dnd-kit ; validation serveur (DRF) au lieu de Zod.
+- **Stock retiré du formulaire produit** : affiché en lecture seule avec un lien vers **Stock** (décision phase 2).
+- Aperçu = la vraie fiche boutique (`ProductView`, même composant que `/produits/:id`) dans un cadre mobile/ordinateur,
+  alimentée par `GET /products/{id}/preview` (même fonction que l'API publique) ; brouillons compris.
+- Non livré : verrou optimiste (`updated_at`), marge calculée en direct, aperçu de la carte produit, codes promo
+  dans l'admin, sélecteur de variante et prix barré sur la boutique, balises SEO injectées dans les pages publiques
+  (application monopage : nécessite un rendu serveur ou un pré-rendu).
+
 ---
 
 ## 9. Visual Theme Builder
@@ -444,11 +454,11 @@ Ordre choisi pour **vendre le plus tôt possible**. Durées non estimées tant q
 
 | Phase | Contenu | Livrable vérifiable |
 |---|---|---|
-| **0. Fondations** | `backend/` Django + DRF + MySQL (docker-compose), settings par environnement, User + rôles, audit, format d'erreurs, CI (lint + tests) | `pytest` vert, `/api/v1/health` |
-| **1. Catalogue** | catalog, media_library (stockage S3-compatible), shipping, store_settings, API publique compatible ; import des 5 produits actuels | Front avec `VITE_API_BASE_URL` : **DOM identique** au mode local |
-| **2. Commandes réelles** | orders (transaction, stock, coupons, idempotence, anti-abus), customers | Vraie commande COD créée ; tests de concurrence (2 commandes pour le dernier article) |
-| **3. Admin cœur** | Login, layout, Commandes (liste, détail, statuts, facture, Excel), Clients, Stock | Gestion quotidienne possible sans toucher au code |
-| **4. Product Builder** | Produits, variantes, médias, catégories, SEO, coupons | Créer un produit de A à Z depuis l'admin |
+| **0. Fondations** ✅ | `backend/` Django + DRF + MySQL (docker-compose), settings par environnement, User + rôles, audit, format d'erreurs, CI (lint + tests) | `pytest` vert, `/api/v1/health` |
+| **1. Catalogue** ✅ | catalog, media_library (stockage S3-compatible), shipping, store_settings, API publique compatible ; import des 5 produits actuels | Front avec `VITE_API_BASE_URL` : **DOM identique** au mode local |
+| **2. Commandes réelles** ✅ | orders (transaction, stock, coupons, idempotence, anti-abus), customers | Vraie commande COD créée ; tests de concurrence (2 commandes pour le dernier article) |
+| **3. Admin cœur** ✅ | Login, layout, Commandes (liste, détail, statuts, facture, Excel), Clients, Stock | Gestion quotidienne possible sans toucher au code |
+| **4. Product Builder** ✅ | Produits, variantes, médias, catégories, SEO (codes promo admin reportés) | Créer un produit de A à Z depuis l'admin |
 | **5. Dashboard & analytics** | KPI, graphiques, filtres de dates, stock bas | Chiffres = requêtes SQL vérifiées à la main sur un jeu de test |
 | **6. Theme Builder** | Étape 0 (accueil = sections, DOM identique) → éditeur → versions | Publier/restaurer sans casser la boutique |
 | **7. Finitions** | Avis modérés, newsletter (si outil), 2FA, sauvegardes, mise en production | Checklist sécurité OWASP passée |
@@ -500,3 +510,8 @@ Ordre choisi pour **vendre le plus tôt possible**. Durées non estimées tant q
 | 30/10/2026 | Admin sur mesure, sans nouvelle dépendance (graphique SVG maison) | Pas de dépendance inutile, design de la marque | — | — |
 | 30/10/2026 | Catalogue et panier chargés seulement sur la boutique, pas dans l'admin | L'admin ne consomme plus la limite anti-abus publique | — | — |
 | 30/10/2026 | Droits affichés dans l'interface = simple masquage ; le serveur décide | Pas de logique métier dupliquée | — | — |
+| 30/10/2026 | Phase 4 livrée : Product Builder (/admin/products) — liste, création, édition, images, options/variantes, SEO, aperçu, duplication | Créer et modifier les produits sans toucher au code | Valider ; décider la suite (phase 5) | [À définir] |
+| 30/10/2026 | Aperçu = même composant et même format JSON que la boutique publique | Aperçu fidèle, pas de 2e logique | — | — |
+| 30/10/2026 | Duplication : copie en brouillon, sans stock, SKU ni code-barres | Ne jamais inventer de stock ; SKU uniques | — | — |
+| 30/10/2026 | Ajout d'une option sur un produit existant : 1re valeur attribuée aux variantes existantes | Garder le produit valide (actif) | — | — |
+| 30/10/2026 | Description longue : assainie au serveur (nh3) ET au navigateur avant affichage | Défense en profondeur contre le HTML dangereux | — | — |

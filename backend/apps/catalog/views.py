@@ -149,7 +149,8 @@ class ProductListCreateView(generics.ListCreateAPIView):
                 | Q(brand__icontains=term)
                 | Q(display_name__icontains=term)
                 | Q(slug__icontains=term)
-                | Q(variants__sku__iexact=term)
+                | Q(variants__sku__icontains=term)
+                | Q(variants__barcode__iexact=term)
             ).distinct()
         ordering = params.get("ordering")
         return qs.order_by(ordering, "id") if ordering in self.ORDERINGS else qs
@@ -173,6 +174,38 @@ class ProductDetailView(generics.RetrieveUpdateDestroyAPIView):
 
     def perform_destroy(self, product):
         services.delete_product(product, user=self.request.user, request=self.request)
+
+
+class ProductPreviewView(APIView):
+    """
+    Aperçu d'un produit (tous statuts) AU FORMAT EXACT de l'API publique (même fonction product_payload) :
+    l'administration l'affiche avec les composants de la fiche produit de la boutique.
+    """
+
+    permission_classes = [CATALOG_PERMISSION]
+
+    def get(self, request, pk):
+        product = get_object_or_404(public.public_products_queryset(statuses=Product.Status.values), pk=pk)
+        labels = {c.slug: c.name for c in Category.objects.all()}
+        return Response(
+            {
+                "product": public.product_payload(product),
+                "categoryLabels": labels,
+                "status": product.status,
+                "activationErrors": services.activation_errors(product),
+            }
+        )
+
+
+class ProductDuplicateView(APIView):
+    """POST : copie en brouillon (textes, catégories, pictos, options, variantes, images). Jamais le stock."""
+
+    permission_classes = [CATALOG_PERMISSION]
+
+    def post(self, request, pk):
+        product = get_object_or_404(Product, pk=pk)
+        copy = services.duplicate_product(product, user=request.user, request=request)
+        return Response(ProductSerializer(copy, context={"request": request}).data, status=status.HTTP_201_CREATED)
 
 
 class StatusSerializer(serializers.Serializer):

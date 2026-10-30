@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { NavLink, Outlet, useLocation } from 'react-router-dom';
-import { Boxes, ExternalLink, LayoutDashboard, Leaf, LogOut, Menu, Settings, ShoppingBag, Users, X } from 'lucide-react';
+import { Boxes, ExternalLink, LayoutDashboard, Leaf, LogOut, Menu, Package, Settings, ShoppingBag, Users, X } from 'lucide-react';
 import { useAuth } from '../auth.jsx';
 import { can } from '../permissions.js';
 import { ROLE_LABELS } from '../format.js';
@@ -9,6 +9,7 @@ import { useApi } from '../hooks.js';
 const NAV = [
   { to: '/admin/dashboard', label: 'Tableau de bord', icon: LayoutDashboard, perm: 'viewDashboard' },
   { to: '/admin/orders', label: 'Commandes', icon: ShoppingBag, perm: 'viewOrders', badge: 'pending' },
+  { to: '/admin/products', label: 'Produits', icon: Package, perm: 'viewProducts' },
   { to: '/admin/customers', label: 'Clients', icon: Users, perm: 'viewCustomers' },
   { to: '/admin/inventory', label: 'Stock', icon: Boxes, perm: 'viewInventory' },
   { to: '/admin/settings', label: 'Réglages', icon: Settings, perm: 'viewInventory' }, // mot de passe : tous les rôles

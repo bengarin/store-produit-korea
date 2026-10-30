@@ -17,6 +17,10 @@ const RULES = {
   viewInventory: [OWNER, ADMIN, ORDERS, EDITOR, ANALYST],
   adjustStock: [OWNER, ADMIN, ORDERS],
   viewSettings: [OWNER, ADMIN, ORDERS, ANALYST],
+  viewProducts: [OWNER, ADMIN, ORDERS, EDITOR, ANALYST],
+  editProducts: [OWNER, ADMIN, EDITOR],
+  deleteProducts: [OWNER, ADMIN],
+  editCost: [OWNER, ADMIN],
   editSettings: [OWNER, ADMIN],
 };
 
@@ -26,5 +30,5 @@ export function can(user, action) {
 
 /** Première page accessible après connexion. */
 export function homePath(user) {
-  return can(user, 'viewDashboard') ? '/admin/dashboard' : '/admin/inventory';
+  return can(user, 'viewDashboard') ? '/admin/dashboard' : '/admin/products';
 }

@@ -69,7 +69,7 @@ Les composants n'importent jamais les données brutes directement.
 | `compareAtPrice` | number \| null             | non         | prix barré de la variante par défaut (phase 1) |
 | `variants`     | `{id, title, price, compareAtPrice, available, isDefault, options}[]` | non | variantes (phase 1, jamais le coût) |
 | `seo`          | `{title, description, image}` | non        | métadonnées SEO (phase 1)                     |
-| `descriptionHtml` | string (HTML assaini)     | non         | description longue (phase 1)                  |
+| `descriptionHtml` | string (HTML assaini)     | non         | description longue (phase 1) — affichée sous le résumé dans « Description » depuis la phase 4, filtrée de nouveau par le navigateur (`utils/richText.js`) |
 | `cardImage`    | Image                        | oui         | cartes, panier, récapitulatif                 |
 | `mainImage`    | Image                        | oui         | 1re image de la fiche                         |
 | `galleryImages`| Image[]                      | oui         | galerie de la fiche                           |

@@ -43,7 +43,7 @@ export function adminUrl(path, params = {}) {
   return url.toString();
 }
 
-export async function adminRequest(path, { method = 'GET', body, params, signal } = {}) {
+export async function adminRequest(path, { method = 'GET', body, params, signal, formData } = {}) {
   if (!ADMIN_API_READY) throw new AdminApiError('API d’administration non configurée.', { code: 'not_configured' });
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), API_TIMEOUT_MS);
@@ -55,10 +55,10 @@ export async function adminRequest(path, { method = 'GET', body, params, signal 
       credentials: 'same-origin',
       headers: {
         Accept: 'application/json',
-        ...(body !== undefined ? { 'Content-Type': 'application/json' } : {}),
+        ...(body !== undefined && !formData ? { 'Content-Type': 'application/json' } : {}),
         ...(unsafe ? { 'X-CSRFToken': csrfToken() } : {}),
       },
-      body: body !== undefined ? JSON.stringify(body) : undefined,
+      body: formData || (body !== undefined ? JSON.stringify(body) : undefined),
       signal: controller.signal,
     });
     if (res.status === 204) return null;
@@ -87,4 +87,8 @@ export const admin = {
   get: (path, params, opts) => adminRequest(path, { ...opts, params }),
   post: (path, body) => adminRequest(path, { method: 'POST', body: body ?? {} }),
   patch: (path, body) => adminRequest(path, { method: 'PATCH', body }),
+  put: (path, body) => adminRequest(path, { method: 'PUT', body }),
+  del: (path) => adminRequest(path, { method: 'DELETE' }),
+  /** Envoi de fichier (multipart) : le navigateur fixe lui-même l'en-tête Content-Type. */
+  upload: (path, formData) => adminRequest(path, { method: 'POST', formData }),
 };

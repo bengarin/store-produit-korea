@@ -194,9 +194,20 @@ def test_options_et_variantes(api, product):
 
 
 @pytest.mark.django_db
+def test_ajout_d_option_complete_les_variantes_existantes(api, product):
+    p = product(status="active")  # possible même sur un produit actif
+    response = api.put(f"{P}/{p.pk}/options", [{"name": "Teinte", "values": ["Clair", "Foncé"]}], format="json")
+    assert response.status_code == 200
+    variant = api.get(f"{P}/{p.pk}").json()["variants"][0]
+    assert variant["options"] == {"Teinte": "Clair"} and variant["title"] == "Clair"
+
+
+@pytest.mark.django_db
 def test_activation_exige_des_variantes_completes(api, product):
+    from apps.catalog.models import ProductOption
+
     p = product()
-    api.put(f"{P}/{p.pk}/options", [{"name": "Teinte", "values": ["Clair"]}], format="json")
+    ProductOption.objects.create(product=p, name="Teinte").values.create(value="Clair")  # état incohérent forcé
     response = api.post(f"{P}/{p.pk}/status", {"status": "active"}, format="json")
     assert response.status_code == 400
     assert any("valeur pour chaque option" in e for e in response.json()["error"]["fields"]["status"])

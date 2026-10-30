@@ -10,8 +10,11 @@
 
 - **Phase 3** (administration) : interface React sous `/admin` (tableau de bord, commandes, clients, stock,
   réglages) + `GET /api/v1/admin/analytics/overview`.
+- **Phase 4** (Product Builder) : `/admin/products` (liste, recherche, filtres, actions rapides), création et
+  édition complètes (contenu, description mise en forme assainie, catégories, SEO, images, options/variantes),
+  aperçu fidèle à la fiche publique, duplication. Le stock reste géré uniquement par **Stock**.
 
-Pas encore d'éditeur de produits (phase 4) ni d'éditeur de thème (phase 6) — voir `docs/ARCHITECTURE.md`.
+Pas encore d'éditeur de thème (phase 6) — voir `docs/ARCHITECTURE.md`.
 
 ## Prérequis
 
@@ -69,7 +72,7 @@ node scripts/check-api-contract.mjs             # doit afficher « DIFFERENCES 0
 Vite relaie `/api` et `/media` vers Django (`vite.config.js`). Sans `VITE_API_BASE_URL`, le site reste en mode
 démo local (commandes simulées), exactement comme avant.
 
-### Administration (phase 3)
+### Administration (phases 3 et 4)
 
 Avec le même `npm run dev` (mode API) : **http://localhost:5173/admin** → connexion avec le compte créé par
 `create_staff_user`. Pour utiliser l'admin alors que la boutique publique reste en mode démo :
@@ -190,8 +193,10 @@ Le coût d'achat des lignes de commande suit la même règle que le catalogue (O
 
 | Méthode | Route | Rôle |
 |---|---|---|
-| GET, POST | `/products` (`?status=`, `?category=`, `?search=`, `?ordering=`, `?page=`, `?page_size=`) | lecture : 5 rôles · création : O, A, E |
-| GET, PATCH, DELETE | `/products/{id}` | suppression : O, A — refusée si actif (archiver d'abord) ou déjà commandé |
+| GET, POST | `/products` (`?status=`, `?category=`, `?search=` nom, slug, SKU ou code-barres, `?ordering=`, `?page=`, `?page_size=`) | lecture : 5 rôles · création : O, A, E |
+| GET, PATCH, DELETE | `/products/{id}` | suppression : O, A — refusée si actif (archiver d'abord) ou avec historique (commandes, mouvements de stock) |
+| GET | `/products/{id}/preview` (phase 4) | 5 rôles — fiche au format de l'API publique (même fonction), y compris brouillon, + `activationErrors` ; jamais le coût |
+| POST | `/products/{id}/duplicate` (phase 4) | O, A, E — copie en brouillon (`<slug>-copie`) ; stock, SKU et code-barres **non copiés** |
 | POST | `/products/{id}/status` `{"status": "active"}` | O, A, E — activation vérifiée par le serveur |
 | PUT | `/products/{id}/options` `[{"name": "Contenance", "values": ["50 ml"]}]` | O, A, E (3 options max) |
 | GET, POST | `/products/{id}/variants` | O, A, E |
@@ -211,6 +216,14 @@ Le **coût** n'est visible que de O, A et Analyste, et modifiable que par O et A
 **Activation d'un produit** (`active`) — refusée tant qu'il manque : marque, nom, description, une catégorie,
 une image dans la galerie, un prix > 0, et (si options) une valeur par option pour chaque variante, sans doublon.
 Un produit actif ne peut pas être modifié de façon à redevenir incomplet (la modification est annulée).
+Ajouter une option à un produit existant attribue la 1re valeur de l'option aux variantes existantes (phase 4).
+
+**Description longue** (`descriptionHtml`) : assainie par le serveur (nh3, liste blanche : paragraphes, titres H2/H3,
+gras, italique, souligné, listes, citations, liens http(s)/mailto) et de nouveau par le navigateur avant affichage.
+Aucun script, style, iframe, attribut `on…` ni lien `javascript:`.
+
+**Stock** : aucune route produit ou variante ne modifie le stock (`stockQuantity` est en lecture seule) ;
+seul `POST /inventory/adjust` le fait, avec un mouvement d'historique.
 
 **Images téléversées** : JPEG, PNG ou WebP vérifiés par leur contenu ; 10 Mo et 6000 px maximum, 200 px minimum ;
 ré-encodées en WebP (1600 px max + version 640 px), métadonnées EXIF/GPS supprimées ; SVG, GIF, fichiers déguisés

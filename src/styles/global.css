@@ -791,3 +791,15 @@ select { appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmln
 .checkout-alert__title { display: flex; gap: 8px; align-items: center; margin: 0 0 6px; font-weight: 600; color: var(--error); }
 .checkout-alert ul { margin: 0 0 8px; padding-left: 1.2em; }
 .checkout-alert li + li { margin-top: 4px; }
+
+/* Description longue (saisie dans l'administration, HTML filtré) — affichée seulement si renseignée */
+.pdp-desc__rich { margin: 0 0 var(--s-3); color: var(--text-2); }
+.pdp-desc__rich > :first-child { margin-top: 0; }
+.pdp-desc__rich p, .pdp-desc__rich ul, .pdp-desc__rich ol, .pdp-desc__rich blockquote { margin: 0 0 var(--s-3); }
+.pdp-desc__rich ul, .pdp-desc__rich ol { padding-left: 1.3em; }
+.pdp-desc__rich li + li { margin-top: 4px; }
+.pdp-desc__rich h2, .pdp-desc__rich h3 { margin: var(--s-4) 0 var(--s-2); font-family: var(--font-serif); font-weight: 600; color: var(--text); line-height: 1.2; }
+.pdp-desc__rich h2 { font-size: 1.35rem; }
+.pdp-desc__rich h3 { font-size: 1.15rem; }
+.pdp-desc__rich a { color: var(--green); text-decoration: underline; text-underline-offset: 2px; }
+.pdp-desc__rich blockquote { padding-left: var(--s-3); border-left: 2px solid var(--sage); font-style: italic; }

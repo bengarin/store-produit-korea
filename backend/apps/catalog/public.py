@@ -31,9 +31,10 @@ def image_payload(image: ProductImage | None, position: str = ""):
     return data
 
 
-def public_products_queryset():
+def public_products_queryset(statuses=(Product.Status.ACTIVE,)):
+    """Produits au format public. `statuses` élargi uniquement pour l'aperçu de l'administration."""
     return (
-        Product.objects.filter(status=Product.Status.ACTIVE)
+        Product.objects.filter(status__in=statuses)
         .select_related("hover_image__media", "scene_image__media", "og_image")
         .prefetch_related(
             Prefetch(

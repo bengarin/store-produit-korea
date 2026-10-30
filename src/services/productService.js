@@ -26,6 +26,7 @@ export function normalizeProduct(raw, images = {}) {
     price: Number(raw.price),
     categories: raw.categories || [],
     summary: raw.summary || '',
+    descriptionHtml: raw.descriptionHtml || '',
     highlights: raw.highlights || [],
     ingredients: raw.ingredients || [],
     usage: raw.usage || [],

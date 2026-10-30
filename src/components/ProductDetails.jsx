@@ -3,6 +3,13 @@ import { FileText, Leaf, Hand, Sparkles } from 'lucide-react';
 import Accordion from './Accordion.jsx';
 import ProductImage from './ProductImage.jsx';
 import NamedIcon from './NamedIcon.jsx';
+import { sanitizeRichText } from '../utils/richText.js';
+
+/** Description longue mise en forme (rendue seulement si elle existe ; HTML filtré). */
+function RichDescription({ html }) {
+  if (!html) return null;
+  return <div className="pdp-desc__rich" dangerouslySetInnerHTML={{ __html: sanitizeRichText(html) }} />;
+}
 
 /** Contenu des 4 rubriques, à partir des données produit existantes uniquement. */
 function useSections(product) {
@@ -16,6 +23,7 @@ function useSections(product) {
           <div className="pdp-desc__text">
             <h3 className="pdp-desc__title">À propos de ce soin</h3>
             <p>{product.summary}</p>
+            <RichDescription html={product.descriptionHtml} />
             <p className="pdp-desc__meta"><strong>Type de peau :</strong> {product.skinTypes}</p>
           </div>
           <ProductImage image={visual} className="pdp-desc__visual" />
@@ -55,6 +63,7 @@ export default function ProductDetails({ product, desktop }) {
         <>
           <h3 className="pdp-card__subtitle">À propos de ce soin</h3>
           <p>{product.summary}</p>
+          <RichDescription html={product.descriptionHtml} />
           <p className="pdp-desc__meta"><strong>Type de peau :</strong> {product.skinTypes}</p>
         </>
       ) : sec.body;

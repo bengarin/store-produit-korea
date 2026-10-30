@@ -211,6 +211,8 @@ class ProductListSerializer(serializers.ModelSerializer):
     image = serializers.SerializerMethodField()
     categories = serializers.SerializerMethodField()
     variantCount = serializers.SerializerMethodField()
+    sku = serializers.SerializerMethodField()
+    stockUnknown = serializers.SerializerMethodField()
     updatedAt = serializers.DateTimeField(source="updated_at")
 
     class Meta:
@@ -220,6 +222,8 @@ class ProductListSerializer(serializers.ModelSerializer):
             "slug",
             "displayName",
             "brand",
+            "sku",
+            "stockUnknown",
             "status",
             "position",
             "price",
@@ -243,6 +247,14 @@ class ProductListSerializer(serializers.ModelSerializer):
         if any(v.stock_quantity is None for v in tracked):
             return None
         return sum(v.stock_quantity for v in tracked)
+
+    def get_sku(self, product):
+        default = next((v for v in self._variants(product) if v.is_default), None)
+        return default.sku if default else None
+
+    def get_stockUnknown(self, product):
+        """Nombre de variantes suivies dont le stock n'a jamais été compté."""
+        return sum(1 for v in self._variants(product) if v.track_inventory and v.stock_quantity is None)
 
     def get_variantCount(self, product):
         return len(self._variants(product))

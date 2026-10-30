@@ -123,12 +123,14 @@ def delete_product(product: Product, *, user=None, request=None):
     used = external_references(product) + sum(external_references(v) for v in product.variants.all())
     if used:
         raise Conflict(
-            "Ce produit a déjà été utilisé (commandes) : il ne peut pas être supprimé. Archivez-le.",
+            "Ce produit a un historique (commandes ou stock) : il ne peut pas être supprimé. Archivez-le.",
             "product_in_use",
         )
     snapshot = {"slug": product.slug, "name": product.public_name, "status": product.status}
     product_id = product.pk
     Product.objects.filter(pk=product_id).update(hover_image=None, scene_image=None)
+    # Les liens variante ↔ valeur protègent les valeurs d'option : on les retire d'abord.
+    VariantOptionValue.objects.filter(variant__product_id=product_id).delete()
     product.delete()
     log_action(
         "product.delete",
@@ -182,6 +184,18 @@ def set_options(product: Product, options: list[dict], *, user=None, request=Non
         option, _ = ProductOption.objects.update_or_create(product=product, name=name, defaults={"position": position})
         for vpos, value in enumerate(values):
             ProductOptionValue.objects.update_or_create(option=option, value=value, defaults={"position": vpos})
+
+    # Une option ajoutée s'applique à TOUTES les variantes existantes avec sa première valeur
+    # (ex. ajout de « Contenance » : la variante actuelle devient « 50 ml »). Le produit reste cohérent.
+    for option in product.options.prefetch_related("values"):
+        first = option.values.order_by("position", "id").first()
+        for variant in product.variants.exclude(option_values__option=option):
+            VariantOptionValue.objects.create(variant=variant, option_value=first)
+    for variant in product.variants.prefetch_related("option_values__option"):
+        ordered = sorted(variant.option_values.all(), key=lambda v: (v.option.position, v.option_id))
+        title = " / ".join(v.value for v in ordered) or DEFAULT_VARIANT_TITLE
+        if variant.title != title:
+            Variant.objects.filter(pk=variant.pk).update(title=title)
 
     log_action("product.options", actor=user, target=product, changes={"options": wanted}, request=request)
     ensure_still_valid(product)
@@ -302,3 +316,82 @@ def _plain(value):
     if isinstance(value, Decimal):
         return str(value)
     return value
+
+
+# --- Duplication ------------------------------------------------------
+@transaction.atomic
+def duplicate_product(product: Product, *, user=None, request=None) -> Product:
+    """
+    Copie en BROUILLON : textes, catégories, pictos, options, variantes (prix, prix barré, coût),
+    images (mêmes fichiers). Jamais copiés : stock (non renseigné), SKU et code-barres (uniques),
+    statut et date de publication.
+    """
+    source = Product.objects.get(pk=product.pk)
+    copy = Product.objects.get(pk=product.pk)
+    copy.pk = None
+    copy.id = None
+    copy.slug = unique_slug(f"{source.slug}-copie", Product)
+    copy.display_name = f"{source.public_name} (copie)"[:255]
+    copy.status = Product.Status.DRAFT
+    copy.published_at = None
+    copy.hover_image = None
+    copy.scene_image = None
+    copy.save()
+
+    ProductCategory.objects.bulk_create(
+        [
+            ProductCategory(product=copy, category_id=link.category_id, position=link.position)
+            for link in source.category_links.all()
+        ]
+    )
+    for h in source.highlights.all():
+        h.pk = None
+        h.product = copy
+        h.save()
+
+    images = {}
+    for image in source.images.all():
+        old_pk = image.pk
+        image.pk = None
+        image.product = copy
+        image.save()
+        images[old_pk] = image
+    copy.hover_image = images.get(source.hover_image_id)
+    copy.scene_image = images.get(source.scene_image_id)
+    copy.save(update_fields=["hover_image", "scene_image", "updated_at"])
+
+    values = {}
+    for option in source.options.prefetch_related("values"):
+        new_option = ProductOption.objects.create(product=copy, name=option.name, position=option.position)
+        for value in option.values.all():
+            values[value.pk] = ProductOptionValue.objects.create(
+                option=new_option, value=value.value, position=value.position
+            )
+    for variant in source.variants.prefetch_related("option_values"):
+        option_value_ids = [ov.pk for ov in variant.option_values.all()]
+        new_variant = Variant.objects.create(
+            product=copy,
+            title=variant.title,
+            price=variant.price,
+            compare_at_price=variant.compare_at_price,
+            cost=variant.cost,
+            stock_quantity=None,
+            track_inventory=variant.track_inventory,
+            allow_backorder=variant.allow_backorder,
+            low_stock_threshold=variant.low_stock_threshold,
+            weight_grams=variant.weight_grams,
+            position=variant.position,
+            is_default=variant.is_default,
+        )
+        VariantOptionValue.objects.bulk_create(
+            [VariantOptionValue(variant=new_variant, option_value=values[pk]) for pk in option_value_ids]
+        )
+
+    log_action(
+        "product.duplicate",
+        actor=user,
+        target=copy,
+        request=request,
+        changes={"source": source.slug, "copy": copy.slug},
+    )
+    return copy

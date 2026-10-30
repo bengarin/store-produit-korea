@@ -82,3 +82,9 @@ export const MOVEMENT_REASONS = {
   order_cancelled: 'Commande annulée',
   order_returned: 'Commande retournée',
 };
+
+export const PRODUCT_STATUS = {
+  draft: { label: 'Brouillon', tone: 'neutral' },
+  active: { label: 'Actif', tone: 'success' },
+  archived: { label: 'Archivé', tone: 'muted' },
+};
