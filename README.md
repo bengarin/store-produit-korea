@@ -21,6 +21,11 @@ npm run lint     # vérifie la qualité du code (ESLint)
 Copiez `.env.example` en `.env.local` si besoin. Sans `VITE_API_BASE_URL`, le site utilise les données locales (mode démo).
 Aucun secret ne doit être mis dans ces variables : elles sont visibles dans le navigateur. Voir **`docs/BACKEND.md`**.
 
+## Backend (API Django)
+
+Le dossier `backend/` contient l'API (Django + MySQL). Démarrage local : voir **`backend/README.md`**.
+Le site fonctionne toujours seul, avec ses données locales, tant que `VITE_API_BASE_URL` n'est pas défini.
+
 ## Où modifier quoi ?
 
 | Je veux changer…                        | Fichier                                   | Quoi                                    |

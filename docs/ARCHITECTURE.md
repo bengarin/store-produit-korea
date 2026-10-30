@@ -483,3 +483,4 @@ Ordre choisi pour **vendre le plus tôt possible**. Durées non estimées tant q
 | 30/10/2026 | (proposé) Storefront à la racine, `backend/` à côté | Zéro déplacement = zéro casse | — | — |
 | 30/10/2026 | (proposé) Sessions + CSRF, pas de JWT | Même domaine, plus sûr | — | — |
 | 30/10/2026 | (proposé) Thème en JSON versionné, sections en liste blanche | Publication atomique, pas de code arbitraire | — | — |
+| 30/10/2026 | Phase 0 livrée : Django 5.2 LTS, DRF, MySQL 8.4 (Docker), 5 rôles, sessions + CSRF, audit, `/api/v1/health` | Fondations sécurisées avant le catalogue | Phase 1 : catalogue | [À définir] |

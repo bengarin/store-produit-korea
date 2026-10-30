@@ -1,0 +1,32 @@
+# Développement local uniquement : base MySQL 8.4 pour le backend Django.
+# Lancement : docker compose --env-file backend/.env up -d
+# Les identifiants viennent de backend/.env (jamais commité) ; voir backend/.env.example.
+services:
+  mysql:
+    image: mysql:8.4
+    container_name: mapetitecoree-mysql
+    restart: unless-stopped
+    environment:
+      MYSQL_DATABASE: ${DB_NAME:?DB_NAME manquant dans backend/.env}
+      MYSQL_USER: ${DB_USER:?DB_USER manquant dans backend/.env}
+      MYSQL_PASSWORD: ${DB_PASSWORD:?DB_PASSWORD manquant dans backend/.env}
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:?MYSQL_ROOT_PASSWORD manquant dans backend/.env}
+      TZ: UTC
+    command:
+      - --character-set-server=utf8mb4
+      - --collation-server=utf8mb4_unicode_ci
+      - --default-time-zone=+00:00
+    ports:
+      # Accessible uniquement depuis la machine locale.
+      - "127.0.0.1:${DB_PORT:-3306}:3306"
+    volumes:
+      - mysql-data:/var/lib/mysql
+      - ./docker/mysql/init:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD-SHELL", "mysqladmin ping -h 127.0.0.1 -uroot -p\"$$MYSQL_ROOT_PASSWORD\" --silent"]
+      interval: 5s
+      timeout: 5s
+      retries: 30
+
+volumes:
+  mysql-data:
