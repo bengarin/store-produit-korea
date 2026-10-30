@@ -9,6 +9,7 @@ import { STORE_CONFIG } from '../config/store.js';
 import { useCart } from '../context/CartContext.jsx';
 import { useToast } from '../context/ToastContext.jsx';
 import { saveDirectOrder } from '../services/orderService.js';
+import { variantLabel } from '../utils/variants.js';
 
 export default function ProductPage() {
   const { id } = useParams();
@@ -36,13 +37,15 @@ export default function ProductPage() {
   const isFav = favorites.includes(product.id);
   const changeQty = (q) => setQty(Math.max(1, Math.min(maxQty, q)));
 
-  const handleAdd = () => {
-    addItem(product.id, qty);
-    showToast(`${qty} × ${product.displayName} ajouté${qty > 1 ? 's' : ''} au panier`);
+  // `variant` = variante choisie sur la fiche (null en mode démo).
+  const handleAdd = (variant) => {
+    addItem(product.id, qty, variant?.id);
+    const label = variantLabel(product, variant);
+    showToast(`${qty} × ${product.displayName}${label ? ` (${label})` : ''} ajouté${qty > 1 ? 's' : ''} au panier`);
   };
-  const handleBuyNow = () => {
+  const handleBuyNow = (variant) => {
     // Achat direct : n'utilise PAS le panier.
-    saveDirectOrder({ id: product.id, qty });
+    saveDirectOrder(variant ? { id: product.id, variantId: variant.id, qty } : { id: product.id, qty });
     navigate('/commande?mode=direct');
   };
 
@@ -50,6 +53,7 @@ export default function ProductPage() {
     <>
       <Header />
       <ProductView
+        key={product.id}
         product={product}
         categoryLabel={categoryLabel}
         qty={qty}

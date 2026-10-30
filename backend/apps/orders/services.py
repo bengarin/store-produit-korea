@@ -17,6 +17,7 @@ from rest_framework.exceptions import ValidationError
 
 from apps.audit.services import log_action
 from apps.catalog.models import Product, Variant
+from apps.catalog.services import DEFAULT_VARIANT_TITLE
 from apps.core.http import Conflict
 from apps.core.money import money, number
 from apps.customers import services as customers
@@ -112,6 +113,14 @@ def resolve_lines(items: list[dict], *, lock=False) -> list[Line]:
     return lines
 
 
+def line_label(line: Line) -> str:
+    """Nom affiché au client : produit + variante choisie (ex. « Crème — 100 ml »)."""
+    title = line.variant.title
+    if title and title != DEFAULT_VARIANT_TITLE:
+        return f"{line.product.public_name} — {title}"
+    return line.product.public_name
+
+
 def stock_problems(lines: list[Line]) -> list[dict]:
     problems = []
     for line in lines:
@@ -122,7 +131,7 @@ def stock_problems(lines: list[Line]) -> list[dict]:
                 {
                     "productId": line.product.slug,
                     "variantId": line.variant.pk,
-                    "name": line.product.public_name,
+                    "name": line_label(line),
                     "requested": line.quantity,
                     "available": 0 if unknown else available,
                     "reason": "stock_unknown" if unknown else ("out_of_stock" if available == 0 else "insufficient"),

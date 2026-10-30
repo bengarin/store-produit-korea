@@ -5,7 +5,7 @@ Chaque modification importante est tracée dans le journal d'audit.
 
 from decimal import Decimal
 
-from django.db import transaction
+from django.db import models, transaction
 from django.utils import timezone
 from django.utils.text import slugify
 from rest_framework.exceptions import ValidationError
@@ -223,6 +223,8 @@ def _resolve_option_values(product: Product, mapping: dict) -> list[ProductOptio
 def save_variant(product: Product, data: dict, *, variant: Variant | None = None, user=None, request=None):
     product = Product.objects.select_for_update().get(pk=product.pk)
     option_map = data.pop("option_values", None)
+    if data.get("image") is not None and data["image"].product_id != product.pk:
+        raise ValidationError({"imageId": ["Cette image n'appartient pas à ce produit."]})
     creating = variant is None
     if creating:
         variant = Variant(product=product, position=product.variants.count())
@@ -315,6 +317,8 @@ def delete_image(image: ProductImage, *, user=None, request=None):
 def _plain(value):
     if isinstance(value, Decimal):
         return str(value)
+    if isinstance(value, models.Model):
+        return value.pk
     return value
 
 
@@ -382,6 +386,7 @@ def duplicate_product(product: Product, *, user=None, request=None) -> Product:
             weight_grams=variant.weight_grams,
             position=variant.position,
             is_default=variant.is_default,
+            image=images.get(variant.image_id),
         )
         VariantOptionValue.objects.bulk_create(
             [VariantOptionValue(variant=new_variant, option_value=values[pk]) for pk in option_value_ids]

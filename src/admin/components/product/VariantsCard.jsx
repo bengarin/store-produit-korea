@@ -5,7 +5,7 @@ import { admin } from '../../api.js';
 import ConfirmDialog from '../ConfirmDialog.jsx';
 import { Badge, Button, Card, Field, Notice } from '../ui.jsx';
 
-const FIELDS = ['price', 'compareAtPrice', 'cost', 'sku', 'barcode', 'lowStockThreshold', 'allowBackorder', 'trackInventory'];
+const FIELDS = ['price', 'compareAtPrice', 'cost', 'sku', 'barcode', 'lowStockThreshold', 'allowBackorder', 'trackInventory', 'imageId'];
 const toForm = (v) => Object.fromEntries(FIELDS.filter((k) => k in v).map((k) => [k, v[k] ?? (typeof v[k] === 'boolean' ? false : '')]));
 const emptyToNull = (value) => (value === '' ? null : value);
 
@@ -22,7 +22,7 @@ function StockInfo({ v, productName }) {
 }
 
 /** Formulaire d'une variante (prix, références, réglages). Le stock n'est JAMAIS modifiable ici. */
-function VariantForm({ variant, productName, editable, canEditCost, onSaved, toast, compact }) {
+function VariantForm({ variant, productName, editable, canEditCost, onSaved, toast, compact, images = [] }) {
   const initial = useMemo(() => toForm(variant), [variant]);
   const [form, setForm] = useState(initial);
   const [errors, setErrors] = useState({});
@@ -36,7 +36,7 @@ function VariantForm({ variant, productName, editable, canEditCost, onSaved, toa
     setBusy(true);
     setErrors({});
     try {
-      const body = Object.fromEntries(changed.map((k) => [k, ['compareAtPrice', 'cost', 'sku', 'barcode'].includes(k) ? emptyToNull(form[k]) : form[k]]));
+      const body = Object.fromEntries(changed.map((k) => [k, ['compareAtPrice', 'cost', 'sku', 'barcode', 'imageId'].includes(k) ? emptyToNull(form[k]) : form[k]]));
       const saved = await admin.patch(`/variants/${variant.id}`, body);
       toast(compact ? `Variante « ${saved.title} » enregistrée` : 'Prix et références enregistrés');
       onSaved();
@@ -69,6 +69,15 @@ function VariantForm({ variant, productName, editable, canEditCost, onSaved, toa
         {input('sku', 'SKU', { maxLength: 64, placeholder: 'ex. MPC-ALOE-250' })}
         {input('barcode', 'Code-barres (EAN)', { maxLength: 64 })}
         {input('lowStockThreshold', 'Seuil d’alerte', { inputMode: 'numeric' })}
+        {compact && images.length > 0 && (
+          <Field label="Photo de la variante" htmlFor={id('imageId')} error={errors.imageId}>
+            <select id={id('imageId')} className="adm-input" value={form.imageId ?? ''} disabled={!editable}
+              onChange={(e) => setForm((f) => ({ ...f, imageId: e.target.value ? Number(e.target.value) : '' }))}>
+              <option value="">Aucune (galerie)</option>
+              {images.map((img, i) => <option key={img.id} value={img.id}>{`Image ${i + 1}${img.alt ? ` — ${img.alt}` : ''}`}</option>)}
+            </select>
+          </Field>
+        )}
         <div className="adm-field">
           <span className="adm-field__label">Stock</span>
           <StockInfo v={variant} productName={productName} />
@@ -190,6 +199,7 @@ export default function VariantsCard({ product, editable, canEditCost, onChanged
   const [generating, setGenerating] = useState(false);
   const hasOptions = product.options.length > 0;
   const productName = product.displayName || `${product.brand} ${product.name}`;
+  const galleryImages = useMemo(() => [...(product.images || [])].sort((x, y) => x.position - y.position), [product.images]);
   const refresh = () => { setEditingOptions(false); onChanged(); };
 
   const missing = useMemo(() => {
@@ -221,7 +231,7 @@ export default function VariantsCard({ product, editable, canEditCost, onChanged
     return (
       <Card title="Prix et références" actions={editable && <Button size="sm" variant="ghost" icon={Layers} onClick={() => setEditingOptions(true)}>Ajouter des options</Button>}>
         {v && <VariantForm key={`${v.id}-${JSON.stringify(v)}`} variant={v} productName={productName} editable={editable} canEditCost={canEditCost} onSaved={onChanged} toast={toast} />}
-        <p className="adm-footnote">Le prix comparatif est enregistré mais pas encore affiché sur la boutique (évolution prévue).</p>
+        <p className="adm-footnote">Le prix comparatif s’affiche barré sur la boutique seulement s’il est supérieur au prix de vente.</p>
       </Card>
     );
   }
@@ -238,7 +248,7 @@ export default function VariantsCard({ product, editable, canEditCost, onChanged
           <div className="adm-variants">
             {product.variants.map((v) => (
               <div key={v.id} className="adm-variants__item">
-                <VariantForm key={`${v.id}-${JSON.stringify(v)}`} variant={v} productName={productName} editable={editable} canEditCost={canEditCost} onSaved={onChanged} toast={toast} compact />
+                <VariantForm key={`${v.id}-${JSON.stringify(v)}`} variant={v} productName={productName} editable={editable} canEditCost={canEditCost} onSaved={onChanged} toast={toast} compact images={galleryImages} />
                 {editable && (
                   <div className="adm-variants__side">
                     {!v.isDefault && (
@@ -258,7 +268,7 @@ export default function VariantsCard({ product, editable, canEditCost, onChanged
             </Notice>
           )}
           {editable && <NewVariant key={product.variants.length} product={product} onSaved={onChanged} toast={toast} />}
-          <p className="adm-footnote">La boutique vend pour l’instant la variante <strong>par défaut</strong> : le choix de variante sur la fiche publique n’existe pas encore (évolution prévue).</p>
+          <p className="adm-footnote">Sur la fiche publique, le client choisit ses options ; la variante <strong>par défaut</strong> est présélectionnée si elle est disponible. Une variante au stock non renseigné ou à 0 s’affiche « Indisponible » ou « Épuisé ».</p>
         </>
       )}
       {toDelete && (

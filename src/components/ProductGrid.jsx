@@ -1,8 +1,8 @@
-import { useCallback, useMemo } from 'react';
+import { useMemo } from 'react';
 import ProductCard from './ProductCard.jsx';
 import { useCatalog } from '../context/CatalogContext.jsx';
 import { useCart } from '../context/CartContext.jsx';
-import { useToast } from '../context/ToastContext.jsx';
+import useQuickAdd from '../hooks/useQuickAdd.js';
 
 /** Filtres catégories (pilules) */
 export function CategoryChips({ value, onChange, extra = null }) {
@@ -28,8 +28,8 @@ export function CategoryChips({ value, onChange, extra = null }) {
 /** Grille produits filtrée + ajout au panier avec toast. */
 export default function ProductGrid({ category = 'all', onlyFavorites = false, ids = null, emptyText }) {
   const { products } = useCatalog();
-  const { addItem, favorites, toggleFavorite } = useCart();
-  const showToast = useToast();
+  const { favorites, toggleFavorite } = useCart();
+  const handleAdd = useQuickAdd();
 
   const visible = useMemo(
     () =>
@@ -40,14 +40,6 @@ export default function ProductGrid({ category = 'all', onlyFavorites = false, i
           (!ids || ids.includes(p.id)),
       ),
     [products, category, onlyFavorites, ids, favorites],
-  );
-
-  const handleAdd = useCallback(
-    (product) => {
-      addItem(product.id, 1);
-      showToast(`${product.displayName} ajouté au panier`);
-    },
-    [addItem, showToast],
   );
 
   return (

@@ -9,9 +9,16 @@ import { STORAGE_KEYS } from './storageKeys.js';
 export const MAX_QTY = 20;
 export const clampQty = (q) => Math.max(1, Math.min(MAX_QTY, Math.floor(q) || 1));
 
+/** Ligne de panier : `variantId` seulement s'il est connu (mode API) — le mode démo garde { id, qty }. */
+export function toItem(id, qty, variantId) {
+  return Number.isInteger(variantId) && variantId > 0 ? { id, variantId, qty: clampQty(qty) } : { id, qty: clampQty(qty) };
+}
+
 export function loadCart() {
   const raw = readJSON(safeLocal(), STORAGE_KEYS.cart, []);
-  return Array.isArray(raw) ? raw.filter((i) => i && typeof i.id === 'string').map((i) => ({ id: i.id, qty: clampQty(i.qty) })) : [];
+  return Array.isArray(raw)
+    ? raw.filter((i) => i && typeof i.id === 'string').map((i) => toItem(i.id, i.qty, i.variantId))
+    : [];
 }
 export const saveCart = (items) => writeJSON(safeLocal(), STORAGE_KEYS.cart, items);
 

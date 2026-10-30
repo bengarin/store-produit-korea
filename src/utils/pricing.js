@@ -3,24 +3,44 @@
  * ⚠️ Le serveur recalcule tout à la commande (prix, remise, livraison) et ne lit jamais ces montants.
  */
 import { STORE_CONFIG } from '../config/store.js';
+import { findVariant, lineKey, unitPrice, variantLabel, variantStatus } from './variants.js';
 
 const round2 = (n) => Math.round(n * 100) / 100;
 
-/** [{id, qty}] → lignes enrichies (les produits inconnus du catalogue sont ignorés). */
+/**
+ * [{id, variantId?, qty}] → lignes enrichies : produit, variante, prix unitaire, libellé, disponibilité.
+ * Les produits ou variantes inconnus du catalogue sont ignorés.
+ */
 export function resolveLines(items, getProductById) {
   return items
-    .map(({ id, qty }) => {
-      const product = getProductById(id);
-      return product ? { product, qty, lineTotal: product.price * qty } : null;
+    .map((item) => {
+      const product = getProductById(item.id);
+      const variant = product && findVariant(product, item.variantId);
+      if (!product || variant === undefined) return null;
+      const price = unitPrice(product, variant);
+      return {
+        key: lineKey(item),
+        product,
+        variant,
+        qty: item.qty,
+        price,
+        label: variantLabel(product, variant),
+        status: variantStatus(product, variant),
+        lineTotal: price * item.qty,
+      };
     })
     .filter(Boolean);
 }
 
-/** Fusionne deux listes {id, qty} en additionnant les quantités. */
+/** Fusionne deux listes {id, variantId?, qty} en additionnant les quantités d'une même ligne. */
 export function mergeItems(a, b) {
   const map = new Map();
-  [...a, ...b].forEach(({ id, qty }) => map.set(id, (map.get(id) || 0) + qty));
-  return [...map].map(([id, qty]) => ({ id, qty }));
+  [...a, ...b].forEach((item) => {
+    const key = lineKey(item);
+    const prev = map.get(key);
+    map.set(key, prev ? { ...prev, qty: prev.qty + item.qty } : { ...item });
+  });
+  return [...map.values()];
 }
 
 /**

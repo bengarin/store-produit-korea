@@ -2,7 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import ProductCard from './ProductCard.jsx';
 import { useCart } from '../context/CartContext.jsx';
-import { useToast } from '../context/ToastContext.jsx';
+import useQuickAdd from '../hooks/useQuickAdd.js';
 
 const reduceMotion = () => window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
 
@@ -14,8 +14,8 @@ export default function ProductCarousel({ products, label = 'Produits' }) {
   const track = useRef(null);
   const frame = useRef(0);
   const [state, setState] = useState({ index: 0, pages: 1, atStart: true, atEnd: false });
-  const { addItem, favorites, toggleFavorite } = useCart();
-  const showToast = useToast();
+  const { favorites, toggleFavorite } = useCart();
+  const handleAdd = useQuickAdd();
 
   const measure = useCallback(() => {
     const el = track.current;
@@ -51,14 +51,6 @@ export default function ProductCarousel({ products, label = 'Produits' }) {
     if (!card) return;
     el.scrollTo({ left: card.offsetLeft - el.firstElementChild.offsetLeft, behavior: reduceMotion() ? 'auto' : 'smooth' });
   };
-
-  const handleAdd = useCallback(
-    (product) => {
-      addItem(product.id, 1);
-      showToast(`${product.displayName} ajouté au panier`);
-    },
-    [addItem, showToast],
-  );
 
   return (
     <div className="carousel" role="region" aria-roledescription="carrousel" aria-label={label}>

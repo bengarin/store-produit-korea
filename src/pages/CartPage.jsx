@@ -21,10 +21,12 @@ export default function CartPage() {
   const lines = useMemo(() => resolveLines(items, getProductById), [items, getProductById]);
   const totals = useMemo(() => computeTotals(lines, promo, config), [lines, promo, config]);
 
+  const blocked = lines.some((l) => l.status !== 'available');
+
   const handleRemove = useCallback(
-    (product) => {
-      removeItem(product.id);
-      showToast(`${product.displayName} retiré du panier`, 'info');
+    ({ key, product, label }) => {
+      removeItem(key);
+      showToast(`${product.displayName}${label ? ` (${label})` : ''} retiré du panier`, 'info');
     },
     [removeItem, showToast],
   );
@@ -74,8 +76,8 @@ export default function CartPage() {
         ) : (
           <div className="cart-layout">
             <ul className="cart-list">
-              {lines.map(({ product, qty }) => (
-                <CartItem key={product.id} product={product} qty={qty} maxQty={maxQty} onQtyChange={setQty} onRemove={handleRemove} />
+              {lines.map((line) => (
+                <CartItem key={line.key} line={line} maxQty={maxQty} onQtyChange={setQty} onRemove={handleRemove} />
               ))}
             </ul>
 
@@ -99,7 +101,8 @@ export default function CartPage() {
               <OrderSummary totals={totals} promoCode={promoCode} />
 
               <div className="sticky-actions">
-                <button className="btn btn--primary btn--lg btn--block" onClick={goCheckout}>
+                {blocked && <p className="cart-blocked" role="alert">Un article n’est plus disponible : retirez-le pour passer commande.</p>}
+                <button className="btn btn--primary btn--lg btn--block" onClick={goCheckout} disabled={blocked}>
                   Passer la commande <ArrowRight size={18} />
                 </button>
                 <Link to="/produits" className="text-link">Continuer mes achats</Link>

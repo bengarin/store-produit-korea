@@ -5,6 +5,7 @@ import ProductImage from './ProductImage.jsx';
 import useReveal from '../hooks/useReveal.js';
 import { formatPrice } from '../utils/currency.js';
 import { useCatalog } from '../context/CatalogContext.jsx';
+import { STATUS_LABELS, compareAtPrice, hasChoice, productStatus } from '../utils/variants.js';
 
 function ProductCard({ product, index = 0, isFavorite, onToggleFavorite, onAdd, animate = true, variant = 'default' }) {
   const { categoryLabel } = useCatalog();
@@ -15,8 +16,13 @@ function ProductCard({ product, index = 0, isFavorite, onToggleFavorite, onAdd, 
   const timer = useRef();
   useEffect(() => () => clearTimeout(timer.current), []);
 
+  const status = productStatus(product);
+  const canBuy = status === 'available';
+  const choice = hasChoice(product);
+  const compare = compareAtPrice(product, null);
+
   const handleAdd = () => {
-    onAdd(product);
+    if (onAdd(product) === false) return; // fiche ouverte pour choisir une option, ou produit indisponible
     setAdded(true);
     clearTimeout(timer.current);
     timer.current = setTimeout(() => setAdded(false), 1400);
@@ -48,16 +54,22 @@ function ProductCard({ product, index = 0, isFavorite, onToggleFavorite, onAdd, 
           <Link to={url}>{product.displayName}</Link>
         </h3>
         <p className="product-card__line">{product.cardLine}</p>
-        <p className="product-card__price">{formatPrice(product.price)}</p>
+        <p className="product-card__price">
+          {formatPrice(product.price)}
+          {compare && <s className="product-card__compare"><span className="sr-only">Prix habituel : </span>{formatPrice(compare)}</s>}
+          {!canBuy && <span className="product-card__stock">{STATUS_LABELS[status]}</span>}
+        </p>
         <div className="product-card__actions">
           {!scene && <Link to={url} className="btn btn--soft">Voir détails</Link>}
           <button
             className={`btn btn--primary ${added ? 'is-added' : ''}`}
             onClick={handleAdd}
-            aria-label={`Ajouter ${product.displayName} au panier`}
+            disabled={!canBuy}
+            aria-label={!canBuy ? `${product.displayName} : ${STATUS_LABELS[status].toLowerCase()}`
+              : choice ? `Choisir une option de ${product.displayName}` : `Ajouter ${product.displayName} au panier`}
           >
             {added ? <Check size={17} aria-hidden="true" /> : <ShoppingCart size={17} aria-hidden="true" />}
-            <span>{added ? 'Ajouté' : 'Ajouter au panier'}</span>
+            <span>{added ? 'Ajouté' : !canBuy ? STATUS_LABELS[status] : choice ? 'Choisir une option' : 'Ajouter au panier'}</span>
           </button>
         </div>
       </div>

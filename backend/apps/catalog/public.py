@@ -10,7 +10,7 @@ from decimal import Decimal
 
 from django.db.models import Prefetch
 
-from .models import Category, Product, ProductCategory, ProductImage, Variant
+from .models import Category, Product, ProductCategory, ProductImage, ProductOption, Variant
 
 
 def number(value: Decimal | None):
@@ -43,9 +43,25 @@ def public_products_queryset(statuses=(Product.Status.ACTIVE,)):
             ),
             "highlights",
             Prefetch("images", queryset=ProductImage.objects.filter(in_gallery=True).select_related("media")),
-            Prefetch("variants", queryset=Variant.objects.prefetch_related("option_values__option")),
+            Prefetch(
+                "variants",
+                queryset=Variant.objects.select_related("image__media").prefetch_related("option_values__option"),
+            ),
+            Prefetch("options", queryset=ProductOption.objects.prefetch_related("values")),
         )
     )
+
+
+def availability(variant: Variant) -> str:
+    """
+    État public d'une variante, sans publier la quantité :
+    - "available"    : commandable maintenant
+    - "out_of_stock" : stock suivi et épuisé (0)
+    - "unavailable"  : stock non renseigné (NULL) — jamais traité comme disponible
+    """
+    if variant.is_available:
+        return "available"
+    return "unavailable" if variant.stock_quantity is None else "out_of_stock"
 
 
 def product_payload(product: Product) -> dict:
@@ -80,15 +96,19 @@ def product_payload(product: Product) -> dict:
         "image": scene,
         "sceneImage": scene,
         "hoverImage": hover,
+        "options": [{"name": o.name, "values": [v.value for v in o.values.all()]} for o in product.options.all()],
         "variants": [
             {
                 "id": v.pk,
                 "title": v.title,
+                "sku": v.sku,
                 "price": number(v.price),
                 "compareAtPrice": number(v.compare_at_price),
                 "available": v.is_available,
+                "availability": availability(v),
                 "isDefault": v.is_default,
                 "options": {ov.option.name: ov.value for ov in v.option_values.all()},
+                "image": image_payload(v.image) if v.image_id else None,
             }
             for v in variants
         ],

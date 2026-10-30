@@ -126,6 +126,9 @@ class VariantSerializer(serializers.ModelSerializer):
     options = serializers.SerializerMethodField()
     sku = serializers.CharField(max_length=64, required=False, allow_blank=True, allow_null=True)
     barcode = serializers.CharField(max_length=64, required=False, allow_blank=True, allow_null=True)
+    imageId = serializers.PrimaryKeyRelatedField(
+        source="image", queryset=ProductImage.objects.all(), allow_null=True, required=False
+    )
 
     class Meta:
         model = Variant
@@ -146,6 +149,7 @@ class VariantSerializer(serializers.ModelSerializer):
             "isDefault",
             "optionValues",
             "options",
+            "imageId",
         ]
         read_only_fields = ["title", "position"]
 

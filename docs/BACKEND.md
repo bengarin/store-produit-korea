@@ -67,7 +67,8 @@ Les composants n'importent jamais les données brutes directement.
 | `stock`        | null                         | non         | toujours `null` : la quantité exacte n'est pas publiée |
 | `inStock`      | boolean                      | non         | au moins une variante disponible (ajouté en phase 1) |
 | `compareAtPrice` | number \| null             | non         | prix barré de la variante par défaut (phase 1) |
-| `variants`     | `{id, title, price, compareAtPrice, available, isDefault, options}[]` | non | variantes (phase 1, jamais le coût) |
+| `options`      | `{name, values[]}[]`         | non         | options dans l'ordre (sélecteur de la fiche) |
+| `variants`     | `{id, title, sku, price, compareAtPrice, available, availability, isDefault, options, image}[]` | non | variantes (jamais le coût ni la quantité). `availability` : `available` \| `out_of_stock` (stock 0) \| `unavailable` (stock non renseigné) ; `image` : photo propre à la variante ou `null` |
 | `seo`          | `{title, description, image}` | non        | métadonnées SEO (phase 1)                     |
 | `descriptionHtml` | string (HTML assaini)     | non         | description longue (phase 1) — affichée sous le résumé dans « Description » depuis la phase 4, filtrée de nouveau par le navigateur (`utils/richText.js`) |
 | `cardImage`    | Image                        | oui         | cartes, panier, récapitulatif                 |
@@ -106,6 +107,9 @@ Réponses :
 - `409 insufficient_stock` : `error.items = [{ productId, variantId, name, requested, available, reason: "stock_unknown" | "out_of_stock" | "insufficient" }]` ;
 - `400 validation_error` : `error.fields` (ex. `customer.phone`, `promoCode`, `items`) ;
 - `409 too_many_orders`, `409 idempotency_mismatch`, `429 throttled`.
+
+`variantId` = variante choisie sur la fiche (absent = variante par défaut). Panier navigateur :
+`[{ id, variantId?, qty }]` — même produit + même variante = une seule ligne ; l'ancien format `{ id, qty }` reste accepté.
 
 Le front n'envoie **aucun prix** : seulement des identifiants et des quantités. Les totaux affichés dans le
 navigateur sont indicatifs ; la confirmation affiche les totaux renvoyés par le serveur.

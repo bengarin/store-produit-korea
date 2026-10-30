@@ -200,7 +200,7 @@ Le coût d'achat des lignes de commande suit la même règle que le catalogue (O
 | POST | `/products/{id}/status` `{"status": "active"}` | O, A, E — activation vérifiée par le serveur |
 | PUT | `/products/{id}/options` `[{"name": "Contenance", "values": ["50 ml"]}]` | O, A, E (3 options max) |
 | GET, POST | `/products/{id}/variants` | O, A, E |
-| GET, PATCH, DELETE | `/variants/{id}` | O, A, E — la dernière variante ne peut pas être supprimée |
+| GET, PATCH, DELETE | `/variants/{id}` | O, A, E — la dernière variante ne peut pas être supprimée ; `imageId` = photo de la variante (image du même produit, ou `null`) |
 | GET, POST | `/products/{id}/images` `{"mediaId", "alt", "fit", "kind", "focalPosition", "inGallery"}` | O, A, E |
 | POST | `/products/{id}/images/reorder` `{"ids": [...]}` | O, A, E — la 1re image est l'image principale |
 | PATCH, DELETE | `/product-images/{id}` | O, A, E |
@@ -221,6 +221,10 @@ Ajouter une option à un produit existant attribue la 1re valeur de l'option aux
 **Description longue** (`descriptionHtml`) : assainie par le serveur (nh3, liste blanche : paragraphes, titres H2/H3,
 gras, italique, souligné, listes, citations, liens http(s)/mailto) et de nouveau par le navigateur avant affichage.
 Aucun script, style, iframe, attribut `on…` ni lien `javascript:`.
+
+**Boutique publique — variantes** : `options`, et pour chaque variante `sku`, `availability`
+(`available` / `out_of_stock` / `unavailable` = stock non renseigné, jamais traité comme disponible) et `image`.
+Aucune quantité n'est publiée. Le refus de stock d'une commande nomme la variante (« Produit — 100 ml »).
 
 **Stock** : aucune route produit ou variante ne modifie le stock (`stockQuantity` est en lecture seule) ;
 seul `POST /inventory/adjust` le fait, avec un mouvement d'historique.

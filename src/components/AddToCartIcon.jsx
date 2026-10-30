@@ -1,19 +1,16 @@
 import { useEffect, useRef, useState } from 'react';
 import { ShoppingBag, Check } from 'lucide-react';
-import { useCart } from '../context/CartContext.jsx';
-import { useToast } from '../context/ToastContext.jsx';
+import useQuickAdd from '../hooks/useQuickAdd.js';
 
 /** Bouton carré « ajouter au panier » (rituel), avec confirmation visuelle. */
 export default function AddToCartIcon({ product }) {
-  const { addItem } = useCart();
-  const showToast = useToast();
+  const quickAdd = useQuickAdd();
   const [added, setAdded] = useState(false);
   const t = useRef();
   useEffect(() => () => clearTimeout(t.current), []);
 
   const onClick = () => {
-    addItem(product.id, 1);
-    showToast(`${product.displayName} ajouté au panier`);
+    if (!quickAdd(product)) return;
     setAdded(true);
     clearTimeout(t.current);
     t.current = setTimeout(() => setAdded(false), 1400);

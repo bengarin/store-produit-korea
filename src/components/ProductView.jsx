@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { ChevronRight, Heart, ShoppingCart, Zap, Info, Leaf } from 'lucide-react';
 import ProductGallery from './ProductGallery.jsx';
@@ -5,11 +6,22 @@ import ProductDetails from './ProductDetails.jsx';
 import NamedIcon from './NamedIcon.jsx';
 import QuantitySelector from './QuantitySelector.jsx';
 import { REASSURANCE_ITEMS } from './Reassurance.jsx';
+import VariantPicker from './VariantPicker.jsx';
 import { formatPrice } from '../utils/currency.js';
+import { STATUS_LABELS, compareAtPrice, defaultVariant, hasChoice, unitPrice, variantStatus } from '../utils/variants.js';
+
+/** Variante affichée à l'ouverture : celle par défaut si elle est disponible, sinon la 1re disponible. */
+function initialVariant(product) {
+  const fallback = defaultVariant(product);
+  if (!hasChoice(product) || variantStatus(product, fallback) === 'available') return fallback;
+  return product.variants.find((v) => variantStatus(product, v) === 'available') || fallback;
+}
 
 /**
  * Fiche produit (présentation seule). Utilisée par la boutique (ProductPage) ET par l'aperçu de
  * l'administration : ce que l'équipe prévisualise est exactement ce que voient les clients.
+ * Le choix de variante vit ici ; `onAdd(variant)` et `onBuyNow(variant)` reçoivent la variante choisie
+ * (null en mode démo, sans variantes).
  */
 export default function ProductView({
   product, categoryLabel, qty, onQtyChange, maxQty, isFav, onToggleFavorite, onAdd, onBuyNow, showDemoNotices, desktop,
@@ -17,9 +29,15 @@ export default function ProductView({
   const mainCat = product.categories[0];
   const categories = product.categories.map(categoryLabel).join(' · ');
   const changeQty = onQtyChange;
-  const handleAdd = onAdd;
-  const handleBuyNow = onBuyNow;
   const toggleFavorite = onToggleFavorite;
+  const [variant, setVariant] = useState(() => initialVariant(product));
+  const choice = hasChoice(product);
+  const status = variantStatus(product, variant);
+  const canBuy = status === 'available';
+  const price = unitPrice(product, variant);
+  const compare = compareAtPrice(product, variant);
+  const handleAdd = () => canBuy && onAdd(variant);
+  const handleBuyNow = () => canBuy && onBuyNow(variant);
 
   return (
     <main className="pdp">
@@ -38,6 +56,7 @@ export default function ProductView({
             <ProductGallery
               key={product.id}
               product={product}
+              focusImage={variant?.image || null}
               badge={<span className="pdp__badge"><Leaf size={13} aria-hidden="true" />{categoryLabel(mainCat)}</span>}
               actions={(
                 <button
@@ -55,7 +74,10 @@ export default function ProductView({
           <div className="pdp__info">
             <p className="pdp__cat">{categories}</p>
             <h1 className="pdp__title">{product.displayName}</h1>
-            <p className="pdp__price">{formatPrice(product.price)}</p>
+            <p className="pdp__price">
+              {formatPrice(price)}
+              {compare && <s className="pdp__compare"><span className="sr-only">Prix habituel : </span>{formatPrice(compare)}</s>}
+            </p>
             <p className="pdp__desc">{product.summary}</p>
 
             <ul className="pdp-tiles" aria-label="Caractéristiques">
@@ -64,16 +86,34 @@ export default function ProductView({
               ))}
             </ul>
 
+            {choice && <VariantPicker product={product} variant={variant} onChange={setVariant} />}
+            {(variant?.sku || !canBuy) && (
+              <div className="pdp__variant-info" aria-live="polite">
+                {!canBuy && (
+                  <p className={`pdp__stock pdp__stock--${status}`}>
+                    {STATUS_LABELS[status]}
+                    {choice && variant?.title ? ` — ${variant.title}` : ''}
+                    <small>
+                      {status === 'out_of_stock'
+                        ? `${choice ? 'Cette variante' : 'Ce produit'} n’est plus en stock pour le moment.`
+                        : `${choice ? 'Cette variante ne peut pas être commandée' : 'Ce produit ne peut pas être commandé'} pour le moment.`}
+                    </small>
+                  </p>
+                )}
+                {variant?.sku && <p className="pdp__sku">Réf. {variant.sku}</p>}
+              </div>
+            )}
+
             <div className="pdp__buy">
               <div className="pdp__buy-row">
                 <QuantitySelector value={qty} onChange={changeQty} max={maxQty} size="buy" />
-                <button className="btn pdp__add" onClick={handleAdd}>
-                  <ShoppingCart size={18} aria-hidden="true" /> Ajouter au panier
+                <button className="btn pdp__add" onClick={handleAdd} disabled={!canBuy}>
+                  <ShoppingCart size={18} aria-hidden="true" /> {canBuy ? 'Ajouter au panier' : STATUS_LABELS[status]}
                 </button>
               </div>
-              <button className="btn btn--primary btn--block pdp__now" onClick={handleBuyNow}>
+              <button className="btn btn--primary btn--block pdp__now" onClick={handleBuyNow} disabled={!canBuy}>
                 <Zap size={17} aria-hidden="true" /> Commander maintenant
-                <span className="pdp__now-total">· {formatPrice(product.price * qty)}</span>
+                {canBuy && <span className="pdp__now-total">· {formatPrice(price * qty)}</span>}
               </button>
             </div>
 

@@ -1,6 +1,7 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 import { useCatalog } from './CatalogContext.jsx';
-import { MAX_QTY, clampQty, loadCart, saveCart, loadPromo, savePromo } from '../services/cartService.js';
+import { MAX_QTY, clampQty, loadCart, saveCart, loadPromo, savePromo, toItem } from '../services/cartService.js';
+import { findVariant, lineKey } from '../utils/variants.js';
 import { loadFavorites, saveFavorites } from '../services/favoritesService.js';
 import { resolveLocalPromo } from '../utils/pricing.js';
 import { DATA_SOURCE } from '../config/env.js';
@@ -22,11 +23,14 @@ export function CartProvider({ children }) {
   });
   const [favorites, setFavorites] = useState(loadFavorites);
 
-  // Une fois le catalogue prêt, on retire les produits qui n'existent plus.
+  // Une fois le catalogue prêt, on retire les produits (ou variantes) qui n'existent plus.
   useEffect(() => {
     if (status !== 'ready') return;
     setItems((prev) => {
-      const kept = prev.filter((i) => getProductById(i.id));
+      const kept = prev.filter((i) => {
+        const product = getProductById(i.id);
+        return product && (i.variantId == null || findVariant(product, i.variantId));
+      });
       return kept.length === prev.length ? prev : kept;
     });
   }, [status, getProductById]);
@@ -35,19 +39,23 @@ export function CartProvider({ children }) {
   useEffect(() => savePromo(promo), [promo]);
   useEffect(() => saveFavorites(favorites), [favorites]);
 
-  const addItem = useCallback((id, qty = 1) => {
+  /** `variantId` : variante choisie (mode API) ; même produit + même variante = même ligne. */
+  const addItem = useCallback((id, qty = 1, variantId) => {
+    const item = toItem(id, qty, variantId);
+    const key = lineKey(item);
     setItems((prev) => {
-      const existing = prev.find((i) => i.id === id);
-      if (existing) return prev.map((i) => (i.id === id ? { ...i, qty: clampQty(i.qty + qty) } : i));
-      return [...prev, { id, qty: clampQty(qty) }];
+      const existing = prev.find((i) => lineKey(i) === key);
+      if (existing) return prev.map((i) => (lineKey(i) === key ? { ...i, qty: clampQty(i.qty + qty) } : i));
+      return [...prev, item];
     });
   }, []);
 
-  const setQty = useCallback((id, qty) => {
-    setItems((prev) => prev.map((i) => (i.id === id ? { ...i, qty: clampQty(qty) } : i)));
+  /** `key` = lineKey(ligne) — l'identifiant du produit pour une ligne sans variante. */
+  const setQty = useCallback((key, qty) => {
+    setItems((prev) => prev.map((i) => (lineKey(i) === key ? { ...i, qty: clampQty(qty) } : i)));
   }, []);
 
-  const removeItem = useCallback((id) => setItems((prev) => prev.filter((i) => i.id !== id)), []);
+  const removeItem = useCallback((key) => setItems((prev) => prev.filter((i) => lineKey(i) !== key)), []);
 
   const clearCart = useCallback(() => {
     setItems([]);

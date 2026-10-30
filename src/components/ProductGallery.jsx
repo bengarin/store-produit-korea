@@ -6,9 +6,17 @@ import ProductImage from './ProductImage.jsx';
  * Galerie produit : grande image (flèches, zoom discret au survol), vignettes cliquables.
  * `badge` et `actions` sont posés sur l'image (catégorie, favori…).
  */
-export default function ProductGallery({ product, badge = null, actions = null }) {
-  const images = product.galleryImages;
-  const [active, setActive] = useState(0);
+export default function ProductGallery({ product, badge = null, actions = null, focusImage = null }) {
+  // Image propre à la variante choisie : affichée (ajoutée en tête si elle n'est pas dans la galerie).
+  const inGallery = focusImage ? product.galleryImages.findIndex((img) => img.src === focusImage.src) : -1;
+  const images = focusImage && inGallery < 0 ? [focusImage, ...product.galleryImages] : product.galleryImages;
+  const [active, setActive] = useState(() => (focusImage ? Math.max(inGallery, 0) : 0));
+  const [shown, setShown] = useState(focusImage?.src || null);
+  if ((focusImage?.src || null) !== shown) {
+    // Changement de variante : on montre sa photo (ajustement pendant le rendu, sans effet).
+    setShown(focusImage?.src || null);
+    setActive(focusImage ? Math.max(inGallery, 0) : 0);
+  }
   const [origin, setOrigin] = useState('50% 50%');
   const go = (d) => setActive((i) => (i + d + images.length) % images.length);
 

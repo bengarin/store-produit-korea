@@ -17,8 +17,13 @@ export const ORDERS_ARE_SIMULATED = DATA_SOURCE === 'local';
  * Vérifie un code promo auprès du serveur (mode API) pour le panier donné.
  * Retourne { ok: true, promo } ou { ok: false, message }.
  */
+/** Ligne envoyée au serveur : identifiants + quantité ; `variantId` seulement s'il est connu. */
+const requestItem = (productId, variantId, qty) => (variantId == null ? { productId, qty } : { productId, variantId, qty });
+
 export async function validatePromo(code, items) {
-  const res = await api.post(ENDPOINTS.promoValidate, { code, items: items.map(({ id, qty }) => ({ productId: id, qty })) });
+  const res = await api.post(ENDPOINTS.promoValidate, {
+    code, items: items.map(({ id, variantId, qty }) => requestItem(id, variantId, qty)),
+  });
   if (!res.valid) return { ok: false, message: res.message };
   return { ok: true, promo: { code: res.code, type: res.type, value: res.value, minSubtotal: res.minSubtotal } };
 }
@@ -27,7 +32,7 @@ export async function validatePromo(code, items) {
 export function buildOrderRequest({ customer, lines, promoCode }) {
   return {
     customer,
-    items: lines.map(({ product, qty }) => ({ productId: product.id, qty })),
+    items: lines.map(({ product, variant, qty }) => requestItem(product.id, variant?.id, qty)),
     promoCode: promoCode || null,
     paymentMethod: 'cod',
     deliveryMethod: 'home',
@@ -47,7 +52,9 @@ export async function submitOrder({ customer, lines, promoCode, totals, idempote
   const request = buildOrderRequest({ customer, lines, promoCode });
   const summary = {
     customer,
-    lines: lines.map(({ product, qty }) => ({ id: product.id, name: product.displayName, price: product.price, qty })),
+    lines: lines.map(({ product, qty, price, label }) => ({
+      id: product.id, name: label ? `${product.displayName} — ${label}` : product.displayName, price, qty,
+    })),
     promoCode: totals.discount > 0 ? promoCode : '',
     payment: 'cod',
     delivery: 'home',

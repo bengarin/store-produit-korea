@@ -103,7 +103,20 @@ def test_donnees_sensibles_jamais_publiques(client, imported):
     assert '"cost"' not in raw and "4321" not in raw
     first = client.get(f"{STORE}/products").json()["items"][0]
     assert first["stock"] is None and first["inStock"] is True
-    assert set(first["variants"][0]) == {"id", "title", "price", "compareAtPrice", "available", "isDefault", "options"}
+    # Liste fermée : jamais coût ni quantité. `availability` = état (disponible / épuisé / non renseigné), sans nombre.
+    assert set(first["variants"][0]) == {
+        "id",
+        "title",
+        "sku",
+        "price",
+        "compareAtPrice",
+        "available",
+        "availability",
+        "isDefault",
+        "options",
+        "image",
+    }
+    assert first["variants"][0]["availability"] == "available" and "7" not in str(first["variants"][0]["availability"])
 
 
 @pytest.mark.django_db

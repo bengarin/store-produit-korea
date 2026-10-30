@@ -320,7 +320,7 @@ Rôles : **O**wner · **A**dmin · **M** Order Manager · **E** Content Editor �
 - Aperçu = la vraie fiche boutique (`ProductView`, même composant que `/produits/:id`) dans un cadre mobile/ordinateur,
   alimentée par `GET /products/{id}/preview` (même fonction que l'API publique) ; brouillons compris.
 - Non livré : verrou optimiste (`updated_at`), marge calculée en direct, aperçu de la carte produit, codes promo
-  dans l'admin, sélecteur de variante et prix barré sur la boutique, balises SEO injectées dans les pages publiques
+  dans l'admin, balises SEO injectées dans les pages publiques
   (application monopage : nécessite un rendu serveur ou un pré-rendu).
 
 ---
@@ -515,3 +515,8 @@ Ordre choisi pour **vendre le plus tôt possible**. Durées non estimées tant q
 | 30/10/2026 | Duplication : copie en brouillon, sans stock, SKU ni code-barres | Ne jamais inventer de stock ; SKU uniques | — | — |
 | 30/10/2026 | Ajout d'une option sur un produit existant : 1re valeur attribuée aux variantes existantes | Garder le produit valide (actif) | — | — |
 | 30/10/2026 | Description longue : assainie au serveur (nh3) ET au navigateur avant affichage | Défense en profondeur contre le HTML dangereux | — | — |
+| 30/10/2026 | Étape intermédiaire livrée : sélecteur de variantes, stock par variante et prix barré sur la boutique | Vendre réellement les produits à options sans fausse promotion | Valider ; puis phase 5 | [À définir] |
+| 30/10/2026 | État public d'une variante (`availability`) sans quantité : disponible / épuisé / indisponible (stock non renseigné) | Afficher clairement sans publier le stock | — | — |
+| 30/10/2026 | Variante ↔ photo : champ `image` facultatif (image du même produit) | Montrer la bonne photo au choix d'une option | — | — |
+| 30/10/2026 | Carte d'un produit à options : ouvre la fiche (jamais de variante ajoutée au hasard) | Éviter les erreurs de commande | — | — |
+| 30/10/2026 | Prix barré affiché seulement s'il est supérieur au prix (déjà imposé par le serveur, revérifié par le front) | Pas de faux prix promotionnel | — | — |

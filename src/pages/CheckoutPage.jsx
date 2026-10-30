@@ -12,6 +12,7 @@ import { useCatalog } from '../context/CatalogContext.jsx';
 import { computeTotals, resolveLines, mergeItems } from '../utils/pricing.js';
 import { submitOrder, loadDirectOrder, clearDirectOrder, saveLastOrder } from '../services/orderService.js';
 import { createIdempotencyKey } from '../utils/id.js';
+import { STATUS_LABELS } from '../utils/variants.js';
 
 /** Message clair pour chaque article en rupture renvoyé par le serveur (409 insufficient_stock). */
 function stockMessage({ name, requested, available, reason }) {
@@ -45,6 +46,12 @@ export default function CheckoutPage() {
   const appliedPromo = usesCart ? promo : null;
   const lines = useMemo(() => resolveLines(orderItems, getProductById), [orderItems, getProductById]);
   const totals = useMemo(() => computeTotals(lines, appliedPromo, config), [lines, appliedPromo, config]);
+  // Articles connus comme épuisés / indisponibles : la commande est bloquée (le serveur revérifie de toute façon).
+  const unavailable = lines.filter((l) => l.status !== 'available');
+  const shownProblem = problem || (unavailable.length > 0 && {
+    title: 'Article indisponible',
+    lines: unavailable.map((l) => `${l.product.displayName}${l.label ? ` (${l.label})` : ''} : ${STATUS_LABELS[l.status].toLowerCase()}.`),
+  });
 
   if (lines.length === 0) {
     return (
@@ -62,6 +69,7 @@ export default function CheckoutPage() {
 
   const handleSubmit = async (customer, { website } = {}) => {
     if (lockRef.current) return;
+    if (unavailable.length) return; // message déjà affiché au-dessus du formulaire
     lockRef.current = true;
     setSubmitting(true);
     setProblem(null);
@@ -104,10 +112,10 @@ export default function CheckoutPage() {
           deliveryFee={totals.delivery}
           submitting={submitting}
           onSubmit={handleSubmit}
-          alert={problem && (
+          alert={shownProblem && (
             <div className="checkout-alert" role="alert">
-              <p className="checkout-alert__title"><AlertTriangle size={18} aria-hidden="true" /> {problem.title}</p>
-              <ul>{problem.lines.map((line) => <li key={line}>{line}</li>)}</ul>
+              <p className="checkout-alert__title"><AlertTriangle size={18} aria-hidden="true" /> {shownProblem.title}</p>
+              <ul>{shownProblem.lines.map((line) => <li key={line}>{line}</li>)}</ul>
               {usesCart && <Link to="/panier" className="text-link">Modifier mon panier</Link>}
             </div>
           )}
@@ -115,10 +123,15 @@ export default function CheckoutPage() {
           <section className="checkout-section recap">
             <h2>Récapitulatif {isDirect && <span className="pill">Achat direct</span>}</h2>
             <ul className="recap__list">
-              {lines.map(({ product, qty, lineTotal }) => (
-                <li key={product.id}>
-                  <ProductImage image={product.cardImage} className="recap__thumb" />
-                  <span className="recap__name">{product.displayName}<small>{qty} × {formatPrice(product.price)}</small></span>
+              {lines.map(({ key, product, variant, qty, price, label, status, lineTotal }) => (
+                <li key={key}>
+                  <ProductImage image={variant?.image || product.cardImage} className="recap__thumb" />
+                  <span className="recap__name">
+                    {product.displayName}
+                    {label && <span className="recap__variant">{label}</span>}
+                    {status !== 'available' && <span className="recap__stock">{STATUS_LABELS[status]}</span>}
+                    <small>{qty} × {formatPrice(price)}</small>
+                  </span>
                   <strong>{formatPrice(lineTotal)}</strong>
                 </li>
               ))}

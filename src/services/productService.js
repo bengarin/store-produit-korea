@@ -13,6 +13,24 @@ import { PRODUCT_IMAGES } from '../data/local/productImages.js';
  * Les clés d'images (cardImage, mainImage, galleryImages, image, sceneImage, hoverImage)
  * viennent du dossier local ou, plus tard, des URL renvoyées par l'API.
  */
+const toNumberOrNull = (value) => (value == null || value === '' || Number.isNaN(Number(value)) ? null : Number(value));
+
+function normalizeVariant(v) {
+  return {
+    id: v.id,
+    title: v.title || '',
+    sku: v.sku || '',
+    price: Number(v.price),
+    compareAtPrice: toNumberOrNull(v.compareAtPrice),
+    available: v.available === true,
+    // Ancien format sans `availability` : non disponible = « Indisponible » (jamais supposé en stock).
+    availability: v.availability || (v.available === true ? 'available' : 'unavailable'),
+    isDefault: Boolean(v.isDefault),
+    options: v.options || {},
+    image: v.image || null,
+  };
+}
+
 export function normalizeProduct(raw, images = {}) {
   const gallery = images.galleryImages || raw.images || [];
   const main = images.mainImage || gallery[0] || null;
@@ -33,6 +51,11 @@ export function normalizeProduct(raw, images = {}) {
     benefits: raw.benefits || [],
     skinTypes: raw.skinTypes || '',
     stock: raw.stock ?? null, // inconnu en local
+    // Variantes et prix barré (mode API). Mode démo : aucune variante, produit disponible, pas de prix barré.
+    compareAtPrice: toNumberOrNull(raw.compareAtPrice),
+    inStock: raw.inStock !== false,
+    options: (raw.options || []).filter((o) => o && o.name && Array.isArray(o.values)),
+    variants: (raw.variants || []).map(normalizeVariant),
     cardImage: images.cardImage || main,
     mainImage: main,
     galleryImages: gallery,

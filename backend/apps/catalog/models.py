@@ -230,6 +230,10 @@ class Variant(Timestamped):
     weight_grams = models.PositiveIntegerField("poids (g)", null=True, blank=True)
     position = models.PositiveIntegerField(default=0)
     is_default = models.BooleanField("variante par défaut", default=False)
+    # Photo affichée quand le client choisit cette variante (facultatif, image du même produit).
+    image = models.ForeignKey(
+        "ProductImage", verbose_name="image", null=True, blank=True, on_delete=models.SET_NULL, related_name="+"
+    )
     option_values = models.ManyToManyField(ProductOptionValue, through="VariantOptionValue", related_name="variants")
 
     class Meta:
