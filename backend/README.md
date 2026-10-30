@@ -10,6 +10,8 @@
 
 - **Phase 3** (administration) : interface React sous `/admin` (tableau de bord, commandes, clients, stock,
   réglages) + `GET /api/v1/admin/analytics/overview`.
+- **Phase 5** (tableau de bord) : indicateurs comparés à la période précédente, graphiques jour/semaine/mois,
+  répartitions (statut, catégorie, paiement, ville), classements produits/variantes/clients, stock, export Excel.
 - **Phase 4** (Product Builder) : `/admin/products` (liste, recherche, filtres, actions rapides), création et
   édition complètes (contenu, description mise en forme assainie, catégories, SEO, images, options/variantes),
   aperçu fidèle à la fiche publique, duplication. Le stock reste géré uniquement par **Stock**.
@@ -180,11 +182,26 @@ Statistiques client recalculées depuis la base : commandes = non annulées, tot
 | GET, POST, PATCH, DELETE | `/coupons`, `/coupons/{id}` | O A M N / O A |
 | GET, POST, PATCH | `/shipping/zones`, `/shipping/cities` (+ `/{id}`) | O A M N / O A |
 | GET, PATCH | `/settings` (WhatsApp, mentions légales de facture, limites) | O A M N / O A |
-| GET | `/analytics/overview?from=AAAA-MM-JJ&to=AAAA-MM-JJ` (tableau de bord, 30 jours par défaut, 366 max) | O A M N |
+| GET | `/analytics/report?preset=…` (phase 5) : indicateurs + comparaison, séries, statuts, catégories, paiement, produits, variantes, clients, villes, stock | O A M N |
+| GET | `/analytics/export?preset=…` (phase 5) : le même rapport en Excel (une feuille par analyse) | O A M N |
 
-Définitions du tableau de bord (période = date de commande, heure du Maroc) : **chiffre d'affaires encaissé** =
-total des commandes livrées ; **ventes** = commandes hors annulées et retournées ; **panier moyen** = ventes / nombre
-de ces commandes. Une correction de stock « manuelle » exige une note.
+`preset` = `today`, `7d`, `30d` (défaut), `90d`, `month`, `last_month`, `year` ou `custom` (+ `from`, `to`, 366 jours
+max) ; `granularity` = `day`, `week` ou `month` (par défaut selon la durée). Réponse : `period`, `previousPeriod`
+(période équivalente), `kpis`, `previousKpis`, `changes` (`{percent}` ou `{points}` pour les taux, `null` si non
+comparable), `series`, `statuses`, `categories`, `payments`, `products`, `customers`, `stock`.
+
+**Définitions du tableau de bord** (montants figés dans les commandes, jamais les prix actuels ; heure du Maroc) :
+- **chiffre d'affaires encaissé** = total des commandes **livrées**, à la **date de livraison** (une commande livrée
+  puis retournée en sort) ;
+- au **jour de commande** : commandes (tous statuts), ventes commandées et panier moyen (commandes **valides** = ni
+  annulées ni retournées), unités vendues, clients, statuts, catégories, villes ;
+- **nouveau client** = première commande valide de toute l'histoire dans la période ; **taux d'annulation** =
+  annulées / commandes ; **taux de retour** = retournées / (expédiées + livrées + retournées) ;
+- **catégorie** = catégorie principale actuelle du produit (une vente n'est comptée qu'une fois) ;
+- **stock** = état actuel ; « épuisé » (0) et « non renseigné » (NULL) toujours séparés.
+Chaque indicateur est vérifié par une requête SQL écrite à la main (`tests/test_analytics.py`).
+
+Une correction de stock « manuelle » exige une note.
 
 L'Éditeur de contenu n'a pas accès aux commandes ni aux clients (données personnelles).
 Le coût d'achat des lignes de commande suit la même règle que le catalogue (O, A, Analyste).

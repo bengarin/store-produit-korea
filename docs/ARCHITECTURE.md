@@ -459,7 +459,7 @@ Ordre choisi pour **vendre le plus tôt possible**. Durées non estimées tant q
 | **2. Commandes réelles** ✅ | orders (transaction, stock, coupons, idempotence, anti-abus), customers | Vraie commande COD créée ; tests de concurrence (2 commandes pour le dernier article) |
 | **3. Admin cœur** ✅ | Login, layout, Commandes (liste, détail, statuts, facture, Excel), Clients, Stock | Gestion quotidienne possible sans toucher au code |
 | **4. Product Builder** ✅ | Produits, variantes, médias, catégories, SEO (codes promo admin reportés) | Créer un produit de A à Z depuis l'admin |
-| **5. Dashboard & analytics** | KPI, graphiques, filtres de dates, stock bas | Chiffres = requêtes SQL vérifiées à la main sur un jeu de test |
+| **5. Dashboard & analytics** ✅ | KPI, graphiques, filtres de dates, stock bas | Chiffres = requêtes SQL vérifiées à la main sur un jeu de test |
 | **6. Theme Builder** | Étape 0 (accueil = sections, DOM identique) → éditeur → versions | Publier/restaurer sans casser la boutique |
 | **7. Finitions** | Avis modérés, newsletter (si outil), 2FA, sauvegardes, mise en production | Checklist sécurité OWASP passée |
 
@@ -520,3 +520,10 @@ Ordre choisi pour **vendre le plus tôt possible**. Durées non estimées tant q
 | 30/10/2026 | Variante ↔ photo : champ `image` facultatif (image du même produit) | Montrer la bonne photo au choix d'une option | — | — |
 | 30/10/2026 | Carte d'un produit à options : ouvre la fiche (jamais de variante ajoutée au hasard) | Éviter les erreurs de commande | — | — |
 | 30/10/2026 | Prix barré affiché seulement s'il est supérieur au prix (déjà imposé par le serveur, revérifié par le front) | Pas de faux prix promotionnel | — | — |
+| 30/10/2026 | Phase 5 livrée : tableau de bord d'analyse (indicateurs comparés, graphiques, produits, clients, stock, export Excel) | Piloter la boutique avec des chiffres fiables | Valider ; puis phase 6 | [À définir] |
+| 30/10/2026 | CA encaissé compté à la date de livraison ; les autres indicateurs à la date de commande | Paiement à la livraison = encaissement le jour de livraison | — | — |
+| 30/10/2026 | Nouveau client = 1re commande valide (non annulée, non retournée) de toute l'histoire | Une commande annulée n'est pas un achat | — | — |
+| 30/10/2026 | Taux de retour sur les commandes parties chez le client (expédiées, livrées, retournées) | Une commande en attente ne peut pas être retournée | — | — |
+| 30/10/2026 | Comparaison = période équivalente (même durée ; mois en cours vs même quantième du mois précédent ; année vs même intervalle) | Comparer ce qui est comparable | — | — |
+| 30/10/2026 | Jours découpés en Python (zoneinfo), sommes en SQL | Exact avec le changement d'heure du ramadan, sans dépendre des tables de fuseaux MySQL | — | — |
+| 30/10/2026 | Pas de marge sur le tableau de bord pour l'instant | Non demandé ; remise de commande non répartie par ligne → risque de chiffre faux | Décider si utile | — |

@@ -572,3 +572,52 @@ textarea.adm-input { resize: vertical; min-height: 80px; }
   .adm-preview-frame { padding: 0; }
   .adm-preview-frame iframe { border-radius: 0; width: 100%; }
 }
+
+/* ===== Phase 5 — Tableau de bord & analyses ============================== */
+.adm-filters--dash { align-items: center; }
+.adm-segmented--scroll { max-width: 100%; overflow-x: auto; scrollbar-width: thin; }
+.adm-segmented--scroll button { white-space: nowrap; flex: none; }
+.adm-segmented--sm button { min-height: 30px; padding: 0 10px; font-size: 12.5px; }
+.adm-period-line { margin: -4px 0 0; font-size: 13.5px; }
+.adm-kpi__compare { display: flex; align-items: center; flex-wrap: wrap; gap: 4px 6px; margin: 6px 0 0; font-size: 12.5px; }
+.adm-delta { display: inline-flex; align-items: center; gap: 2px; padding: 1px 7px 1px 5px; border-radius: 999px; font-weight: 700; font-variant-numeric: tabular-nums; }
+.adm-delta--good { background: #e4ede6; color: #1f5a3f; }
+.adm-delta--bad { background: #f6e4df; color: #9a3423; }
+.adm-delta--none { background: #efe9df; color: var(--adm-muted); }
+.adm-kpi--primary .adm-kpi__compare .adm-muted { color: rgba(255, 255, 255, .78); }
+.adm-kpi--primary .adm-delta { background: rgba(255, 255, 255, .16); color: #fff; }
+.adm-kpis--4 { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+.adm-kpis--flat .adm-kpi { box-shadow: none; }
+.adm-tabs--dash { margin-top: 4px; }
+.adm-chart-controls { display: flex; flex-wrap: wrap; gap: 8px; justify-content: flex-end; }
+.adm-chart-hint { margin: 0 0 8px; font-size: 12.5px; }
+.adm-grid-3 { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 18px; align-items: start; }
+
+.adm-barlist { display: grid; gap: 12px; margin: 0; padding: 0; list-style: none; }
+.adm-barlist__row { display: grid; gap: 5px; min-width: 0; }
+.adm-barlist__text { display: flex; justify-content: space-between; gap: 12px; font-size: 13.5px; }
+.adm-barlist__label { min-width: 0; overflow-wrap: anywhere; font-weight: 600; }
+.adm-barlist__value { flex: none; font-variant-numeric: tabular-nums; font-weight: 600; }
+.adm-barlist__value small { color: var(--adm-muted); font-weight: 500; font-size: 12px; }
+.adm-barlist__track { height: 10px; border-radius: 4px; background: #efe8dc; overflow: hidden; }
+.adm-barlist__bar { height: 100%; border-radius: 0 4px 4px 0; background: var(--adm-chart); }
+.adm-barlist__detail { font-size: 12px; color: var(--adm-muted); }
+.adm-barlist__empty { margin: 4px 0; }
+.adm-rank td:first-child { min-width: 0; }
+.adm-rank .adm-cell-sub { display: block; }
+
+.adm-definitions { margin-top: 6px; padding: 12px 16px; border: 1px solid var(--adm-line); border-radius: var(--adm-radius); background: var(--adm-panel); font-size: 13px; }
+.adm-definitions summary { cursor: pointer; font-weight: 600; color: var(--adm-green); }
+.adm-definitions ul { margin: 10px 0 0; padding-left: 18px; display: grid; gap: 6px; color: var(--adm-ink-2); line-height: 1.5; }
+
+@media (max-width: 1100px) {
+  .adm-grid-3 { grid-template-columns: minmax(0, 1fr); }
+}
+@media (max-width: 900px) {
+  .adm-kpis--4 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .adm-chart-controls { justify-content: flex-start; }
+}
+@media (max-width: 560px) {
+  .adm-kpis--4 { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 10px; }
+  .adm-kpi__compare { font-size: 11.5px; }
+}

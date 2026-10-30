@@ -27,5 +27,6 @@ urlpatterns = [
     path("shipping/cities", shipping_views.CityListCreateView.as_view(), name="admin-cities"),
     path("shipping/cities/<int:pk>", shipping_views.CityDetailView.as_view(), name="admin-city"),
     path("settings", settings_views.SettingsView.as_view(), name="admin-settings"),
-    path("analytics/overview", analytics_views.OverviewView.as_view(), name="admin-analytics-overview"),
+    path("analytics/report", analytics_views.ReportView.as_view(), name="admin-analytics-report"),
+    path("analytics/export", analytics_views.ReportExportView.as_view(), name="admin-analytics-export"),
 ]
