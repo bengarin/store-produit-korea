@@ -7,6 +7,12 @@ export const STORE_CONFIG = {
   brandName: 'Ma Petite Corée',
   brandTagline: 'KOREAN & NATURAL SKINCARE',
 
+  /**
+   * Politique de confidentialité relue et validée par un professionnel du droit ?
+   * Tant que false, la page affiche qu'il s'agit d'un document d'information non validé.
+   */
+  privacyPolicyReviewed: false,
+
   /** Affiche les mentions « prix provisoires / description indicative ». Passer à false une fois validés. */
   showDemoNotices: true,
 

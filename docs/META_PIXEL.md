@@ -20,6 +20,7 @@ quand même qu'un `fbq` n'existe pas déjà avant d'injecter le script (cas d'un
 | Périmètre | Boutique publique en **mode API** uniquement. Jamais dans l'administration, l'aperçu du thème, ni le mode démo (commandes simulées). |
 | CSP | Aucun script en ligne. CSP : `script-src 'self' https://connect.facebook.net`, envois vers `https://www.facebook.com`. |
 | `<noscript>` officiel | **Non installé** : il enverrait un PageView sans consentement possible. |
+| Pas d'envoi automatique de Meta | `fbq.disablePushState = true` (sinon fbevents.js enverrait un PageView automatique à chaque changement d'URL de l'application, en double) et `fbq('set','autoConfig',false,ID)` (pas d'événements automatiques sur les clics). [À VÉRIFIER avec le vrai script dans Events Manager : non testable ici.] |
 
 ## 3. Événements
 
@@ -82,8 +83,12 @@ simple commande. La déduplication est prévue : même `event_id` = `purchase.<n
 3. Mesure agrégée (iOS) : classer les événements par priorité (Purchase en premier).
 4. Si un catalogue est créé : identifiants produits = slugs de la boutique.
 5. Ne pas ajouter le pixel une seconde fois via GTM ou un autre outil.
+6. Paramètres du pixel → **désactiver la « correspondance avancée automatique »** (Automatic Advanced Matching) :
+   la politique de confidentialité indique que nom, téléphone et adresse ne sont pas envoyés à Meta ; ce réglage
+   de Meta pourrait sinon lire les champs du formulaire de commande. [À VÉRIFIER dans Events Manager]
 
 ## 7. Points à décider
 
-- Politique de confidentialité / cookies : **aucune page n'existe**. Le bandeau devrait y renvoyer. [DONNÉES MANQUANTES]
+- Politique de confidentialité : page `/confidentialite` (FR/AR), liée depuis le bandeau et le pied de page.
+  Texte d'information **non validé juridiquement** (mention visible tant que `privacyPolicyReviewed` vaut false).
 - Désactiver le pixel : `VITE_META_PIXEL_ID=off` au moment du build.

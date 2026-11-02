@@ -43,6 +43,7 @@ class CategorySerializer(serializers.ModelSerializer):
     isActive = serializers.BooleanField(source="is_active", required=False)
     seoTitle = serializers.CharField(source="seo_title", max_length=70, required=False, allow_blank=True)
     seoDescription = serializers.CharField(source="seo_description", max_length=160, required=False, allow_blank=True)
+    nameAr = serializers.CharField(source="name_ar", max_length=100, required=False, allow_blank=True)
     productCount = serializers.IntegerField(read_only=True, default=0)
     slug = serializers.SlugField(max_length=80, required=False)
     createdAt = serializers.DateTimeField(source="created_at", read_only=True)
@@ -54,6 +55,7 @@ class CategorySerializer(serializers.ModelSerializer):
             "id",
             "slug",
             "name",
+            "nameAr",
             "parentId",
             "position",
             "isActive",
@@ -206,6 +208,7 @@ class DefaultVariantInputSerializer(VariantSerializer):
 class HighlightSerializer(serializers.Serializer):
     icon = serializers.ChoiceField(choices=ProductHighlight.Icon.choices)
     label = serializers.CharField(max_length=60)
+    labelAr = serializers.CharField(source="label_ar", max_length=60, required=False, allow_blank=True, default="")
 
 
 class ProductListSerializer(serializers.ModelSerializer):
@@ -281,6 +284,17 @@ class ProductSerializer(serializers.ModelSerializer):
     benefits = TextListField()
     usage = TextListField(source="usage_steps")
     skinTypes = serializers.CharField(source="skin_types", max_length=255, required=False, allow_blank=True)
+    # Contenus en arabe : facultatifs, indépendants du français.
+    displayNameAr = serializers.CharField(source="display_name_ar", max_length=255, required=False, allow_blank=True)
+    cardLineAr = serializers.CharField(source="short_description_ar", max_length=160, required=False, allow_blank=True)
+    summaryAr = serializers.CharField(source="summary_ar", required=False, allow_blank=True, max_length=5000)
+    descriptionHtmlAr = serializers.CharField(
+        source="description_html_ar", required=False, allow_blank=True, max_length=20000
+    )
+    ingredientsAr = TextListField(source="ingredients_ar")
+    benefitsAr = TextListField(source="benefits_ar")
+    usageAr = TextListField(source="usage_steps_ar")
+    skinTypesAr = serializers.CharField(source="skin_types_ar", max_length=255, required=False, allow_blank=True)
     categoryIds = serializers.PrimaryKeyRelatedField(
         queryset=Category.objects.all(), many=True, required=False, write_only=True
     )
@@ -327,6 +341,14 @@ class ProductSerializer(serializers.ModelSerializer):
             "benefits",
             "usage",
             "skinTypes",
+            "displayNameAr",
+            "cardLineAr",
+            "summaryAr",
+            "descriptionHtmlAr",
+            "ingredientsAr",
+            "benefitsAr",
+            "usageAr",
+            "skinTypesAr",
             "categoryIds",
             "categories",
             "highlights",
@@ -374,6 +396,9 @@ class ProductSerializer(serializers.ModelSerializer):
         return value
 
     def validate_descriptionHtml(self, value):
+        return sanitize_html(value)
+
+    def validate_descriptionHtmlAr(self, value):
         return sanitize_html(value)
 
     def validate_categoryIds(self, categories):

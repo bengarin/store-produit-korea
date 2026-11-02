@@ -566,3 +566,7 @@ Ordre choisi pour **vendre le plus tôt possible**. Durées non estimées tant q
 | 02/11/2026 | Meta Pixel 1665012938525216 : chargé après consentement uniquement, mode API seulement, sans `<noscript>` | Respect du consentement ; pas de faux achats depuis la démo | Vérifier dans Events Manager sur une adresse de test | Avant ouverture |
 | 02/11/2026 | Purchase = commande créée par le serveur (COD), eventID `purchase.<numéro>`, jamais deux fois | Paiement à la livraison : pas de Purchase sur simple clic | Décider Conversions API (achat à la livraison) | [À définir] |
 | 02/11/2026 | RemoveFromCart envoyé en événement personnalisé ; Search non implémenté (pas de recherche dans la boutique) | Pas d'événement standard Meta / pas de fonctionnalité à mesurer | — | — |
+| 02/11/2026 | Champs arabes des produits et catégories en colonnes séparées (`*_ar`), facultatifs ; repli sur le français | Modifier l'arabe depuis l'admin sans toucher au français | Saisir les traductions des 5 produits | [À définir] |
+| 02/11/2026 | Ton arabe neutre (pluriel de politesse, tournures impersonnelles) | Adapté à tous les clients | — | — |
+| 02/11/2026 | Page `/confidentialite` FR/AR, non indexée, marquée « non validée » | Informer sur cookies, pixel et consentement sans prétendre à une validation juridique | Relecture juridique ; compléter les éléments manquants | Avant ouverture |
+| 02/11/2026 | Pixel : `disablePushState` et `autoConfig=false` | Éviter les PageView en double et les événements automatiques non décrits | Vérifier dans Events Manager | Avant ouverture |

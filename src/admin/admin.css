@@ -734,3 +734,12 @@ textarea.adm-input { resize: vertical; min-height: 80px; }
 .adm-otp-codes__list { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px 16px; margin: 0; padding-left: 22px; font-size: 16px; }
 .adm-otp-codes__list code { font-variant-numeric: tabular-nums; letter-spacing: .06em; }
 .adm-actions-row { display: flex; flex-wrap: wrap; gap: 8px; }
+
+/* Version arabe des produits et catégories */
+.adm-ar-input { width: 100%; }
+.adm-ar-input .adm-input, .adm-ar-input [contenteditable] { font-family: 'Noto Sans Arabic', 'Segoe UI', Tahoma, sans-serif; text-align: right; }
+.adm-ar-ref { display: block; color: var(--adm-muted); font-size: 12px; }
+.adm-ar-highlights { display: grid; gap: 8px; }
+.adm-ar-highlight { display: grid; grid-template-columns: minmax(120px, 200px) minmax(0, 1fr); gap: 8px; align-items: center; font-size: 13px; }
+.adm-card__title svg { vertical-align: -3px; margin-right: 6px; }
+.adm-ar-row { display: flex; gap: 8px; align-items: center; }

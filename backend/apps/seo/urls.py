@@ -10,6 +10,7 @@ urlpatterns = [
     path("", views.home, name="seo-home"),
     path("produits", views.products, name="seo-products"),
     path("produits/<slug:slug>", views.product, name="seo-product"),
+    path("confidentialite", views.privacy, name="seo-privacy"),
     re_path(r"^(panier|commande|confirmation)/?$", views.private_page),
     re_path(r"^admin(/.*)?$", views.private_page),
     re_path(r"^(?!api/|media/|static/|assets/).*$", views.not_found),

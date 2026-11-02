@@ -19,42 +19,42 @@ const AR = {
   'La beauté au naturel': 'الجمال بطبيعته',
   'Des soins doux pour une peau plus belle chaque jour': 'عناية لطيفة لبشرة أجمل كل يوم',
   'Une sélection de soins naturels pour une peau saine, lumineuse et harmonieuse.': 'تشكيلة من منتجات العناية الطبيعية لبشرة صحية ومشرقة ومتوازنة.',
-  'Découvrir nos produits': 'اكتشفي منتجاتنا',
+  'Découvrir nos produits': 'اكتشفوا منتجاتنا',
   'Les cinq soins de la boutique sur des socles en pierre : gel Baroness Aloe Vera, crème SOME BY MI Yuja Niacin, émulsion ORJENA Power Collagen, patchs BIOVÈNE et crème Quret Vitamin Collagen':
     'منتجات العناية الخمسة على قواعد حجرية: جل Baroness Aloe Vera، وكريم SOME BY MI Yuja Niacin، ومستحلب ORJENA Power Collagen، ولصقات BIOVÈNE، وكريم Quret Vitamin Collagen',
 
   // Rituel
-  'Votre routine beauté': 'روتين جمالك',
+  'Votre routine beauté': 'روتين جمالكم',
   'Le rituel NATURE': 'روتين NATURE',
   'Trois étapes simples, trois soins, une seule sélection.': 'ثلاث خطوات بسيطة، ثلاثة منتجات، وتشكيلة واحدة.',
   'Nettoyer & préparer': 'التنظيف والتحضير',
-  'Après votre nettoyage quotidien, préparez votre peau en douceur.': 'بعد التنظيف اليومي، حضّري بشرتك بلطف.',
+  'Après votre nettoyage quotidien, préparez votre peau en douceur.': 'بعد التنظيف اليومي، حضّروا بشرتكم بلطف.',
   Hydrater: 'الترطيب',
-  'Une crème au yuja et à la niacinamide pour poursuivre votre routine.': 'كريم باليوجا والنياسيناميد لمواصلة روتينك.',
+  'Une crème au yuja et à la niacinamide pour poursuivre votre routine.': 'كريم باليوجا والنياسيناميد لمواصلة روتينكم.',
   Sublimer: 'إبراز الجمال',
-  'Un moment dédié au contour des yeux pour terminer votre rituel.': 'لحظة مخصّصة لمحيط العينين لإتمام روتينك.',
+  'Un moment dédié au contour des yeux pour terminer votre rituel.': 'لحظة مخصّصة لمحيط العينين لإتمام روتينكم.',
   'Produits mis en avant': 'منتجات مختارة',
 
   // Ingrédients (section)
   'Nos ingrédients naturels': 'مكوّناتنا الطبيعية',
-  'Des actifs choisis pour votre peau': 'مكوّنات فعّالة مختارة لبشرتك',
+  'Des actifs choisis pour votre peau': 'مكوّنات فعّالة مختارة لبشرتكم',
   'Des ingrédients inspirés par la nature et les traditions de beauté coréennes.': 'مكوّنات مستوحاة من الطبيعة ومن تقاليد الجمال الكورية.',
 
   // Bannière promotionnelle
   'Tout en douceur': 'بكل لطف',
-  'Révélez votre éclat naturel': 'أبرزي إشراقتك الطبيعية',
-  'Des soins coréens et naturels pour accompagner votre routine, jour après jour.': 'منتجات عناية كورية وطبيعية ترافق روتينك يومًا بعد يوم.',
+  'Révélez votre éclat naturel': 'أبرزوا إشراقتكم الطبيعية',
+  'Des soins coréens et naturels pour accompagner votre routine, jour après jour.': 'منتجات عناية كورية وطبيعية ترافق روتينكم يومًا بعد يوم.',
   'Portrait d’une femme au teint lumineux, la main posée sur la joue': 'صورة امرأة ببشرة مشرقة تضع يدها على خدّها',
 
   // Collection
   'Nos essentiels': 'أساسياتنا',
   'Les produits du moment': 'منتجات اللحظة',
-  'Découvrez nos {nombre} soins pour une routine simple et douce au quotidien.': 'اكتشفي منتجات العناية لدينا ({nombre}) لروتين يومي بسيط ولطيف.',
+  'Découvrez nos {nombre} soins pour une routine simple et douce au quotidien.': 'اكتشفوا منتجات العناية لدينا ({nombre}) لروتين يومي بسيط ولطيف.',
   'Voir tout': 'عرض الكل',
 
   // Avantages
   'Paiement à la livraison': 'الدفع عند الاستلام',
-  'Vous payez à la réception': 'تدفعين عند استلام طلبك',
+  'Vous payez à la réception': 'الدفع عند استلام الطلب',
   'Produits authentiques': 'منتجات أصلية',
   'Marques coréennes sélectionnées': 'علامات كورية مختارة بعناية',
   'Livraison partout au Maroc': 'التوصيل إلى جميع أنحاء المغرب',
@@ -64,14 +64,14 @@ const AR = {
 
   // Valeurs par défaut des sections ajoutées depuis l'éditeur
   'Avis clients': 'آراء العملاء',
-  'Elles nous font confiance': 'يثقن بنا',
-  'Restez informée': 'ابقي على اطّلاع',
+  'Elles nous font confiance': 'يثقون بنا',
+  'Restez informée': 'ابقوا على اطّلاع',
   'Nouveautés et conseils de routine, sans excès.': 'جديدنا ونصائح للعناية، دون إزعاج.',
-  "Je m'inscris": 'اشتركي',
+  "Je m'inscris": 'الاشتراك',
   "J'accepte de recevoir les e-mails de Ma Petite Corée. Je peux me désinscrire à tout moment.":
     'أوافق على تلقي الرسائل الإلكترونية من Ma Petite Corée، ويمكنني إلغاء الاشتراك في أي وقت.',
-  'Votre titre': 'عنوانك',
-  'Votre message': 'رسالتك',
+  'Votre titre': 'العنوان',
+  'Votre message': 'الرسالة',
 
   // Catégories d'origine
   Hydratation: 'الترطيب',
@@ -87,7 +87,7 @@ const AR = {
   'Agrume coréen': 'حمضيات كورية',
   'Fraîcheur légère': 'انتعاش خفيف',
   'Soin confort': 'عناية مريحة',
-  'Une touche de fraîcheur pour votre routine quotidienne.': 'لمسة من الانتعاش لروتينك اليومي.',
+  'Une touche de fraîcheur pour votre routine quotidienne.': 'لمسة من الانتعاش للروتين اليومي.',
   'Un ingrédient apprécié dans les routines dédiées à l’éclat du teint.': 'مكوّن محبّب في روتينات العناية بإشراقة البشرة.',
   'Une sensation de fraîcheur pour un moment de soin agréable.': 'إحساس بالانتعاش للحظة عناية ممتعة.',
   'Un ingrédient présent dans les soins dédiés au confort et à l’apparence de la peau.': 'مكوّن حاضر في منتجات العناية المخصّصة لراحة البشرة ومظهرها.',

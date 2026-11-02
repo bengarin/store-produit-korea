@@ -9,6 +9,7 @@ import MediaCard from '../components/product/MediaCard.jsx';
 import PreviewModal from '../components/product/PreviewModal.jsx';
 import { CategoriesCard, StatusCard } from '../components/product/SidePanels.jsx';
 import VariantsCard from '../components/product/VariantsCard.jsx';
+import ArabicCard from '../components/product/ArabicCard.jsx';
 import RichTextEditor from '../components/RichTextEditor.jsx';
 import { Badge, Button, Card, ErrorState, Field, Notice, PageHeader, SkeletonRows } from '../components/ui.jsx';
 import { PRODUCT_STATUS } from '../format.js';
@@ -24,9 +25,13 @@ function toForm(p) {
     usage: listToLines(p.usage), skinTypes: p.skinTypes, highlights: p.highlights.map((h) => ({ ...h })),
     categoryIds: p.categories.map((c) => c.id), hoverImageId: p.hoverImageId, hoverImagePosition: p.hoverImagePosition,
     sceneImageId: p.sceneImageId, slug: p.slug, seoTitle: p.seoTitle, seoDescription: p.seoDescription, ogImageId: p.ogImageId,
+    // Version arabe (facultative)
+    displayNameAr: p.displayNameAr || '', cardLineAr: p.cardLineAr || '', summaryAr: p.summaryAr || '',
+    descriptionHtmlAr: sanitizeRichText(p.descriptionHtmlAr || ''), ingredientsAr: listToLines(p.ingredientsAr || []),
+    benefitsAr: listToLines(p.benefitsAr || []), usageAr: listToLines(p.usageAr || []), skinTypesAr: p.skinTypesAr || '',
   };
 }
-const LIST_FIELDS = ['ingredients', 'benefits', 'usage'];
+const LIST_FIELDS = ['ingredients', 'benefits', 'usage', 'ingredientsAr', 'benefitsAr', 'usageAr'];
 const same = (a, b) => JSON.stringify(a ?? null) === JSON.stringify(b ?? null);
 
 function Counter({ value, max }) {
@@ -166,6 +171,10 @@ export default function ProductEditPage() {
               </div>
             </div>
           </Card>
+
+          <ArabicCard form={form} setForm={setForm} errors={errors} editable={editable} resetKey={`${product.id}-${version}`} toast={toast}
+            categories={(categories || []).filter((c) => form.categoryIds.includes(c.id))}
+            onCategorySaved={(saved) => setCategories((categories || []).map((c) => (c.id === saved.id ? { ...c, ...saved } : c)))} />
 
           <Card title="Référencement (SEO)">
             <div className="adm-seo-preview" aria-label="Aperçu dans Google">

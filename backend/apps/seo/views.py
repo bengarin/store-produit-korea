@@ -220,6 +220,17 @@ def private_page(request, *args, **kwargs):
     return render(request, title=settings.SITE_NAME, description=DEFAULT_DESCRIPTION, noindex=True)
 
 
+def privacy(request):
+    """Politique de confidentialité : non indexée tant que le texte n'a pas été validé juridiquement."""
+    return render(
+        request,
+        title=f"Politique de confidentialité — {settings.SITE_NAME}",
+        description="Données collectées, cookies, pixel Meta et consentement sur la boutique Ma Petite Corée.",
+        canonical=f"{site_url(request)}/confidentialite",
+        noindex=True,
+    )
+
+
 def not_found(request, *args, **kwargs):
     return render(
         request,

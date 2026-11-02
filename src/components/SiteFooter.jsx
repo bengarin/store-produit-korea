@@ -1,5 +1,6 @@
 import { STORE_CONFIG } from '../config/store.js';
 import { ORDERS_ARE_SIMULATED } from '../services/orderService.js';
+import { Link } from 'react-router-dom';
 import ThemeLink from '../theme/ThemeLink.jsx';
 import { useTheme } from '../theme/ThemeContext.jsx';
 import Logo from './Logo.jsx';
@@ -22,9 +23,12 @@ export default function SiteFooter() {
         </nav>
       )}
       <p>© {new Date().getFullYear()} {STORE_CONFIG.brandName}{ORDERS_ARE_SIMULATED && t('demo.footer')}</p>
-      {trackingAvailable && (
-        <button type="button" className="site-footer__consent" onClick={openConsentSettings}>{t('consent.manage')}</button>
-      )}
+      <p className="site-footer__legal">
+        <Link to="/confidentialite">{t('privacy.title')}</Link>
+        {trackingAvailable && (
+          <button type="button" className="site-footer__consent" onClick={openConsentSettings}>{t('consent.manage')}</button>
+        )}
+      </p>
     </footer>
   );
 }

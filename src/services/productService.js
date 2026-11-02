@@ -62,8 +62,34 @@ export function normalizeProduct(raw, images = {}) {
     image: images.image || main,
     sceneImage: images.sceneImage || main,
     hoverImage: images.hoverImage || null,
+    // Contenus traduits saisis dans l'administration (mode API) : { ar: { displayName, summary, … } }.
+    translations: raw.translations || {},
   };
 }
+
+const TRANSLATABLE = ['displayName', 'cardLine', 'summary', 'descriptionHtml', 'ingredients', 'usage', 'benefits', 'skinTypes'];
+const filled = (v) => (Array.isArray(v) ? v.length > 0 : Boolean(v));
+
+/**
+ * Produit dans la langue demandée : chaque champ traduit remplace le français, un champ non traduit reste en français.
+ * `nameFr` garde le nom d'origine (mesure d'audience, commandes).
+ */
+export function localizeProduct(product, lang) {
+  const tr = product.translations?.[lang];
+  if (lang === 'fr' || !tr) return product;
+  const out = { ...product, nameFr: product.displayName };
+  TRANSLATABLE.forEach((key) => { if (filled(tr[key])) out[key] = tr[key]; });
+  if (Array.isArray(tr.highlights)) {
+    out.highlights = product.highlights.map((h, i) => (tr.highlights[i] ? { ...h, label: tr.highlights[i] } : h));
+  }
+  return out;
+}
+
+/** Catégorie dans la langue demandée (libellé traduit s'il existe). */
+export const localizeCategory = (category, lang) => {
+  const label = category.translations?.[lang]?.label;
+  return lang !== 'fr' && label ? { ...category, label } : category;
+};
 
 /** Catalogue local normalisé, disponible immédiatement (sans réseau). */
 export const LOCAL_CATALOG = LOCAL_PRODUCTS.map((p) => normalizeProduct(p, PRODUCT_IMAGES[p.id]));

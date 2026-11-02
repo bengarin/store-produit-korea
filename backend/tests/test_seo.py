@@ -154,3 +154,12 @@ def test_csp_autorise_seulement_le_pixel_meta_sans_script_en_ligne(client):
     assert csp["script-src"] == "'self' https://connect.facebook.net"  # aucun 'unsafe-inline' ni autre domaine
     assert "https://www.facebook.com" in csp["connect-src"] and "https://www.facebook.com" in csp["img-src"]
     assert csp["object-src"] == "'none'" and csp["frame-ancestors"] == "'self'"
+
+
+@pytest.mark.django_db
+def test_politique_de_confidentialite_servie_mais_non_indexee(client):
+    r = client.get("/confidentialite")
+    html = r.content.decode()
+    assert r.status_code == 200 and "<title>Politique de confidentialité — Ma Petite Corée</title>" in html
+    assert r["X-Robots-Tag"] == "noindex, nofollow"  # pas d'indexation tant que le texte n'est pas validé
+    assert "/confidentialite" not in client.get("/sitemap.xml").content.decode()

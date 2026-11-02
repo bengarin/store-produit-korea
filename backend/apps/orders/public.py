@@ -78,6 +78,14 @@ class StoreConfigView(PublicView):
                 ),
                 "allowOtherCity": default_zone is not None,
                 "maxQtyPerLine": settings.max_qty_per_line,
+                # Identité et contact du responsable du traitement (page Politique de confidentialité).
+                # Vides tant que le propriétaire ne les a pas saisis : rien n'est inventé.
+                "legal": {
+                    "name": settings.legal_name,
+                    "address": settings.legal_address,
+                    "email": settings.contact_email,
+                    "phone": settings.contact_phone,
+                },
             }
         )
 

@@ -1,5 +1,6 @@
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { getConsent, onConsentChange, setConsent } from './consent.js';
+import { Link } from 'react-router-dom';
 import { useI18n } from '../i18n/I18nContext.jsx';
 
 /**
@@ -30,7 +31,7 @@ export default function ConsentBanner() {
   return (
     <section ref={ref} className="consent" role="dialog" aria-modal="false" aria-labelledby="consent-title" aria-describedby="consent-text">
       <p className="consent__title" id="consent-title">{t('consent.label')}</p>
-      <p id="consent-text">{t('consent.text')}</p>
+      <p id="consent-text">{t('consent.text')} <Link to="/confidentialite" className="consent__more">{t('consent.more')}</Link></p>
       <div className="consent__actions">
         <button type="button" className="btn btn--soft" onClick={() => setConsent('denied')}>{t('consent.refuse')}</button>
         <button type="button" className="btn btn--primary" onClick={() => setConsent('granted')}>{t('consent.accept')}</button>

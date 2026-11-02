@@ -48,7 +48,15 @@ export function ensurePixel() {
   }
   if (initialised) return true;
   const already = window.fbq.getState?.()?.pixels?.some?.((p) => p.id === META_PIXEL_ID);
-  if (!already) window.fbq('init', META_PIXEL_ID);
+  if (!already) {
+    // Application à une seule page : fbevents.js enverrait sinon un PageView automatique à chaque changement
+    // d'URL, en plus du nôtre (doublons). Les PageView sont envoyés uniquement par MetaPixelTracker.
+    window.fbq.disablePushState = true;
+    // Pas d'événements « automatiques » de Meta (clics sur les boutons, métadonnées de la page) :
+    // seuls les événements décrits dans docs/META_PIXEL.md sont envoyés.
+    window.fbq('set', 'autoConfig', false, META_PIXEL_ID);
+    window.fbq('init', META_PIXEL_ID);
+  }
   initialised = true;
   return true;
 }
@@ -86,7 +94,7 @@ export function productParams(product, price, qty = 1) {
   return {
     content_ids: [product.id],
     content_type: 'product',
-    content_name: product.displayName,
+    content_name: product.nameFr || product.displayName, // nom d'origine, quelle que soit la langue affichée
     contents: [{ id: product.id, quantity: qty, item_price: round2(price) }],
     value: round2(price * qty),
     currency: CURRENCY,

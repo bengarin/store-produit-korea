@@ -31,6 +31,7 @@ class Category(Timestamped):
     description = models.TextField("description", blank=True)
     seo_title = models.CharField("titre SEO", max_length=70, blank=True)
     seo_description = models.CharField("description SEO", max_length=160, blank=True)
+    name_ar = models.CharField("nom (arabe)", max_length=100, blank=True)
 
     class Meta:
         verbose_name = "catégorie"
@@ -60,6 +61,15 @@ class Product(Timestamped):
     benefits = models.JSONField("bienfaits", default=list, blank=True)
     usage_steps = models.JSONField("conseils d'utilisation", default=list, blank=True)
     skin_types = models.CharField("types de peau", max_length=255, blank=True)
+    # Contenus en arabe (facultatifs) : vides = le texte français est affiché. Le français n'est jamais modifié.
+    display_name_ar = models.CharField("nom affiché (arabe)", max_length=255, blank=True)
+    short_description_ar = models.CharField("phrase courte (arabe)", max_length=160, blank=True)
+    summary_ar = models.TextField("description (arabe)", blank=True)
+    description_html_ar = models.TextField("description longue (arabe, HTML assaini)", blank=True)
+    ingredients_ar = models.JSONField("ingrédients (arabe)", default=list, blank=True)
+    benefits_ar = models.JSONField("bienfaits (arabe)", default=list, blank=True)
+    usage_steps_ar = models.JSONField("conseils d'utilisation (arabe)", default=list, blank=True)
+    skin_types_ar = models.CharField("types de peau (arabe)", max_length=255, blank=True)
     status = models.CharField("statut", max_length=10, choices=Status.choices, default=Status.DRAFT)
     categories = models.ManyToManyField(Category, through="ProductCategory", related_name="products", blank=True)
     hover_image = models.ForeignKey(
@@ -142,6 +152,7 @@ class ProductHighlight(models.Model):
     product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name="highlights")
     icon = models.CharField(max_length=20, choices=Icon.choices)
     label = models.CharField(max_length=60)
+    label_ar = models.CharField("libellé (arabe)", max_length=60, blank=True)
     position = models.PositiveIntegerField(default=0)
 
     class Meta:

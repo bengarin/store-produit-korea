@@ -14,6 +14,7 @@ const ProductPage = lazy(() => import('./pages/ProductPage.jsx'));
 const CartPage = lazy(() => import('./pages/CartPage.jsx'));
 const CheckoutPage = lazy(() => import('./pages/CheckoutPage.jsx'));
 const ConfirmationPage = lazy(() => import('./pages/ConfirmationPage.jsx'));
+const PrivacyPage = lazy(() => import('./pages/PrivacyPage.jsx'));
 // Administration : chargée à part, uniquement quand on visite /admin (n'alourdit pas la boutique).
 const AdminApp = lazy(() => import('./admin/AdminApp.jsx'));
 
@@ -75,6 +76,7 @@ function StorefrontRoutes() {
           <Route path="/panier" element={<CartPage />} />
           <Route path="/commande" element={<CheckoutPage />} />
           <Route path="/confirmation" element={<ConfirmationPage />} />
+          <Route path="/confidentialite" element={<PrivacyPage />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </Suspense>

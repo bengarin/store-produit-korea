@@ -71,7 +71,7 @@ def product_payload(product: Product) -> dict:
     hover = image_payload(product.hover_image, product.hover_image_position) if product.hover_image_id else None
     variants = list(product.variants.all())
     default = next((v for v in variants if v.is_default), variants[0] if variants else None)
-    return {
+    payload = {
         "id": product.slug,
         "slug": product.slug,
         "brand": product.brand,
@@ -112,13 +112,41 @@ def product_payload(product: Product) -> dict:
             }
             for v in variants
         ],
+        # Contenus arabes saisis dans l'administration (seulement ceux qui sont remplis).
         "seo": {
             "title": product.seo_title or product.public_name,
             "description": product.seo_description or product.short_description or product.summary[:160],
             "image": product.og_image.url if product.og_image_id else (main["src"] if main else None),
         },
     }
+    # Contenus arabes saisis dans l'administration : présents seulement s'il y en a (sinon le français s'affiche).
+    arabic = arabic_payload(product)
+    if arabic:
+        payload["translations"] = {"ar": arabic}
+    return payload
+
+
+def arabic_payload(product: Product) -> dict:
+    """Champs arabes remplis ; un champ absent = afficher le français. Pictos : même ordre, null si non traduit."""
+    data = {
+        "displayName": product.display_name_ar,
+        "cardLine": product.short_description_ar,
+        "summary": product.summary_ar,
+        "descriptionHtml": product.description_html_ar,
+        "ingredients": product.ingredients_ar,
+        "usage": product.usage_steps_ar,
+        "benefits": product.benefits_ar,
+        "skinTypes": product.skin_types_ar,
+    }
+    out = {k: v for k, v in data.items() if v}
+    labels = [h.label_ar or None for h in product.highlights.all()]
+    if any(labels):
+        out["highlights"] = labels
+    return out
 
 
 def category_payload(category: Category) -> dict:
-    return {"id": category.slug, "label": category.name}
+    payload = {"id": category.slug, "label": category.name}
+    if category.name_ar:
+        payload["translations"] = {"ar": {"label": category.name_ar}}
+    return payload
