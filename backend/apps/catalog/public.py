@@ -10,7 +10,7 @@ from decimal import Decimal
 
 from django.db.models import Prefetch
 
-from .models import Category, Product, ProductCategory, ProductImage, ProductOption, Variant
+from .models import Category, Product, ProductCategory, ProductImage, ProductMarketingImage, ProductOption, Variant
 
 
 def number(value: Decimal | None):
@@ -48,8 +48,37 @@ def public_products_queryset(statuses=(Product.Status.ACTIVE,)):
                 queryset=Variant.objects.select_related("image__media").prefetch_related("option_values__option"),
             ),
             Prefetch("options", queryset=ProductOption.objects.prefetch_related("values")),
+            Prefetch(
+                "marketing_images",
+                queryset=ProductMarketingImage.objects.filter(is_active=True).select_related("media"),
+            ),
         )
     )
+
+
+def marketing_payload(product: Product) -> list:
+    """Visuels marketing publics (actifs ; avant/après seulement si confirmés authentiques), dans l'ordre."""
+    items = []
+    for m in product.marketing_images.all():
+        if not m.is_public:
+            continue
+        item = {
+            "id": m.pk,
+            "category": m.category,
+            "language": m.language,
+            "src": m.media.url,
+            "width": m.media.width,
+            "height": m.media.height,
+            "alt": m.alt or m.title or m.media.alt,
+        }
+        if m.media.file_640:
+            item["src640"] = m.media.url_640
+        if m.title:
+            item["title"] = m.title
+        if m.description:
+            item["description"] = m.description
+        items.append(item)
+    return items
 
 
 def availability(variant: Variant) -> str:
@@ -119,6 +148,10 @@ def product_payload(product: Product) -> dict:
             "image": product.og_image.url if product.og_image_id else (main["src"] if main else None),
         },
     }
+    # Visuels marketing (colonne de droite de la fiche) : présents seulement s'il y en a.
+    marketing = marketing_payload(product)
+    if marketing:
+        payload["marketing"] = marketing
     # Contenus arabes saisis dans l'administration : présents seulement s'il y en a (sinon le français s'affiche).
     arabic = arabic_payload(product)
     if arabic:

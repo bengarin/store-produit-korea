@@ -887,3 +887,22 @@ select { appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmln
 .theme-preview-section { position: relative; cursor: pointer; }
 .theme-preview-section:hover { outline: 2px dashed var(--sage); outline-offset: -2px; }
 .theme-preview-badge { position: fixed; left: 50%; bottom: 10px; z-index: 300; transform: translateX(-50%); padding: 6px 14px; border-radius: 999px; background: rgba(23, 56, 45, 0.92); color: #fff; font-size: 12px; font-weight: 600; pointer-events: none; }
+
+/* ==========================================================================
+   Fiche produit — visuels marketing (landing page dans la colonne de droite)
+   ========================================================================== */
+.pdp-mkt { display: grid; gap: 34px; margin-top: 34px; }
+.pdp-mkt__section { display: grid; gap: 14px; }
+.pdp-mkt__title { font-family: var(--font-serif); font-size: calc(clamp(26px, 7vw, 32px) * var(--heading-scale, 1)); font-weight: 600; line-height: 1.15; color: var(--green-deep); }
+.pdp-mkt__title::after { content: ''; display: block; width: 44px; height: 2px; margin-top: 10px; border-radius: 2px; background: var(--sage); }
+.pdp-mkt__list { display: grid; gap: 16px; }
+.pdp-mkt__card { overflow: hidden; margin: 0; border: 1px solid var(--border); border-radius: 22px; background: var(--surface); box-shadow: 0 1px 2px rgba(60, 50, 35, 0.04), 0 10px 28px rgba(60, 50, 35, 0.06); }
+.pdp-mkt__card img { display: block; width: 100%; height: auto; }
+.pdp-mkt__caption { display: grid; gap: 4px; padding: 14px 18px 16px; font-size: 14.5px; line-height: 1.55; color: var(--text-2); }
+.pdp-mkt__caption strong { font-size: 16px; color: var(--green-deep); }
+.pdp-mkt__section:nth-child(even) .pdp-mkt__card { background: #f4ece0; }
+.pdp-mkt__note { font-size: 12.5px; color: var(--muted); }
+@media (min-width: 860px) {
+  .pdp-mkt { gap: 48px; margin-top: 48px; padding-top: 40px; border-top: 1px solid var(--border); max-width: 640px; }
+  .pdp-mkt__title { font-size: calc(clamp(28px, 2.4vw, 36px) * var(--heading-scale, 1)); }
+}

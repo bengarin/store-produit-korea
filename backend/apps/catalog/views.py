@@ -10,10 +10,11 @@ from apps.audit.services import log_action
 from apps.core.http import Conflict
 
 from . import public, services
-from .models import Category, Product, ProductCategory, ProductImage, Variant
+from .models import Category, Product, ProductCategory, ProductImage, ProductMarketingImage, Variant
 from .permissions import CATALOG_PERMISSION
 from .serializers import (
     CategorySerializer,
+    MarketingImageSerializer,
     ProductImageSerializer,
     ProductListSerializer,
     ProductSerializer,
@@ -123,6 +124,9 @@ def admin_products_queryset():
         Prefetch("images", queryset=ProductImage.objects.select_related("media")),
         Prefetch("category_links", queryset=ProductCategory.objects.select_related("category")),
         "highlights",
+        Prefetch(
+            "marketing_images", queryset=ProductMarketingImage.objects.only("id", "product_id", "language", "is_active")
+        ),
     )
 
 
@@ -344,4 +348,92 @@ class ProductImageDetailView(APIView):
 
     def delete(self, request, pk):
         services.delete_image(self.get_object(pk), user=request.user, request=request)
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+# --- Visuels marketing (séparés des photos du produit) ---------------------------------------------------
+class MarketingImageListCreateView(APIView):
+    """GET : visuels du produit · POST {mediaId, category, language, title, description, alt, isActive, …}."""
+
+    permission_classes = [CATALOG_PERMISSION]
+
+    def get(self, request, pk):
+        product = get_object_or_404(Product, pk=pk)
+        qs = product.marketing_images.select_related("media")
+        return Response({"items": MarketingImageSerializer(qs, many=True).data})
+
+    @transaction.atomic
+    def post(self, request, pk):
+        product = get_object_or_404(Product.objects.select_for_update(), pk=pk)
+        serializer = MarketingImageSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        last = product.marketing_images.order_by("-position").values_list("position", flat=True).first()
+        item = serializer.save(product=product, position=0 if last is None else last + 1)
+        log_action(
+            "product.marketing_add",
+            actor=request.user,
+            target=product,
+            changes={"marketingImageId": item.pk, "mediaId": item.media_id, "category": item.category},
+            request=request,
+        )
+        return Response(MarketingImageSerializer(item).data, status=status.HTTP_201_CREATED)
+
+
+class MarketingImageReorderView(APIView):
+    """POST {ids} : nouvel ordre d'affichage (identifiants de visuels de CE produit)."""
+
+    permission_classes = [CATALOG_PERMISSION]
+
+    @transaction.atomic
+    def post(self, request, pk):
+        product = get_object_or_404(Product, pk=pk)
+        data = ReorderSerializer(data=request.data)
+        data.is_valid(raise_exception=True)
+        ids = data.validated_data["ids"]
+        owned = set(product.marketing_images.filter(pk__in=ids).values_list("pk", flat=True))
+        if len(set(ids)) != len(ids) or owned != set(ids):
+            raise serializers.ValidationError({"ids": ["Liste invalide : visuels en double ou d'un autre produit."]})
+        for position, item_id in enumerate(ids):
+            ProductMarketingImage.objects.filter(pk=item_id).update(position=position)
+        log_action(
+            "product.marketing_reorder", actor=request.user, target=product, changes={"order": ids}, request=request
+        )
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+class MarketingImageDetailView(APIView):
+    """
+    PATCH : modifier (dont remplacer l'image via mediaId).
+    DELETE : retirer le visuel (le média reste dans la bibliothèque).
+    """
+
+    permission_classes = [CATALOG_PERMISSION]
+
+    def patch(self, request, pk):
+        item = get_object_or_404(ProductMarketingImage.objects.select_related("product"), pk=pk)
+        serializer = MarketingImageSerializer(item, data=request.data, partial=True)
+        serializer.is_valid(raise_exception=True)
+        before = {k: getattr(item, k) for k in ("media_id", "category", "language", "is_active", "authentic_confirmed")}
+        item = serializer.save()
+        changes = {k: [v, getattr(item, k)] for k, v in before.items() if v != getattr(item, k)}
+        log_action(
+            "product.marketing_update",
+            actor=request.user,
+            target=item.product,
+            changes={"marketingImageId": item.pk, **changes},
+            request=request,
+        )
+        return Response(MarketingImageSerializer(item).data)
+
+    def delete(self, request, pk):
+        item = get_object_or_404(ProductMarketingImage.objects.select_related("product"), pk=pk)
+        product, item_id = item.product, item.pk
+        item.delete()
+        log_action(
+            "product.marketing_delete",
+            actor=request.user,
+            target=product,
+            changes={"marketingImageId": item_id},
+            request=request,
+        )
         return Response(status=status.HTTP_204_NO_CONTENT)

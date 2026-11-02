@@ -64,6 +64,8 @@ export function normalizeProduct(raw, images = {}) {
     hoverImage: images.hoverImage || null,
     // Contenus traduits saisis dans l'administration (mode API) : { ar: { displayName, summary, … } }.
     translations: raw.translations || {},
+    // Visuels marketing (colonne de droite de la fiche), distincts des photos du produit.
+    marketing: Array.isArray(raw.marketing) ? raw.marketing : [],
   };
 }
 
@@ -98,4 +100,15 @@ export async function fetchProducts({ signal } = {}) {
   if (DATA_SOURCE === 'local') return LOCAL_CATALOG;
   const data = await api.get(ENDPOINTS.products, { signal });
   return (data?.items || data || []).map((p) => normalizeProduct(p, p));
+}
+
+/**
+ * Visuels marketing à afficher dans la langue demandée :
+ * - arabe : visuels arabes + sans texte ; si le produit n'a AUCUN visuel arabe, visuels français + sans texte ;
+ * - français : visuels français + sans texte.
+ */
+export function marketingFor(product, lang) {
+  const list = product.marketing || [];
+  const wanted = lang === 'ar' && list.some((m) => m.language === 'ar') ? 'ar' : 'fr';
+  return list.filter((m) => m.language === wanted || m.language === 'any');
 }

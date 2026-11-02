@@ -195,6 +195,56 @@ class ProductImage(models.Model):
         return self.alt or f"Image {self.pk}"
 
 
+class ProductMarketingImage(models.Model):
+    """
+    Visuel marketing d'un produit (bannière, bienfaits, utilisation…), affiché dans la colonne de droite de la fiche.
+    Totalement séparé des photos du produit (ProductImage, galerie) : aucun mélange.
+    """
+
+    class Category(models.TextChoices):
+        BANNER = "banner", "Bannière / présentation"
+        BENEFITS = "benefits", "Bienfaits"
+        INGREDIENTS = "ingredients", "Ingrédients clés"
+        USAGE = "usage", "Mode d'utilisation"
+        BEFORE_AFTER = "before_after", "Avant / Après"
+        COMPARISON = "comparison", "Comparaison"
+        BRAND = "brand", "La marque"
+        OTHER = "other", "Autre"
+
+    class Language(models.TextChoices):
+        FR = "fr", "Français"
+        AR = "ar", "Arabe"
+        ANY = "any", "Sans texte (toutes langues)"
+
+    product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name="marketing_images")
+    media = models.ForeignKey(MediaAsset, on_delete=models.PROTECT, related_name="marketing_images")
+    category = models.CharField("catégorie", max_length=20, choices=Category.choices, default=Category.OTHER)
+    language = models.CharField("langue", max_length=3, choices=Language.choices, default=Language.FR)
+    title = models.CharField("titre (facultatif)", max_length=120, blank=True)
+    description = models.CharField("description (facultative)", max_length=600, blank=True)
+    alt = models.CharField("texte alternatif", max_length=255, blank=True)
+    position = models.PositiveIntegerField(default=0)
+    is_active = models.BooleanField("affiché", default=True)
+    # Avant / Après : affiché seulement si l'équipe confirme qu'il s'agit de photos authentiques (jamais de montage).
+    authentic_confirmed = models.BooleanField("photos authentiques confirmées", default=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name = "visuel marketing"
+        verbose_name_plural = "visuels marketing"
+        ordering = ["position", "id"]
+        indexes = [models.Index(fields=["product", "language", "position"], name="pmarketing_lang_pos_idx")]
+
+    def __str__(self):
+        return self.title or f"Visuel {self.pk}"
+
+    @property
+    def is_public(self):
+        """Visible sur la boutique : actif, et pour un avant/après, photos confirmées authentiques."""
+        return self.is_active and (self.category != self.Category.BEFORE_AFTER or self.authentic_confirmed)
+
+
 class ProductOption(models.Model):
     """Ex. « Contenance ». 3 options maximum par produit (contrôlé par le service)."""
 

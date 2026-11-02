@@ -7,6 +7,7 @@ import NamedIcon from './NamedIcon.jsx';
 import QuantitySelector from './QuantitySelector.jsx';
 import { reassuranceItems } from './Reassurance.jsx';
 import VariantPicker from './VariantPicker.jsx';
+import ProductMarketing from './ProductMarketing.jsx';
 import { formatPrice } from '../utils/currency.js';
 import { compareAtPrice, defaultVariant, hasChoice, unitPrice, variantStatus } from '../utils/variants.js';
 import { useI18n } from '../i18n/I18nContext.jsx';
@@ -139,6 +140,9 @@ export default function ProductView({
                 {t('pdp.demoNote')}
               </p>
             )}
+
+            {/* Landing page : visuels marketing dans la colonne de droite (jamais dans la galerie). */}
+            <ProductMarketing product={product} />
           </div>
         </div>
 

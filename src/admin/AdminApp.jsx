@@ -20,6 +20,8 @@ const ProductsPage = lazy(() => import('./pages/ProductsPage.jsx'));
 const ProductNewPage = lazy(() => import('./pages/ProductNewPage.jsx'));
 const ProductEditPage = lazy(() => import('./pages/ProductEditPage.jsx'));
 const ProductPreviewPage = lazy(() => import('./pages/ProductPreviewPage.jsx'));
+const MarketingPage = lazy(() => import('./pages/MarketingPage.jsx'));
+const ProductMarketingPage = lazy(() => import('./pages/ProductMarketingPage.jsx'));
 const ThemeEditorPage = lazy(() => import('./pages/ThemeEditorPage.jsx'));
 
 /** Page réservée à certains rôles (le serveur refuse de toute façon). */
@@ -78,6 +80,8 @@ function AdminShellRoutes() {
         <Route path="products" element={<Allow perm="viewProducts"><ProductsPage /></Allow>} />
         <Route path="products/new" element={<Allow perm="editProducts"><ProductNewPage /></Allow>} />
         <Route path="products/:id" element={<Allow perm="viewProducts"><ProductEditPage /></Allow>} />
+        <Route path="products/:id/marketing" element={<Allow perm="viewProducts"><ProductMarketingPage /></Allow>} />
+        <Route path="marketing" element={<Allow perm="viewProducts"><MarketingPage /></Allow>} />
         <Route path="*" element={<Home />} />
       </Route>
     </Routes>

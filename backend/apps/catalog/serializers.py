@@ -11,7 +11,16 @@ from apps.core.html import sanitize_html
 from apps.media_library.models import MediaAsset
 
 from . import services
-from .models import FOCAL_POSITION, Category, Product, ProductCategory, ProductHighlight, ProductImage, Variant
+from .models import (
+    FOCAL_POSITION,
+    Category,
+    Product,
+    ProductCategory,
+    ProductHighlight,
+    ProductImage,
+    ProductMarketingImage,
+    Variant,
+)
 from .permissions import COST_EDIT, COST_VIEW
 
 MAX_LIST_ITEMS = 30
@@ -220,6 +229,7 @@ class ProductListSerializer(serializers.ModelSerializer):
     variantCount = serializers.SerializerMethodField()
     sku = serializers.SerializerMethodField()
     stockUnknown = serializers.SerializerMethodField()
+    marketingCounts = serializers.SerializerMethodField()
     updatedAt = serializers.DateTimeField(source="updated_at")
 
     class Meta:
@@ -238,8 +248,17 @@ class ProductListSerializer(serializers.ModelSerializer):
             "variantCount",
             "image",
             "categories",
+            "marketingCounts",
             "updatedAt",
         ]
+
+    def get_marketingCounts(self, product):
+        """Nombre de visuels marketing par langue (actifs / total), pour la page « Visuels marketing »."""
+        counts = {lang: {"active": 0, "total": 0} for lang in ProductMarketingImage.Language.values}
+        for m in product.marketing_images.all():
+            counts[m.language]["total"] += 1
+            counts[m.language]["active"] += int(m.is_active)
+        return counts
 
     def _variants(self, product):
         return list(product.variants.all())
@@ -485,3 +504,55 @@ def _plain(value):
     if hasattr(value, "pk"):
         return value.pk
     return value if isinstance(value, (str, int, float, bool, list, dict, type(None))) else str(value)
+
+
+# --- Visuels marketing --------------------------------------------------------
+class MarketingImageSerializer(serializers.ModelSerializer):
+    """Visuel marketing (distinct des photos du produit). `mediaId` modifiable = remplacer l'image."""
+
+    mediaId = serializers.PrimaryKeyRelatedField(source="media", queryset=MediaAsset.objects.all())
+    url = serializers.CharField(source="media.url", read_only=True)
+    url640 = serializers.CharField(source="media.url_640", read_only=True)
+    width = serializers.IntegerField(source="media.width", read_only=True)
+    height = serializers.IntegerField(source="media.height", read_only=True)
+    isActive = serializers.BooleanField(source="is_active", required=False)
+    authenticConfirmed = serializers.BooleanField(source="authentic_confirmed", required=False)
+    isPublic = serializers.BooleanField(source="is_public", read_only=True)
+
+    class Meta:
+        model = ProductMarketingImage
+        fields = [
+            "id",
+            "mediaId",
+            "url",
+            "url640",
+            "width",
+            "height",
+            "category",
+            "language",
+            "title",
+            "description",
+            "alt",
+            "position",
+            "isActive",
+            "authenticConfirmed",
+            "isPublic",
+        ]
+        read_only_fields = ["position"]
+
+    def validate(self, attrs):
+        current = self.instance
+        category = attrs.get("category", getattr(current, "category", ProductMarketingImage.Category.OTHER))
+        active = attrs.get("is_active", getattr(current, "is_active", True))
+        authentic = attrs.get("authentic_confirmed", getattr(current, "authentic_confirmed", False))
+        # Jamais de faux avant/après : affichable seulement après confirmation explicite de l'équipe.
+        if category == ProductMarketingImage.Category.BEFORE_AFTER and active and not authentic:
+            raise serializers.ValidationError(
+                {
+                    "authenticConfirmed": [
+                        "Avant / Après : confirmez qu'il s'agit de photos authentiques (sans retouche ni montage), "
+                        "ou laissez le visuel désactivé."
+                    ]
+                }
+            )
+        return attrs

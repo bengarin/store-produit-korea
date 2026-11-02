@@ -570,3 +570,5 @@ Ordre choisi pour **vendre le plus tôt possible**. Durées non estimées tant q
 | 02/11/2026 | Ton arabe neutre (pluriel de politesse, tournures impersonnelles) | Adapté à tous les clients | — | — |
 | 02/11/2026 | Page `/confidentialite` FR/AR, non indexée, marquée « non validée » | Informer sur cookies, pixel et consentement sans prétendre à une validation juridique | Relecture juridique ; compléter les éléments manquants | Avant ouverture |
 | 02/11/2026 | Pixel : `disablePushState` et `autoConfig=false` | Éviter les PageView en double et les événements automatiques non décrits | Vérifier dans Events Manager | Avant ouverture |
+| 02/11/2026 | Visuels marketing dans une table séparée (`ProductMarketingImage`), affichés dans la colonne de droite de la fiche ; galerie collante à gauche | Landing page sans toucher aux photos du produit | Fournir les visuels arabes ; vérifier les mentions des visuels | [À définir] |
+| 02/11/2026 | Avant / Après affichable seulement avec confirmation « photos authentiques » ; les 6 avant/après fournis (générés par IA) non importés | Pas de faux résultats | Fournir des photos réelles si souhaité | — |

@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useParams } from 'react-router-dom';
-import { Save, Undo2 } from 'lucide-react';
+import { Images, Save, Undo2 } from 'lucide-react';
 import { admin } from '../api.js';
 import { useAuth } from '../auth.jsx';
 import { useToast } from '../../context/ToastContext.jsx';
@@ -11,7 +11,7 @@ import { CategoriesCard, StatusCard } from '../components/product/SidePanels.jsx
 import VariantsCard from '../components/product/VariantsCard.jsx';
 import ArabicCard from '../components/product/ArabicCard.jsx';
 import RichTextEditor from '../components/RichTextEditor.jsx';
-import { Badge, Button, Card, ErrorState, Field, Notice, PageHeader, SkeletonRows } from '../components/ui.jsx';
+import { Badge, Button, ButtonLink, Card, ErrorState, Field, Notice, PageHeader, SkeletonRows } from '../components/ui.jsx';
 import { PRODUCT_STATUS } from '../format.js';
 import { sanitizeRichText } from '../../utils/richText.js';
 import { useApi, useTitle } from '../hooks.js';
@@ -147,6 +147,10 @@ export default function ProductEditPage() {
           </Card>
 
           <MediaCard product={product} editable={editable} onChanged={refresh} toast={toast} />
+
+          <Card title="Visuels marketing" actions={<ButtonLink icon={Images} to={`/admin/products/${product.id}/marketing`}>Gérer les visuels</ButtonLink>}>
+            <p className="adm-muted">Bannière, bienfaits, ingrédients, utilisation… affichés dans la colonne de droite de la fiche (versions française, arabe et sans texte). Séparés des photos ci-dessus.</p>
+          </Card>
 
           <VariantsCard product={product} editable={editable} canEditCost={can(user, 'editCost')} onChanged={refresh} toast={toast} />
 

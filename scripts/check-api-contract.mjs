@@ -17,8 +17,9 @@ const cats = (await (await fetch(`${BASE}/categories`)).json()).items;
 // Comparaison indépendante de l'ordre des clés d'un objet.
 const canon = (v) => (Array.isArray(v) ? v.map(canon) : v && typeof v === 'object' ? Object.fromEntries(Object.keys(v).sort().map((k) => [k, canon(v[k])])) : v);
 const norm = (v) => canon( JSON.parse(JSON.stringify(v, (k, x) => (typeof x === 'string' && /\.(webp|png)$/.test(x) ? x.split('/').pop() : x))));
-// Données de vente propres au backend (le mode démo n'a ni variantes ni stock) : non comparées.
-const API_ONLY = new Set(['variants', 'inStock']);
+// Données propres au backend, sans équivalent en mode démo : variantes et stock (vente), visuels marketing
+// gérés dans l'administration (« Visuels marketing »). Non comparées ; leur forme est testée côté backend.
+const API_ONLY = new Set(['variants', 'inStock', 'marketing']);
 let diffs = 0;
 if (JSON.stringify(cats) !== JSON.stringify(LOCAL_CATEGORIES)) { diffs++; console.log('CATEGORIES', cats, LOCAL_CATEGORIES); }
 if (api.length !== LOCAL_CATALOG.length) { diffs++; console.log('COUNT', api.length); }

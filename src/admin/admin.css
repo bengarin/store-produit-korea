@@ -743,3 +743,30 @@ textarea.adm-input { resize: vertical; min-height: 80px; }
 .adm-ar-highlight { display: grid; grid-template-columns: minmax(120px, 200px) minmax(0, 1fr); gap: 8px; align-items: center; font-size: 13px; }
 .adm-card__title svg { vertical-align: -3px; margin-right: 6px; }
 .adm-ar-row { display: flex; gap: 8px; align-items: center; }
+
+/* Visuels marketing */
+.adm-mkt-products { list-style: none; margin: 0; padding: 0; }
+.adm-mkt-products li + li { border-top: 1px solid var(--adm-line); }
+.adm-mkt-products__row { display: grid; grid-template-columns: 52px minmax(0, 1fr) auto; gap: 14px; align-items: center; padding: 12px 16px; color: inherit; text-decoration: none; }
+.adm-mkt-products__row:hover { background: var(--adm-hover, #f6f3ee); }
+.adm-mkt-products__row img, .adm-mkt-products__ph { width: 52px; height: 52px; border-radius: 10px; object-fit: contain; background: #f6f0e7; border: 1px solid var(--adm-line); }
+.adm-mkt-products__name { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; min-width: 0; }
+.adm-mkt-products__counts { display: flex; flex-wrap: wrap; gap: 6px; justify-content: flex-end; font-size: 12.5px; }
+.adm-mkt-products__counts span { padding: 3px 9px; border-radius: 999px; background: #f1ede6; color: var(--adm-muted); }
+.adm-mkt-products__counts span.has-items { background: #e5efe2; color: var(--adm-green); font-weight: 600; }
+.adm-tab__count { margin-left: 4px; font-size: 12px; opacity: 0.75; }
+.adm-mkt-upload { display: flex; flex-wrap: wrap; gap: 12px; align-items: flex-end; }
+.adm-mkt-upload .adm-field { min-width: 240px; margin: 0; }
+.adm-mkt-list { list-style: none; display: grid; gap: 16px; margin: 16px 0 0; padding: 0; }
+.adm-mkt-item { display: grid; grid-template-columns: minmax(160px, 260px) minmax(0, 1fr); gap: 18px; padding: 16px; border: 1px solid var(--adm-line); border-radius: 14px; background: var(--adm-panel, #fff); }
+.adm-mkt-item.is-hidden .adm-mkt-item__media img { opacity: 0.55; }
+.adm-mkt-item__media { position: relative; }
+.adm-mkt-item__media img { display: block; width: 100%; height: auto; border-radius: 10px; border: 1px solid var(--adm-line); }
+.adm-mkt-item__media .adm-badge { position: absolute; top: 8px; left: 8px; }
+.adm-mkt-item__actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; }
+.adm-mkt-item__authentic { color: #8a5a10; }
+@media (max-width: 720px) {
+  .adm-mkt-item { grid-template-columns: 1fr; }
+  .adm-mkt-products__row { grid-template-columns: 52px minmax(0, 1fr); }
+  .adm-mkt-products__counts { grid-column: 1 / -1; justify-content: flex-start; }
+}

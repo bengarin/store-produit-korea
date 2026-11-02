@@ -19,6 +19,17 @@ urlpatterns = [
     path("products/<int:pk>/images", views.ProductImageListCreateView.as_view(), name="admin-product-images"),
     path("products/<int:pk>/images/reorder", views.ProductImageReorderView.as_view(), name="admin-images-reorder"),
     path("product-images/<int:pk>", views.ProductImageDetailView.as_view(), name="admin-product-image"),
+    path(
+        "products/<int:pk>/marketing-images",
+        views.MarketingImageListCreateView.as_view(),
+        name="admin-marketing-images",
+    ),
+    path(
+        "products/<int:pk>/marketing-images/reorder",
+        views.MarketingImageReorderView.as_view(),
+        name="admin-marketing-reorder",
+    ),
+    path("marketing-images/<int:pk>", views.MarketingImageDetailView.as_view(), name="admin-marketing-image"),
     path("media", media_views.MediaListCreateView.as_view(), name="admin-media"),
     path("media/<int:pk>", media_views.MediaDetailView.as_view(), name="admin-media-detail"),
 ]
