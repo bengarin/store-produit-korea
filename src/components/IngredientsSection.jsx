@@ -40,11 +40,13 @@ function Ingredient({ ingredient, index }) {
   );
 }
 
-export default function IngredientsSection() {
+export default function IngredientsSection({ section }) {
+  const { eyebrow, heading, intro } = section.settings;
+  const titleId = `${section.id}-title`;
   return (
     <section
       className="home-section ingredients"
-      aria-labelledby="ingredients-title"
+      aria-labelledby={titleId}
       style={{ '--ing-bg': `url(${bg})`, '--ing-bg-sm': `url(${bg960})` }}
     >
       <div className="container">
@@ -54,9 +56,9 @@ export default function IngredientsSection() {
             <path d="M20 30 C 28 28 33 22 33 14 C 26 15 21 21 20 30 Z" />
             <path d="M20 22 C 15 18 14 10 20 2 C 26 10 25 18 20 22 Z" />
           </svg>
-          <p className="ingredients__eyebrow">Nos ingrédients naturels</p>
-          <h2 className="ingredients__title" id="ingredients-title">Des actifs choisis pour votre peau</h2>
-          <p className="ingredients__intro">Des ingrédients inspirés par la nature et les traditions de beauté coréennes.</p>
+          {eyebrow && <p className="ingredients__eyebrow">{eyebrow}</p>}
+          <h2 className="ingredients__title" id={titleId}>{heading}</h2>
+          {intro && <p className="ingredients__intro">{intro}</p>}
         </Reveal>
         <ul className="ingredients__list">
           {INGREDIENTS.map((ing, i) => <Ingredient key={ing.id} ingredient={ing} index={i} />)}

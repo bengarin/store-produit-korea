@@ -1,0 +1,183 @@
+{
+  "schemaVersion": 1,
+  "limits": { "maxHomeSections": 20, "maxBytes": 262144, "idPattern": "^[a-z][a-z0-9-]{0,39}$" },
+  "fonts": {
+    "cormorant": { "label": "Cormorant Garamond (élégante)", "stack": "'Cormorant Garamond', Georgia, 'Times New Roman', serif", "google": null },
+    "playfair": { "label": "Playfair Display (classique)", "stack": "'Playfair Display', Georgia, serif", "google": "Playfair+Display:wght@500;600;700" },
+    "lora": { "label": "Lora (douce)", "stack": "'Lora', Georgia, serif", "google": "Lora:wght@400;500;600;700" },
+    "dm-sans": { "label": "DM Sans (moderne)", "stack": "'DM Sans', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif", "google": null },
+    "inter": { "label": "Inter (neutre)", "stack": "'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif", "google": "Inter:wght@400;500;600;700" },
+    "jost": { "label": "Jost (géométrique)", "stack": "'Jost', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif", "google": "Jost:wght@400;500;600;700" }
+  },
+  "icons": ["hand-coins", "badge-check", "truck", "headset", "leaf", "sparkles", "gift", "shield-check", "phone", "heart", "package", "clock"],
+  "assets": ["hero-wide", "hero-portrait", "banner-desktop", "banner-mobile"],
+  "settings": [
+    { "id": "colorPrimary", "group": "Couleurs", "type": "color", "label": "Couleur principale (vert)", "default": "#214a3b" },
+    { "id": "colorPrimaryDark", "group": "Couleurs", "type": "color", "label": "Couleur principale foncée (titres)", "default": "#17382d" },
+    { "id": "colorAccent", "group": "Couleurs", "type": "color", "label": "Couleur secondaire (sauge)", "default": "#8fa88b" },
+    { "id": "colorBackground", "group": "Couleurs", "type": "color", "label": "Fond de page (crème)", "default": "#faf6ef" },
+    { "id": "colorSurface", "group": "Couleurs", "type": "color", "label": "Fond des cartes", "default": "#fffdf9" },
+    { "id": "colorBeige", "group": "Couleurs", "type": "color", "label": "Beige (boutons secondaires)", "default": "#ede1d2" },
+    { "id": "colorText", "group": "Couleurs", "type": "color", "label": "Texte", "default": "#20241f" },
+    { "id": "colorTextSoft", "group": "Couleurs", "type": "color", "label": "Texte secondaire", "default": "#4a4d46" },
+    { "id": "buttonBackground", "group": "Boutons", "type": "color", "label": "Fond des boutons principaux", "default": "#214a3b" },
+    { "id": "buttonText", "group": "Boutons", "type": "color", "label": "Texte des boutons principaux", "default": "#ffffff" },
+    { "id": "buttonShape", "group": "Boutons", "type": "select", "label": "Forme des boutons", "default": "rounded",
+      "options": [{ "value": "square", "label": "Carrés" }, { "value": "rounded", "label": "Arrondis" }, { "value": "pill", "label": "Pilule" }] },
+    { "id": "headingFont", "group": "Typographie", "type": "font", "label": "Police des titres", "default": "cormorant" },
+    { "id": "bodyFont", "group": "Typographie", "type": "font", "label": "Police des textes", "default": "dm-sans" },
+    { "id": "headingScale", "group": "Typographie", "type": "select", "label": "Taille des titres", "default": "m",
+      "options": [{ "value": "s", "label": "Petits" }, { "value": "m", "label": "Normaux" }, { "value": "l", "label": "Grands" }, { "value": "xl", "label": "Très grands" }] },
+    { "id": "contentWidth", "group": "Mise en page", "type": "select", "label": "Largeur du contenu", "default": "1200",
+      "options": [{ "value": "1080", "label": "Étroite (1080 px)" }, { "value": "1200", "label": "Normale (1200 px)" }, { "value": "1320", "label": "Large (1320 px)" }, { "value": "1440", "label": "Très large (1440 px)" }] },
+    { "id": "sectionSpacing", "group": "Mise en page", "type": "select", "label": "Espacement des sections", "default": "normal",
+      "options": [{ "value": "compact", "label": "Compact" }, { "value": "normal", "label": "Normal" }, { "value": "spacious", "label": "Aéré" }] },
+    { "id": "radius", "group": "Mise en page", "type": "select", "label": "Arrondis (cartes, images)", "default": "normal",
+      "options": [{ "value": "square", "label": "Droits" }, { "value": "small", "label": "Légers" }, { "value": "normal", "label": "Normaux" }, { "value": "large", "label": "Prononcés" }] }
+  ],
+  "sections": {
+    "announcement_bar": {
+      "name": "Barre d'annonce", "area": "announcement",
+      "description": "Bandeau en haut de toutes les pages (livraison, promotion…).",
+      "settings": [
+        { "id": "text", "type": "text", "label": "Message", "maxLength": 120, "required": true, "default": "Livraison partout au Maroc · Paiement à la livraison" },
+        { "id": "link", "type": "link", "label": "Lien (facultatif)", "default": "" },
+        { "id": "background", "type": "color", "label": "Couleur de fond", "default": "#214a3b" },
+        { "id": "color", "type": "color", "label": "Couleur du texte", "default": "#ffffff" }
+      ]
+    },
+    "header": {
+      "name": "En-tête et navigation", "area": "header",
+      "description": "Logo, liens du menu et panier.",
+      "settings": [],
+      "items": { "name": "Lien du menu", "min": 1, "max": 6, "settings": [
+        { "id": "label", "type": "text", "label": "Texte", "maxLength": 30, "required": true, "default": "Nouveau lien" },
+        { "id": "link", "type": "link", "label": "Destination", "kinds": ["internal"], "required": true, "default": "/produits" }
+      ] }
+    },
+    "hero": {
+      "name": "Bannière principale (hero)", "area": "home", "max": 1,
+      "description": "Grand visuel d'accueil avec titre et bouton.",
+      "settings": [
+        { "id": "eyebrow", "type": "text", "label": "Sur-titre", "maxLength": 60, "default": "" },
+        { "id": "heading", "type": "text", "label": "Titre", "maxLength": 120, "required": true, "default": "Votre titre" },
+        { "id": "text", "type": "textarea", "label": "Texte", "maxLength": 240, "default": "" },
+        { "id": "buttonLabel", "type": "text", "label": "Texte du bouton", "maxLength": 40, "default": "Découvrir nos produits" },
+        { "id": "buttonLink", "type": "link", "label": "Lien du bouton", "default": "#collection" },
+        { "id": "imageDesktop", "type": "image", "label": "Image ordinateur (paysage)", "assets": ["hero-wide"], "default": null },
+        { "id": "imageMobile", "type": "image", "label": "Image mobile (portrait)", "assets": ["hero-portrait"], "default": null },
+        { "id": "imageAlt", "type": "text", "label": "Texte alternatif des images", "maxLength": 300, "default": "" }
+      ]
+    },
+    "featured_products": {
+      "name": "Produits mis en avant (rituel)", "area": "home", "max": 1,
+      "description": "Jusqu'à 3 étapes, chacune reliée à un produit réel du catalogue.",
+      "settings": [
+        { "id": "eyebrow", "type": "text", "label": "Sur-titre", "maxLength": 60, "default": "" },
+        { "id": "heading", "type": "text", "label": "Titre", "maxLength": 80, "required": true, "default": "Produits mis en avant" },
+        { "id": "intro", "type": "textarea", "label": "Introduction", "maxLength": 200, "default": "" }
+      ],
+      "items": { "name": "Étape", "min": 1, "max": 3, "settings": [
+        { "id": "title", "type": "text", "label": "Titre de l'étape", "maxLength": 40, "required": true, "default": "Étape" },
+        { "id": "text", "type": "textarea", "label": "Texte", "maxLength": 160, "default": "" },
+        { "id": "product", "type": "product", "label": "Produit", "required": true, "default": "" }
+      ] }
+    },
+    "ingredients": {
+      "name": "Ingrédients", "area": "home", "max": 1,
+      "description": "Les ingrédients phares et leurs soins (liste gérée dans le code).",
+      "settings": [
+        { "id": "eyebrow", "type": "text", "label": "Sur-titre", "maxLength": 60, "default": "Nos ingrédients naturels" },
+        { "id": "heading", "type": "text", "label": "Titre", "maxLength": 80, "required": true, "default": "Des actifs choisis pour votre peau" },
+        { "id": "intro", "type": "textarea", "label": "Introduction", "maxLength": 200, "default": "" }
+      ]
+    },
+    "promo_banner": {
+      "name": "Bannière promotionnelle", "area": "home", "max": 3,
+      "description": "Grande image avec un message et un bouton.",
+      "settings": [
+        { "id": "eyebrow", "type": "text", "label": "Sur-titre", "maxLength": 60, "default": "" },
+        { "id": "heading", "type": "text", "label": "Titre", "maxLength": 80, "required": true, "default": "Votre message" },
+        { "id": "text", "type": "textarea", "label": "Texte", "maxLength": 200, "default": "" },
+        { "id": "buttonLabel", "type": "text", "label": "Texte du bouton", "maxLength": 40, "default": "Découvrir nos produits" },
+        { "id": "buttonLink", "type": "link", "label": "Lien du bouton", "default": "/produits" },
+        { "id": "imageDesktop", "type": "image", "label": "Image ordinateur (paysage)", "assets": ["banner-desktop"], "default": null },
+        { "id": "imageMobile", "type": "image", "label": "Image mobile (portrait)", "assets": ["banner-mobile"], "default": null },
+        { "id": "imageAlt", "type": "text", "label": "Texte alternatif des images", "maxLength": 300, "default": "" }
+      ]
+    },
+    "product_collection": {
+      "name": "Collection de produits", "area": "home", "max": 2,
+      "description": "Carrousel de produits : tout le catalogue ou une catégorie.",
+      "settings": [
+        { "id": "eyebrow", "type": "text", "label": "Sur-titre", "maxLength": 60, "default": "" },
+        { "id": "heading", "type": "text", "label": "Titre", "maxLength": 80, "required": true, "default": "Nos produits" },
+        { "id": "intro", "type": "textarea", "label": "Introduction ({nombre} = nombre de produits)", "maxLength": 200, "default": "" },
+        { "id": "category", "type": "category", "label": "Catégorie (vide = tous les produits)", "default": "" },
+        { "id": "viewAllLabel", "type": "text", "label": "Texte du lien « voir tout » (vide = masqué)", "maxLength": 30, "default": "Voir tout" }
+      ]
+    },
+    "image_with_text": {
+      "name": "Texte et image", "area": "home", "max": 4,
+      "description": "Une image et un texte côte à côte.",
+      "settings": [
+        { "id": "image", "type": "image", "label": "Image", "assets": [], "default": null },
+        { "id": "imageAlt", "type": "text", "label": "Texte alternatif de l'image", "maxLength": 200, "default": "" },
+        { "id": "imagePosition", "type": "select", "label": "Position de l'image", "default": "left",
+          "options": [{ "value": "left", "label": "À gauche" }, { "value": "right", "label": "À droite" }] },
+        { "id": "eyebrow", "type": "text", "label": "Sur-titre", "maxLength": 60, "default": "" },
+        { "id": "heading", "type": "text", "label": "Titre", "maxLength": 80, "required": true, "default": "Notre histoire" },
+        { "id": "text", "type": "textarea", "label": "Texte (une ligne vide = nouveau paragraphe)", "maxLength": 1200, "default": "" },
+        { "id": "buttonLabel", "type": "text", "label": "Texte du bouton (vide = pas de bouton)", "maxLength": 40, "default": "" },
+        { "id": "buttonLink", "type": "link", "label": "Lien du bouton", "default": "/produits" },
+        { "id": "background", "type": "select", "label": "Fond", "default": "page",
+          "options": [{ "value": "page", "label": "Crème (page)" }, { "value": "surface", "label": "Blanc cassé" }, { "value": "beige", "label": "Beige" }] }
+      ]
+    },
+    "benefits": {
+      "name": "Avantages de la boutique", "area": "home", "max": 1,
+      "description": "Engagements (paiement, livraison…) avec une icône. {frais_livraison} = frais de livraison actuels.",
+      "settings": [],
+      "items": { "name": "Avantage", "min": 1, "max": 4, "settings": [
+        { "id": "icon", "type": "icon", "label": "Icône", "default": "badge-check" },
+        { "id": "title", "type": "text", "label": "Titre", "maxLength": 40, "required": true, "default": "Avantage" },
+        { "id": "text", "type": "text", "label": "Texte", "maxLength": 80, "default": "" }
+      ] }
+    },
+    "testimonials": {
+      "name": "Témoignages clients", "area": "home", "max": 1,
+      "description": "Uniquement de vrais avis de clients, avec leur accord. Section masquée tant qu'elle est vide.",
+      "settings": [
+        { "id": "eyebrow", "type": "text", "label": "Sur-titre", "maxLength": 60, "default": "Avis clients" },
+        { "id": "heading", "type": "text", "label": "Titre", "maxLength": 80, "required": true, "default": "Elles nous font confiance" }
+      ],
+      "items": { "name": "Témoignage", "min": 0, "max": 6, "settings": [
+        { "id": "quote", "type": "textarea", "label": "Avis (texte exact du client)", "maxLength": 400, "required": true, "default": "" },
+        { "id": "author", "type": "text", "label": "Prénom ou initiales", "maxLength": 60, "required": true, "default": "" },
+        { "id": "detail", "type": "text", "label": "Précision (ville, produit…)", "maxLength": 60, "default": "" }
+      ] }
+    },
+    "newsletter": {
+      "name": "Newsletter", "area": "home", "max": 1,
+      "description": "Inscription par e-mail avec consentement (inscriptions visibles dans Réglages).",
+      "settings": [
+        { "id": "heading", "type": "text", "label": "Titre", "maxLength": 80, "required": true, "default": "Restez informée" },
+        { "id": "text", "type": "textarea", "label": "Texte", "maxLength": 200, "default": "Nouveautés et conseils de routine, sans excès." },
+        { "id": "buttonLabel", "type": "text", "label": "Texte du bouton", "maxLength": 30, "required": true, "default": "Je m'inscris" },
+        { "id": "consentText", "type": "textarea", "label": "Texte de consentement (case à cocher)", "maxLength": 240, "required": true,
+          "default": "J'accepte de recevoir les e-mails de Ma Petite Corée. Je peux me désinscrire à tout moment." }
+      ]
+    },
+    "footer": {
+      "name": "Pied de page", "area": "footer",
+      "description": "Logo, texte et liens en bas de page.",
+      "settings": [
+        { "id": "text", "type": "textarea", "label": "Texte (vide = © année et nom de la boutique)", "maxLength": 200, "default": "" }
+      ],
+      "items": { "name": "Lien", "min": 0, "max": 6, "settings": [
+        { "id": "label", "type": "text", "label": "Texte", "maxLength": 30, "required": true, "default": "Lien" },
+        { "id": "link", "type": "link", "label": "Destination", "required": true, "default": "/produits" }
+      ] }
+    }
+  }
+}

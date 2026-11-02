@@ -327,6 +327,26 @@ Rôles : **O**wner · **A**dmin · **M** Order Manager · **E** Content Editor �
 
 ## 9. Visual Theme Builder
 
+> **Livré en phase 6** — ce qui suit §9.1–9.6 est le plan d'origine ; l'état réel est résumé ici.
+>
+> - **Registre et schémas partagés** : `shared/theme/schema.json` (sections, champs, limites) + `default-theme.json`
+>   (accueil d'origine) ; validateurs JS (`src/theme/validate.js`) et Python (`backend/apps/themes/validation.py`)
+>   écrits à la main, sans bibliothèque JSON Schema, vérifiés sur les mêmes cas (`shared/theme/test-cases.json`).
+> - **Format simplifié** : `home` est une **liste** ordonnée de sections ; les éléments répétés sont une liste `items`
+>   (pas de `blocks` + `blockOrder`) ; `announcement`, `header`, `footer` sont des zones fixes.
+> - **Sections réellement rendues** : barre d'annonce, en-tête (liens du menu), hero, produits mis en avant (rituel),
+>   ingrédients (textes), bannière promotionnelle, collection de produits, texte et image, avantages, témoignages
+>   (vrais avis saisis par l'équipe, masquée si vide), newsletter (inscriptions enregistrées), pied de page.
+> - **Étape 0 respectée** : thème par défaut = accueil d'origine ; DOM du mode démo identique à la version précédente
+>   (seuls des attributs `class=""` vides et une correction `aria-current` diffèrent).
+> - **Aperçu** : la vraie boutique `/?apercu-theme=1` dans une iframe ; brouillon envoyé par `postMessage` (origine et
+>   source vérifiées, thème revalidé) ; sans iframe, le brouillon n'est lu qu'avec une session de l'équipe.
+> - **Versions** : `ThemeDraft` (ligne unique, `revision`) + `ThemeVersion` (ajout seul) ; la boutique lit la version de
+>   plus grand numéro ; restaurer = republier une copie.
+> - **Non livré** : annuler/rétablir, sauvegarde automatique, type `richtext`, aperçu tablette, réglages responsive
+>   par champ, cache/ETag de `/store/theme` (`Cache-Control: no-cache`), sélection d'autres pages que l'accueil,
+>   liste des ingrédients et engagements de la fiche produit modifiables, glisser-déposer au clavier (flèches à la place).
+
 ### 9.1 Principe
 Le storefront **ne lit plus une page d'accueil codée en dur** mais une **liste de sections validées** rendues par `SectionRenderer`. Les sections sont des composants React **existants refactorés** (même HTML/CSS) qui reçoivent leurs réglages en props.
 
@@ -460,7 +480,7 @@ Ordre choisi pour **vendre le plus tôt possible**. Durées non estimées tant q
 | **3. Admin cœur** ✅ | Login, layout, Commandes (liste, détail, statuts, facture, Excel), Clients, Stock | Gestion quotidienne possible sans toucher au code |
 | **4. Product Builder** ✅ | Produits, variantes, médias, catégories, SEO (codes promo admin reportés) | Créer un produit de A à Z depuis l'admin |
 | **5. Dashboard & analytics** ✅ | KPI, graphiques, filtres de dates, stock bas | Chiffres = requêtes SQL vérifiées à la main sur un jeu de test |
-| **6. Theme Builder** | Étape 0 (accueil = sections, DOM identique) → éditeur → versions | Publier/restaurer sans casser la boutique |
+| **6. Theme Builder** ✅ | Étape 0 (accueil = sections, DOM identique) → éditeur → versions | Publier/restaurer sans casser la boutique |
 | **7. Finitions** | Avis modérés, newsletter (si outil), 2FA, sauvegardes, mise en production | Checklist sécurité OWASP passée |
 
 ## 11. Stratégie de tests
@@ -527,3 +547,9 @@ Ordre choisi pour **vendre le plus tôt possible**. Durées non estimées tant q
 | 30/10/2026 | Comparaison = période équivalente (même durée ; mois en cours vs même quantième du mois précédent ; année vs même intervalle) | Comparer ce qui est comparable | — | — |
 | 30/10/2026 | Jours découpés en Python (zoneinfo), sommes en SQL | Exact avec le changement d'heure du ramadan, sans dépendre des tables de fuseaux MySQL | — | — |
 | 30/10/2026 | Pas de marge sur le tableau de bord pour l'instant | Non demandé ; remise de commande non répartie par ligne → risque de chiffre faux | Décider si utile | — |
+| 02/11/2026 | Phase 6 livrée : éditeur de thème (sections, réglages globaux, médiathèque, brouillon, publication, historique, restauration) | Modifier l'apparence sans toucher au code | Valider ; puis phase 7 | [À définir] |
+| 02/11/2026 | Permissions thème : O/A modifient et publient ; Éditeur modifie le brouillon seulement ; Gestionnaire et Analyste en lecture | Séparer préparation et mise en ligne | — | — |
+| 02/11/2026 | Publier exige la révision affichée ; brouillon protégé contre l'écrasement (409) | Jamais de brouillon publié ou écrasé par erreur | — | — |
+| 02/11/2026 | Témoignages : uniquement saisis par l'équipe, aucun exemple, section masquée si vide | Pas de faux avis | — | — |
+| 02/11/2026 | Newsletter : inscriptions enregistrées avec consentement ; aucun envoi d'e-mail par le site | Section réellement fonctionnelle sans outil d'e-mailing | Choisir l'outil d'envoi | [À définir] |
+| 02/11/2026 | Textes du thème sans `<` ni `>` (refus plutôt que nettoyage) | Aucun HTML possible, règle simple et testable | — | — |

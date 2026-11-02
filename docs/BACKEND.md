@@ -89,6 +89,14 @@ Les composants n'importent jamais les données brutes directement.
 `{ brandName, whatsappNumber, deliveryFee, freeDeliveryThreshold, cities, allowOtherCity, maxQtyPerLine }`
 — **sans** les codes promo. En mode API, le front l'utilise pour les villes, la livraison et WhatsApp.
 
+### Thème — `GET /theme` (livré phase 6)
+`{ version, theme, media }` : dernière version **publiée** (jamais le brouillon) ; `theme: null` = thème d'origine
+intégré au site (`shared/theme/default-theme.json`). Le front revalide le thème et garde le thème d'origine si l'API
+ne répond pas ou si le thème est invalide. Format : `shared/theme/README.md`.
+
+### Newsletter — `POST /newsletter` (livré phase 6)
+`{ email, consent: true, consentText, website }` → 201, même réponse si l'adresse est déjà inscrite.
+
 ### Commande — `POST /orders` (livré phase 2)
 En-tête obligatoire : `Idempotency-Key: <UUID>` (généré par le navigateur, réutilisé pour un nouvel essai de la
 même commande après une coupure réseau ⇒ jamais de double commande).

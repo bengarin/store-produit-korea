@@ -22,6 +22,11 @@ const RULES = {
   deleteProducts: [OWNER, ADMIN],
   editCost: [OWNER, ADMIN],
   editSettings: [OWNER, ADMIN],
+  // Phase 6 : thème. Lecture : toute l'équipe ; brouillon : + Éditeur ; publier / restaurer : Propriétaire, Admin.
+  viewTheme: [OWNER, ADMIN, ORDERS, EDITOR, ANALYST],
+  editTheme: [OWNER, ADMIN, EDITOR],
+  publishTheme: [OWNER, ADMIN],
+  viewNewsletter: [OWNER, ADMIN],
 };
 
 export function can(user, action) {

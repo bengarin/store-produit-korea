@@ -10,4 +10,6 @@ export const ENDPOINTS = {
   config: '/config',
   promoValidate: '/promo-codes/validate',
   orders: '/orders',
+  theme: '/theme',
+  newsletter: '/newsletter',
 };

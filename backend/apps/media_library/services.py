@@ -92,6 +92,13 @@ def _delete_files(asset):
 
 
 def delete_asset(asset: MediaAsset, *, user=None, request=None):
+    from apps.themes.services import media_ids_in_use
+
+    if asset.pk in media_ids_in_use():
+        raise Conflict(
+            "Ce média est utilisé par le thème (brouillon ou version publiée) : retirez-le d'abord du thème.",
+            "media_in_use",
+        )
     try:
         with transaction.atomic():
             snapshot = {"filename": asset.original_filename, "file": asset.file.name}

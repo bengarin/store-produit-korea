@@ -20,6 +20,7 @@ const ProductsPage = lazy(() => import('./pages/ProductsPage.jsx'));
 const ProductNewPage = lazy(() => import('./pages/ProductNewPage.jsx'));
 const ProductEditPage = lazy(() => import('./pages/ProductEditPage.jsx'));
 const ProductPreviewPage = lazy(() => import('./pages/ProductPreviewPage.jsx'));
+const ThemeEditorPage = lazy(() => import('./pages/ThemeEditorPage.jsx'));
 
 /** Page réservée à certains rôles (le serveur refuse de toute façon). */
 function Allow({ perm, children }) {
@@ -54,6 +55,8 @@ function AdminRoutes() {
     <Routes>
       {/* Aperçu : hors du cadre de l'admin, avec les styles de la boutique uniquement (fidélité). */}
       <Route path="preview/products/:id" element={<RequireAuth><ProductPreviewPage /></RequireAuth>} />
+      {/* Éditeur de thème : plein écran (hors barre latérale) */}
+      <Route path="theme" element={<RequireAuth><div className="adm-root adm-theme-root"><ThemeEditorPage /></div></RequireAuth>} />
       <Route path="*" element={<div className="adm-root"><AdminShellRoutes /></div>} />
     </Routes>
   );

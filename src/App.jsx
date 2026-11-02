@@ -4,6 +4,8 @@ import HomePage from './pages/HomePage.jsx';
 import ScrollToTop from './components/ScrollToTop.jsx';
 import { CatalogProvider, useCatalog } from './context/CatalogContext.jsx';
 import { CartProvider } from './context/CartContext.jsx';
+import { ThemeProvider, useTheme } from './theme/ThemeContext.jsx';
+import ThemePreviewBridge from './theme/ThemePreviewBridge.jsx';
 
 const ProductsPage = lazy(() => import('./pages/ProductsPage.jsx'));
 const ProductPage = lazy(() => import('./pages/ProductPage.jsx'));
@@ -25,7 +27,8 @@ function NotFound() {
 /** Mode API uniquement : attente puis erreur du chargement du catalogue. */
 function CatalogGate({ children }) {
   const { status, retry } = useCatalog();
-  if (status === 'ready') return children;
+  const theme = useTheme();
+  if (status === 'ready' && theme.status === 'ready') return children;
   if (status === 'error') {
     return (
       <main className="container empty-state" role="alert">
@@ -42,9 +45,12 @@ function CatalogGate({ children }) {
 function Storefront() {
   return (
     <CatalogProvider>
-      <CartProvider>
-        <StorefrontRoutes />
-      </CartProvider>
+      <ThemeProvider>
+        <CartProvider>
+          <StorefrontRoutes />
+          <ThemePreviewBridge />
+        </CartProvider>
+      </ThemeProvider>
     </CatalogProvider>
   );
 }

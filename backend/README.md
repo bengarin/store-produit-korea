@@ -8,15 +8,15 @@
   la livraison (transaction, verrouillage du stock, anti-doublon), clients, livraison, codes promo, statuts,
   facture imprimable, export Excel ; le formulaire de commande du site est branché sur l'API.
 
-- **Phase 3** (administration) : interface React sous `/admin` (tableau de bord, commandes, clients, stock,
-  réglages) + `GET /api/v1/admin/analytics/overview`.
-- **Phase 5** (tableau de bord) : indicateurs comparés à la période précédente, graphiques jour/semaine/mois,
-  répartitions (statut, catégorie, paiement, ville), classements produits/variantes/clients, stock, export Excel.
+- **Phase 3** (administration) : interface React sous `/admin` (tableau de bord, commandes, clients, stock, réglages).
 - **Phase 4** (Product Builder) : `/admin/products` (liste, recherche, filtres, actions rapides), création et
   édition complètes (contenu, description mise en forme assainie, catégories, SEO, images, options/variantes),
   aperçu fidèle à la fiche publique, duplication. Le stock reste géré uniquement par **Stock**.
-
-Pas encore d'éditeur de thème (phase 6) — voir `docs/ARCHITECTURE.md`.
+- **Phase 5** (tableau de bord) : indicateurs comparés à la période précédente, graphiques jour/semaine/mois,
+  répartitions (statut, catégorie, paiement, ville), classements produits/variantes/clients, stock, export Excel.
+- **Phase 6** (éditeur de thème) : `/admin/theme` — sections de l'accueil, en-tête, annonce, pied de page et réglages
+  globaux (couleurs, polices, boutons, mise en page) ; brouillon, publication avec confirmation, historique,
+  restauration ; newsletter réelle (inscriptions avec consentement). Voir `shared/theme/README.md`.
 
 ## Prérequis
 
@@ -142,6 +142,9 @@ Par défaut, **toute vue est fermée** (membre de l'équipe requis) ; une vue pu
 | GET | `/products/{slug}` | `Product` ou 404 |
 | GET | `/categories` | `{"items": [{"id": "hydratation", "label": "Hydratation"}]}` |
 
+| GET | `/theme` (phase 6) | `{"version": n, "theme": {...}, "media": {id: {src, src640, width, height, alt}}}` — **dernière version publiée** ; `version: null, theme: null` = thème d'origine du site. Jamais le brouillon. |
+| POST | `/newsletter` (phase 6) | `{email, consent: true, consentText, website}` → 201 (même réponse si déjà inscrit) ; 400 sans consentement ; limite 10/heure/IP |
+
 Jamais exposés : coût, quantité de stock exacte (`stock: null`, mais `inStock` et `variants[].available`),
 brouillons, produits archivés, catégories masquées.
 
@@ -259,6 +262,27 @@ Codes : `validation_error`, `parse_error`, `not_authenticated`, `authentication_
 `conflict` et ses variantes (`product_active`, `product_in_use`, `category_in_use`, `media_in_use`, `last_variant`,
 `variant_in_use`, `option_in_use`, `insufficient_stock`, `idempotency_mismatch`, `too_many_orders`,
 `invalid_transition`, `coupon_in_use`).
+
+### Thème (administration, phase 6) — `/api/v1/admin/`
+
+| Méthode | Route | Rôles |
+|---|---|---|
+| GET | `/theme` → brouillon (`data`, `revision`), version publiée, `dirty`, images, `canEdit`, `canPublish` | O A M E N (lecture) |
+| PUT | `/theme/draft` `{data, revision}` → valide puis enregistre ; **409 `draft_conflict`** si la révision n'est plus la dernière | O A E |
+| POST | `/theme/publish` `{revision, note}` → nouvelle version ; 409 si la révision a changé ou si rien n'a changé | **O A** |
+| GET | `/theme/versions`, `/theme/versions/{n}` | O A M E N |
+| POST | `/theme/versions/{n}/restore` → republie la version n (nouvelle version, historique conservé) | **O A** |
+| POST | `/theme/versions/{n}/load` `{revision}` → copie la version n dans le brouillon (rien n'est publié) | O A E |
+| GET | `/newsletter/subscribers`, `/newsletter/export` (Excel) | **O A** (données personnelles) |
+
+**Permissions retenues** : Propriétaire et Administrateur modifient et **publient** ; l'Éditeur de contenu modifie
+le **brouillon** sans publier ni restaurer ; Gestionnaire de commandes et Analyste : **lecture seule** (éditeur et
+historique visibles, aucune écriture). Toutes ces règles sont appliquées par le serveur (`apps/themes/views.py`).
+
+**Validation** (`apps/themes/validation.py`, même schéma que le navigateur : `shared/theme/schema.json`) : clés inconnues
+refusées, textes sans `<` ni `>`, couleurs `#rrggbb`, choix dans des listes fermées, liens internes / ancres / `https://`
+uniquement, images de la médiathèque, produits et catégories vérifiés en base, 256 Ko max. Une image utilisée par le
+brouillon ou par une version (restaurable) ne peut pas être supprimée de la médiathèque.
 
 ## Sécurité en place
 

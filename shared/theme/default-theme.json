@@ -1,0 +1,110 @@
+{
+  "schemaVersion": 1,
+  "settings": {
+    "colorPrimary": "#214a3b",
+    "colorPrimaryDark": "#17382d",
+    "colorAccent": "#8fa88b",
+    "colorBackground": "#faf6ef",
+    "colorSurface": "#fffdf9",
+    "colorBeige": "#ede1d2",
+    "colorText": "#20241f",
+    "colorTextSoft": "#4a4d46",
+    "buttonBackground": "#214a3b",
+    "buttonText": "#ffffff",
+    "buttonShape": "rounded",
+    "headingFont": "cormorant",
+    "bodyFont": "dm-sans",
+    "headingScale": "m",
+    "contentWidth": "1200",
+    "sectionSpacing": "normal",
+    "radius": "normal"
+  },
+  "announcement": {
+    "id": "announcement", "type": "announcement_bar", "disabled": true,
+    "settings": { "text": "Livraison partout au Maroc · Paiement à la livraison", "link": "", "background": "#214a3b", "color": "#ffffff" }
+  },
+  "header": {
+    "id": "header", "type": "header", "disabled": false,
+    "settings": {},
+    "items": [
+      { "label": "Accueil", "link": "/" },
+      { "label": "Nos produits", "link": "/produits" },
+      { "label": "Favoris", "link": "/produits?favoris=1" },
+      { "label": "Mon panier", "link": "/panier" }
+    ]
+  },
+  "home": [
+    {
+      "id": "hero", "type": "hero", "disabled": false,
+      "settings": {
+        "eyebrow": "La beauté au naturel",
+        "heading": "Des soins doux pour une peau plus belle chaque jour",
+        "text": "Une sélection de soins naturels pour une peau saine, lumineuse et harmonieuse.",
+        "buttonLabel": "Découvrir nos produits",
+        "buttonLink": "#collection",
+        "imageDesktop": { "asset": "hero-wide" },
+        "imageMobile": { "asset": "hero-portrait" },
+        "imageAlt": "Les cinq soins de la boutique sur des socles en pierre : gel Baroness Aloe Vera, crème SOME BY MI Yuja Niacin, émulsion ORJENA Power Collagen, patchs BIOVÈNE et crème Quret Vitamin Collagen"
+      }
+    },
+    {
+      "id": "ritual", "type": "featured_products", "disabled": false,
+      "settings": {
+        "eyebrow": "Votre routine beauté",
+        "heading": "Le rituel NATURE",
+        "intro": "Trois étapes simples, trois soins, une seule sélection."
+      },
+      "items": [
+        { "title": "Nettoyer & préparer", "text": "Après votre nettoyage quotidien, préparez votre peau en douceur.", "product": "baroness-aloe-vera-gel" },
+        { "title": "Hydrater", "text": "Une crème au yuja et à la niacinamide pour poursuivre votre routine.", "product": "some-by-mi-yuja-niacin-cream" },
+        { "title": "Sublimer", "text": "Un moment dédié au contour des yeux pour terminer votre rituel.", "product": "biovene-eye-patches" }
+      ]
+    },
+    {
+      "id": "ingredients", "type": "ingredients", "disabled": false,
+      "settings": {
+        "eyebrow": "Nos ingrédients naturels",
+        "heading": "Des actifs choisis pour votre peau",
+        "intro": "Des ingrédients inspirés par la nature et les traditions de beauté coréennes."
+      }
+    },
+    {
+      "id": "banner", "type": "promo_banner", "disabled": false,
+      "settings": {
+        "eyebrow": "Tout en douceur",
+        "heading": "Révélez votre éclat naturel",
+        "text": "Des soins coréens et naturels pour accompagner votre routine, jour après jour.",
+        "buttonLabel": "Découvrir nos produits",
+        "buttonLink": "/produits",
+        "imageDesktop": { "asset": "banner-desktop" },
+        "imageMobile": { "asset": "banner-mobile" },
+        "imageAlt": "Portrait d’une femme au teint lumineux, la main posée sur la joue"
+      }
+    },
+    {
+      "id": "collection", "type": "product_collection", "disabled": false,
+      "settings": {
+        "eyebrow": "Nos essentiels",
+        "heading": "Les produits du moment",
+        "intro": "Découvrez nos {nombre} soins pour une routine simple et douce au quotidien.",
+        "category": "",
+        "viewAllLabel": "Voir tout"
+      }
+    },
+    {
+      "id": "benefits", "type": "benefits", "disabled": false,
+      "settings": {},
+      "items": [
+        { "icon": "hand-coins", "title": "Paiement à la livraison", "text": "Vous payez à la réception" },
+        { "icon": "badge-check", "title": "Produits authentiques", "text": "Marques coréennes sélectionnées" },
+        { "icon": "truck", "title": "Livraison partout au Maroc", "text": "À domicile · {frais_livraison}" },
+        { "icon": "headset", "title": "Service client", "text": "Chaque commande confirmée par téléphone" }
+      ]
+    }
+  ],
+  "footer": {
+    "id": "footer", "type": "footer", "disabled": false,
+    "settings": { "text": "" },
+    "items": []
+  }
+}

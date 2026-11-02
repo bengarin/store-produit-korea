@@ -25,7 +25,7 @@ Aucun secret ne doit être mis dans ces variables : elles sont visibles dans le 
 
 Le dossier `backend/` contient l'API (Django + MySQL). Démarrage local : voir **`backend/README.md`**.
 Le site fonctionne toujours seul, avec ses données locales, tant que `VITE_API_BASE_URL` n'est pas défini.
-L'administration (`/admin` : commandes, produits, clients, stock, réglages) nécessite le backend — voir `backend/README.md`.
+L'administration (`/admin` : tableau de bord, commandes, produits, clients, stock, thème, réglages) nécessite le backend — voir `backend/README.md`.
 
 ## Où modifier quoi ?
 
@@ -42,9 +42,9 @@ L'administration (`/admin` : commandes, produits, clients, stock, réglages) né
 | **Photos des produits**                 | `src/assets/products/` + `productImages.js` | voir ci-dessous                         |
 | **Visuel de l'accueil**                 | `src/assets/hero/`                        | mobile : `nature-hero-products.webp` (+ 640 px) · desktop : `nature-hero-products-wide.webp` (+ 1280 px) |
 | **Ingrédients à l'honneur**            | `src/data/ingredients.js` + `src/assets/ingredients/` | textes, photos, cadrage (`focus`) et produits liés (`productIds`) |
-| **Le rituel NATURÉ (3 étapes)**        | `src/data/ritual.js`                      | titre, texte, produit lié, photo et cadrage |
+| **Textes et sections de l'accueil, rituel (3 étapes), menu, pied de page** | mode API : **Admin → Thème** · mode démo : `shared/theme/default-theme.json` | voir `shared/theme/README.md` |
 | **Feuilles (page confirmation)**        | `src/assets/backgrounds/`                 | remplacer les fichiers                  |
-| **Couleurs / typo / arrondis**          | `src/styles/global.css`                   | variables en haut du fichier (`:root`)  |
+| **Couleurs / typo / arrondis**          | mode API : **Admin → Thème → Réglages du thème** · valeurs d'origine : `src/styles/global.css` (`:root`) | |
 
 ### Photos produits
 

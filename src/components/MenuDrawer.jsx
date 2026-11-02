@@ -6,10 +6,16 @@ import Logo from './Logo.jsx';
 import { useCatalog } from '../context/CatalogContext.jsx';
 import { ORDERS_ARE_SIMULATED } from '../services/orderService.js';
 import { useCart } from '../context/CartContext.jsx';
+import { useTheme } from '../theme/ThemeContext.jsx';
+
+// Liens déjà présents dans le menu mobile (avec icône) ; les autres liens du thème sont ajoutés en dessous.
+const BUILT_IN = new Set(['/', '/produits', '/produits?favoris=1', '/panier']);
 
 export default function MenuDrawer({ open, onClose }) {
   const { count, favorites } = useCart();
   const { categories } = useCatalog();
+  const { theme } = useTheme();
+  const extra = theme.header.items.filter((l) => !BUILT_IN.has(l.link));
 
   useEffect(() => {
     if (!open) return undefined;
@@ -41,6 +47,9 @@ export default function MenuDrawer({ open, onClose }) {
             <li key={c.id} className="drawer__sub">
               <NavLink to={`/produits?categorie=${c.id}`}>{c.label}</NavLink>
             </li>
+          ))}
+          {extra.map(({ label, link }, i) => (
+            <li key={`${i}-${link}`}><NavLink to={link}>{label}</NavLink></li>
           ))}
           <li><NavLink to="/produits?favoris=1"><Heart size={18} /> Mes favoris ({favorites.length})</NavLink></li>
           <li><NavLink to="/panier"><ShoppingCart size={18} /> Mon panier ({count})</NavLink></li>

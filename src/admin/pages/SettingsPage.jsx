@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react';
-import { KeyRound, Lock, Save, Store, Truck } from 'lucide-react';
-import { admin } from '../api.js';
+import { Download, KeyRound, Lock, Mail, Save, Store, Truck } from 'lucide-react';
+import { admin, adminUrl } from '../api.js';
 import { useAuth } from '../auth.jsx';
-import { Button, Card, ErrorState, Field, Notice, PageHeader, SkeletonRows } from '../components/ui.jsx';
+import { Button, ButtonLink, Card, ErrorState, Field, Notice, PageHeader, SkeletonRows } from '../components/ui.jsx';
 import { useToast } from '../../context/ToastContext.jsx';
 import { formatMoney } from '../format.js';
 import { useApi, useTitle } from '../hooks.js';
@@ -182,6 +182,23 @@ function PasswordCard() {
   );
 }
 
+/** Inscrits à la newsletter (section du thème) : nombre et export Excel — Propriétaire, Admin. */
+function NewsletterCard() {
+  const { data, error, reload } = useApi('/newsletter/subscribers');
+  return (
+    <Card title={<><Mail size={17} aria-hidden="true" /> Newsletter</>}
+      actions={data?.total > 0 && <ButtonLink href={adminUrl('/newsletter/export')} icon={Download} download>Exporter (Excel)</ButtonLink>}>
+      {error && <ErrorState error={error} onRetry={reload} />}
+      {data && (
+        <p>
+          <strong>{data.total} inscrit{data.total > 1 ? 's' : ''}</strong> avec consentement enregistré.{' '}
+          <span className="adm-muted">Le site n’envoie aucun e-mail : importez la liste dans votre outil d’e-mailing.</span>
+        </p>
+      )}
+    </Card>
+  );
+}
+
 export default function SettingsPage() {
   useTitle('Réglages');
   const { user } = useAuth();
@@ -200,6 +217,7 @@ export default function SettingsPage() {
         <SettingsSection key={`${s.id}-${version}`} section={s} data={data} editable={editable} onSaved={setData} />
       ))}
       {viewStore && <ShippingCard editable={editable} />}
+      {can(user, 'viewNewsletter') && <NewsletterCard />}
       <PasswordCard />
     </div>
   );

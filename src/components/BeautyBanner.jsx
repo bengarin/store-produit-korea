@@ -1,41 +1,50 @@
-import { Link } from 'react-router-dom';
 import { ArrowRight } from 'lucide-react';
 import Reveal from './Reveal.jsx';
-import desktopImg from '../assets/banner/eclat-desktop.webp';
-import desktopImg1200 from '../assets/banner/eclat-desktop-1200.webp';
-import mobileImg from '../assets/banner/eclat-mobile.webp';
-import mobileImg640 from '../assets/banner/eclat-mobile-640.webp';
+import ThemeLink from '../theme/ThemeLink.jsx';
+import { resolveImage } from '../theme/assets.js';
+import { useTheme } from '../theme/ThemeContext.jsx';
 
 /**
- * Bannière « Révélez votre éclat naturel ».
- * - ≥ 860 px : image horizontale (portrait à gauche), texte posé sur la zone beige de droite.
- * - < 860 px : image verticale (zone beige en haut), texte au-dessus du portrait.
+ * Bannière promotionnelle (section « promo_banner » du thème ; à l'origine « Révélez votre éclat naturel »).
+ * - ≥ 860 px : image horizontale, texte posé sur la zone claire de droite.
+ * - < 860 px : image verticale, texte au-dessus.
  */
-export default function BeautyBanner() {
+export default function BeautyBanner({ section }) {
+  const { media } = useTheme();
+  const { eyebrow, heading, text, buttonLabel, buttonLink, imageDesktop, imageMobile, imageAlt } = section.settings;
+  const desktop = resolveImage(imageDesktop, media);
+  const mobile = resolveImage(imageMobile, media) || desktop;
+  const titleId = `${section.id}-title`;
   return (
-    <section className="home-section banner-section" aria-labelledby="banner-title">
+    <section className="home-section banner-section" aria-labelledby={titleId}>
       <Reveal className="container">
         <div className="beauty-banner">
-          <picture className="beauty-banner__media">
-            <source media="(min-width: 860px)" srcSet={`${desktopImg1200} 1200w, ${desktopImg} 1920w`} sizes="min(100vw, 1200px)" width="1920" height="768" />
-            <img
-              src={mobileImg640}
-              srcSet={`${mobileImg640} 640w, ${mobileImg} 890w`}
-              sizes="(max-width: 520px) 100vw, 520px"
-              width="890"
-              height="1767"
-              alt="Portrait d’une femme au teint lumineux, la main posée sur la joue"
-              loading="lazy"
-              decoding="async"
-            />
-          </picture>
+          {mobile && (
+            <picture className="beauty-banner__media">
+              {desktop && desktop !== mobile && (
+                <source media="(min-width: 860px)" srcSet={desktop.srcSet || desktop.src} sizes="min(100vw, 1200px)" width={desktop.width} height={desktop.height} />
+              )}
+              <img
+                src={mobile.src}
+                srcSet={mobile.srcSet}
+                sizes="(max-width: 520px) 100vw, 520px"
+                width={mobile.width}
+                height={mobile.height}
+                alt={imageAlt}
+                loading="lazy"
+                decoding="async"
+              />
+            </picture>
+          )}
           <div className="beauty-banner__content">
-            <p className="beauty-banner__eyebrow">Tout en douceur</p>
-            <h2 className="beauty-banner__title" id="banner-title">Révélez votre éclat naturel</h2>
-            <p className="beauty-banner__text">Des soins coréens et naturels pour accompagner votre routine, jour après jour.</p>
-            <Link to="/produits" className="btn btn--primary beauty-banner__btn">
-              Découvrir nos produits <ArrowRight size={16} aria-hidden="true" />
-            </Link>
+            {eyebrow && <p className="beauty-banner__eyebrow">{eyebrow}</p>}
+            <h2 className="beauty-banner__title" id={titleId}>{heading}</h2>
+            {text && <p className="beauty-banner__text">{text}</p>}
+            {buttonLabel && buttonLink && (
+              <ThemeLink to={buttonLink} className="btn btn--primary beauty-banner__btn">
+                {buttonLabel} <ArrowRight size={16} aria-hidden="true" />
+              </ThemeLink>
+            )}
           </div>
         </div>
       </Reveal>

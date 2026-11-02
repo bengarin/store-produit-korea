@@ -23,3 +23,12 @@ ORDERS_PERMISSION = ReadWriteRoles.of(read=_OPS_READ, write=_OPS_WRITE)
 INVENTORY_PERMISSION = ReadWriteRoles.of(read=ALL_ROLES, write=_OPS_WRITE)
 # Codes promo, livraison, réglages : modification par Propriétaire et Admin.
 SETTINGS_PERMISSION = ReadWriteRoles.of(read=_OPS_READ, write=_SETTINGS_WRITE)
+
+# --- Phase 6 : thème -------------------------------------------------------
+# Lecture (éditeur en lecture seule, historique) : toute l'équipe.
+# Modifier le BROUILLON : Propriétaire, Admin, Éditeur de contenu. PUBLIER / RESTAURER : Propriétaire, Admin.
+THEME_EDIT = frozenset({Role.OWNER, Role.ADMIN, Role.CONTENT_EDITOR})
+THEME_PUBLISH = frozenset({Role.OWNER, Role.ADMIN})
+THEME_PERMISSION = ReadWriteRoles.of(read=ALL_ROLES, write=THEME_EDIT)
+# Inscrits à la newsletter (données personnelles) : Propriétaire et Admin uniquement.
+NEWSLETTER_READ = frozenset({Role.OWNER, Role.ADMIN})

@@ -1,18 +1,39 @@
 import { useEffect, useRef, useState } from 'react';
-import { Link, NavLink, useLocation } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import { Menu, ShoppingCart } from 'lucide-react';
 import Logo from './Logo.jsx';
 import MenuDrawer from './MenuDrawer.jsx';
+import AnnouncementBar from './AnnouncementBar.jsx';
 import { useCart } from '../context/CartContext.jsx';
+import { useTheme } from '../theme/ThemeContext.jsx';
+
+/**
+ * Lien actif : même chemin (ou sous-page) et mêmes paramètres ; « / » seulement exact. Un lien sans paramètre n'est pas actif
+ * si un autre lien du menu, plus précis, correspond (ex. « Nos produits » vs « Favoris »).
+ */
+function activeLink(links, pathname, search) {
+  const current = new URLSearchParams(search);
+  const matches = links.filter((link) => {
+    const [path, query = ''] = link.split('?');
+    // Sans paramètre, un lien est aussi actif sur ses sous-pages (« Nos produits » sur une fiche produit).
+    const samePage = path === pathname || (!query && path !== '/' && pathname.startsWith(`${path}/`));
+    if (!samePage) return false;
+    return [...new URLSearchParams(query)].every(([k, v]) => current.get(k) === v);
+  });
+  return matches.sort((a, b) => b.length - a.length)[0];
+}
 
 export default function Header() {
   const { count } = useCart();
+  const { theme } = useTheme();
   const [menuOpen, setMenuOpen] = useState(false);
   const { pathname, search } = useLocation();
-  const onFavorites = pathname === '/produits' && search.includes('favoris=1');
+  const links = theme.header.items;
+  const active = activeLink(links.map((l) => l.link), pathname, search);
 
   return (
     <>
+      <AnnouncementBar />
       <header className="site-header">
         <div className="site-header__inner container">
           <button className="icon-btn site-header__menu" onClick={() => setMenuOpen(true)} aria-label="Ouvrir le menu" aria-expanded={menuOpen}>
@@ -20,10 +41,9 @@ export default function Header() {
           </button>
           <Logo />
           <nav className="site-nav" aria-label="Navigation principale">
-            <NavLink to="/" end>Accueil</NavLink>
-            <NavLink to="/produits" className={({ isActive }) => (isActive && !onFavorites ? 'active' : '')}>Nos produits</NavLink>
-            <Link to="/produits?favoris=1" className={onFavorites ? 'active' : ''}>Favoris</Link>
-            <Link to="/panier">Mon panier</Link>
+            {links.map(({ label, link }, i) => (
+              <Link key={`${i}-${link}`} to={link} aria-current={link === active ? 'page' : undefined} className={link === active ? 'active' : ''}>{label}</Link>
+            ))}
           </nav>
           <CartButton count={count} />
         </div>

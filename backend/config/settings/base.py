@@ -42,6 +42,8 @@ INSTALLED_APPS = [
     "apps.inventory",
     "apps.orders",
     "apps.analytics",
+    "apps.themes",
+    "apps.newsletter",
 ]
 
 MIDDLEWARE = [
@@ -154,6 +156,7 @@ REST_FRAMEWORK = {
         # Création de commande publique : par adresse IP (le serveur limite AUSSI par téléphone).
         "orders": env.str("THROTTLE_ORDERS", default="10/hour"),
         "promo": env.str("THROTTLE_PROMO", default="30/hour"),
+        "newsletter": env.str("THROTTLE_NEWSLETTER", default="10/hour"),
     },
     "UNAUTHENTICATED_USER": "django.contrib.auth.models.AnonymousUser",
     # Les prix sortent en nombres JSON (129.0), comme dans le front actuel, et non en chaînes.

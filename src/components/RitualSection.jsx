@@ -3,25 +3,29 @@ import { ArrowRight, ChevronRight } from 'lucide-react';
 import Reveal from './Reveal.jsx';
 import ProductImage from './ProductImage.jsx';
 import AddToCartIcon from './AddToCartIcon.jsx';
-import { RITUAL_STEPS } from '../data/ritual.js';
 import { useCatalog } from '../context/CatalogContext.jsx';
 import { formatPrice } from '../utils/currency.js';
 
-export default function RitualSection() {
+/** Produits mis en avant (« le rituel ») : étapes du thème, chacune reliée à un produit réel du catalogue. */
+export default function RitualSection({ section }) {
   const { getProductById } = useCatalog();
-  const steps = RITUAL_STEPS.map((s) => {
-    const product = getProductById(s.productId);
+  const { eyebrow, heading, intro } = section.settings;
+  const titleId = `${section.id}-title`;
+  // Un produit absent du catalogue (archivé, supprimé) : l'étape n'est pas affichée.
+  const steps = (section.items || []).map((s) => {
+    const product = getProductById(s.product);
     if (!product) return null;
-    return { ...s, product, image: product.sceneImage };
-  }).filter(Boolean);
+    return { title: s.title, text: s.text, product, image: product.sceneImage };
+  }).filter(Boolean).map((s, i) => ({ ...s, step: i + 1 }));
+  if (!steps.length) return null;
 
   return (
-    <section className="home-section ritual" aria-labelledby="ritual-title">
+    <section className="home-section ritual" aria-labelledby={titleId}>
       <div className="container">
         <Reveal as="header" className="section-head">
-          <p className="eyebrow">Votre routine beauté</p>
-          <h2 className="section-title" id="ritual-title">Le rituel NATURE</h2>
-          <p className="section-intro">Trois étapes simples, trois soins, une seule sélection.</p>
+          {eyebrow && <p className="eyebrow">{eyebrow}</p>}
+          <h2 className="section-title" id={titleId}>{heading}</h2>
+          {intro && <p className="section-intro">{intro}</p>}
         </Reveal>
 
         <ol className="ritual__steps">
@@ -31,7 +35,7 @@ export default function RitualSection() {
                 <span className="ritual-card__num" aria-hidden="true">{step}</span>
                 <div>
                   <h3 className="ritual-card__title"><span className="sr-only">Étape {step} : </span>{title}</h3>
-                  <p className="ritual-card__text">{text}</p>
+                  {text && <p className="ritual-card__text">{text}</p>}
                 </div>
                 <Link to={`/produits/${product.id}`} className="ritual-card__more" aria-label={`Voir ${product.displayName}`}>
                   <ChevronRight size={18} aria-hidden="true" />
