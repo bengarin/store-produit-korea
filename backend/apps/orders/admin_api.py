@@ -14,7 +14,8 @@ from apps.store_settings.models import StoreSettings
 
 from . import services
 from .exports import orders_workbook
-from .models import Order, OrderStatusHistory
+from .invoicing import SELLER_FIELDS, missing_legal_info
+from .models import Invoice, Order, OrderStatusHistory
 from .serializers import OrderDetailSerializer, OrderListSerializer, OrderUpdateSerializer, StatusChangeSerializer
 
 
@@ -100,13 +101,22 @@ class OrderInvoiceView(APIView):
 
     def get(self, request, pk):
         order = get_object_or_404(Order.objects.prefetch_related("items"), pk=pk)
+        invoice = Invoice.objects.filter(order=order).first()
+        settings = StoreSettings.load()
+        # Facture émise : informations du vendeur FIGÉES à l'émission ; sinon (bon de commande) : réglages actuels.
+        seller = invoice.seller if invoice else {f: getattr(settings, f) for f in SELLER_FIELDS}
         html = render_to_string(
             "orders/invoice.html",
             {
                 "order": order,
+                "invoice": invoice,
+                "seller": seller,
+                "missing": missing_legal_info(settings)
+                if not invoice
+                else [k for k in ("ice", "rc", "if_number") if not seller.get(k)],
                 "items": order.items.all(),
-                "settings": StoreSettings.load(),
                 "placed_at": timezone.localtime(order.placed_at),
+                "issued_at": timezone.localtime(invoice.issued_at) if invoice else None,
             },
         )
         log_action("order.invoice", actor=request.user, target=order, request=request)

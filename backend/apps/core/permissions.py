@@ -6,19 +6,43 @@ doit déclarer `permission_classes = [AllowAny]`. Le serveur reste l'unique auto
 le front ne fait que masquer les boutons.
 """
 
+from rest_framework.exceptions import PermissionDenied
 from rest_framework.permissions import BasePermission
 
 from apps.accounts.roles import Role
 
 
+class OtpRequired(PermissionDenied):
+    default_code = "otp_required"
+
+
+class OtpSetupRequired(PermissionDenied):
+    default_code = "otp_setup_required"
+
+
 class IsStaffMember(BasePermission):
-    """Utilisateur connecté, actif, avec un rôle de l'équipe."""
+    """
+    Utilisateur connecté, actif, avec un rôle de l'équipe ET double authentification validée pour cette
+    session (si elle est activée, ou obligatoire pour son rôle). Les routes de 2FA déclarent
+    `allow_unverified = True` pour rester accessibles avant la saisie du code.
+    """
 
     message = "Vous n'avez pas les droits pour cette action."
 
     def has_permission(self, request, view):
         user = request.user
-        return bool(user and user.is_authenticated and user.is_active and user.role is not None)
+        if not (user and user.is_authenticated and user.is_active and user.role is not None):
+            return False
+        if getattr(view, "allow_unverified", False):
+            return True
+        from apps.accounts import twofactor
+
+        state = twofactor.status(request)
+        if state == "required":
+            raise OtpRequired()
+        if state == "setup_required":
+            raise OtpSetupRequired()
+        return True
 
 
 class HasRole(IsStaffMember):

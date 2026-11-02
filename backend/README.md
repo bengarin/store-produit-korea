@@ -297,6 +297,24 @@ brouillon ou par une version (restaurable) ne peut pas être supprimée de la m�
 - Export Excel : les textes saisis par les clients commençant par `=`, `+`, `-`, `@` sont neutralisés (pas d'injection
   de formule). Facture : toutes les données sont échappées (pas d'injection HTML).
 
+## Production (Phase 7)
+
+Tout est dans [`docs/PRODUCTION.md`](../docs/PRODUCTION.md) (installation, variables, mise à jour, sauvegarde,
+restauration, incidents), [`docs/SECURITY_AUDIT.md`](../docs/SECURITY_AUDIT.md) et
+[`docs/BLUEHOST.md`](../docs/BLUEHOST.md). Exemples de configuration : `deploy/`. Scripts : `scripts/ops/`.
+
+Commandes utiles :
+
+| Commande | Rôle |
+|----------|------|
+| `launch_check` | Vérification d'avant-ouverture (lecture seule, code 1 si point bloquant) |
+| `createcachetable` | Table du cache partagé (production, une fois) |
+| `verify_backup --against <base>` | Compare une base restaurée à l'originale (lecture seule) |
+| `issue_missing_invoices [--apply]` | Factures des commandes déjà livrées (simulation par défaut) |
+| `send_pending_emails` | Renvoi des e-mails en attente (cron, 10 min) |
+| `reset_2fa --email X` | Réinitialise la 2FA d'un compte et ferme ses sessions |
+| `revoke_sessions --email X [--deactivate]` | Ferme toutes les sessions d'un compte (compte compromis) |
+
 ## Limites connues (à traiter plus tard)
 
 - **Stock réel des 5 produits non renseigné** : ils ne sont pas commandables tant qu'il n'est pas saisi.

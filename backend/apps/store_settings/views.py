@@ -19,6 +19,23 @@ class SettingsSerializer(serializers.ModelSerializer):
     legalAddress = serializers.CharField(source="legal_address", allow_blank=True, required=False)
     ifNumber = serializers.CharField(source="if_number", allow_blank=True, required=False, max_length=30)
     invoiceFooter = serializers.CharField(source="invoice_footer", allow_blank=True, required=False, max_length=255)
+    ice = serializers.RegexField(
+        r"^(\d{15})?$",
+        allow_blank=True,
+        required=False,
+        max_length=15,
+        error_messages={"invalid": "L'ICE comporte 15 chiffres."},
+    )
+    patente = serializers.CharField(allow_blank=True, required=False, max_length=30)
+    invoicePrefix = serializers.RegexField(
+        r"^[A-Z]{1,6}$",
+        source="invoice_prefix",
+        required=False,
+        error_messages={"invalid": "1 à 6 lettres majuscules (ex. FAC)."},
+    )
+    vatRate = serializers.DecimalField(
+        source="vat_rate", max_digits=5, decimal_places=2, min_value=0, max_value=100, allow_null=True, required=False
+    )
     maxQtyPerLine = serializers.IntegerField(source="max_qty_per_line", min_value=1, max_value=100, required=False)
     maxOrdersPerPhonePerHour = serializers.IntegerField(
         source="max_orders_per_phone_per_hour", min_value=1, max_value=100, required=False
@@ -36,7 +53,10 @@ class SettingsSerializer(serializers.ModelSerializer):
             "ice",
             "rc",
             "ifNumber",
+            "patente",
             "invoiceFooter",
+            "invoicePrefix",
+            "vatRate",
             "maxQtyPerLine",
             "maxOrdersPerPhonePerHour",
         ]

@@ -313,6 +313,9 @@ def _create(data, idempotency_key, fingerprint, request) -> Order:
         request=request,
         changes={"number": order.number, "total": str(order.total), "items": quote.item_count},
     )
+    from apps.notifications.services import order_created
+
+    order_created(order)  # envoyé après validation de la transaction ; un échec n'annule jamais la commande
     return order
 
 
@@ -376,10 +379,17 @@ def change_status(order: Order, to_status: str, *, user=None, note="", restock=T
     order.status = to_status
     setattr(order, TIMESTAMPS[to_status], timezone.now())
     order.save()
+    if to_status == Order.Status.DELIVERED:
+        from .invoicing import issue_invoice
+
+        issue_invoice(order)  # même transaction : livrée ⇔ facturée
     OrderStatusHistory.objects.create(
         order=order, from_status=current, to_status=to_status, changed_by=user, note=note[:500]
     )
     customers.refresh_stats(order.customer)
+    from apps.notifications.services import order_status_changed
+
+    order_status_changed(order, to_status)
     log_action(
         "order.status",
         actor=user,

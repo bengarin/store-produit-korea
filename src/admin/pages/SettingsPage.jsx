@@ -3,6 +3,7 @@ import { Download, KeyRound, Lock, Mail, Save, Store, Truck } from 'lucide-react
 import { admin, adminUrl } from '../api.js';
 import { useAuth } from '../auth.jsx';
 import { Button, ButtonLink, Card, ErrorState, Field, Notice, PageHeader, SkeletonRows } from '../components/ui.jsx';
+import AccountSecurity from '../components/AccountSecurity.jsx';
 import { useToast } from '../../context/ToastContext.jsx';
 import { formatMoney } from '../format.js';
 import { useApi, useTitle } from '../hooks.js';
@@ -24,9 +25,12 @@ const SECTIONS = [
       ['ice', 'ICE'],
       ['rc', 'RC'],
       ['ifNumber', 'IF'],
+      ['patente', 'Taxe professionnelle (patente)'],
+      ['vatRate', 'Taux de TVA (%)', 'Vide = TVA non affichée sur les factures. Les prix du site sont TTC.', 'decimal-null'],
+      ['invoicePrefix', 'Préfixe des factures', 'Ex. FAC → FAC-2026-000001. Numérotation continue par année, émise à la livraison.'],
       ['invoiceFooter', 'Pied de facture'],
     ],
-    note: 'À valider avec votre comptable.',
+    note: 'Informations à fournir par vous et à valider avec votre comptable : rien n’est rempli automatiquement.',
   },
   {
     id: 'limits', title: 'Commandes en ligne', icon: Truck, fields: [
@@ -48,7 +52,8 @@ function SettingsSection({ section, data, editable, onSaved }) {
     setBusy(true);
     setErrors({});
     try {
-      const body = Object.fromEntries(section.fields.map(([k, , , type]) => [k, type === 'number' ? Number(values[k]) : values[k]]));
+      const convert = (v, type) => (type === 'number' ? Number(v) : type === 'decimal-null' ? (String(v).trim() === '' ? null : String(v).replace(',', '.')) : v);
+      const body = Object.fromEntries(section.fields.map(([k, , , type]) => [k, convert(values[k], type)]));
       onSaved(await admin.patch('/settings', body));
       showToast('Réglages enregistrés');
     } catch (err) {
@@ -182,6 +187,45 @@ function PasswordCard() {
   );
 }
 
+/** E-mails : configuration (sans secret), journal, e-mail de test — Propriétaire, Admin. */
+function EmailCard() {
+  const { data, error, reload } = useApi('/notifications/emails');
+  const [sending, setSending] = useState(false);
+  const showToast = useToast();
+  const test = async () => {
+    setSending(true);
+    try {
+      const r = await admin.post('/notifications/emails/test');
+      showToast(r.status === 'skipped' ? 'E-mail non configuré : rien n’a été envoyé.' : 'E-mail de test envoyé (voir le journal).');
+      reload();
+    } catch (e) {
+      showToast(e.message, 'info');
+    } finally {
+      setSending(false);
+    }
+  };
+  return (
+    <Card title={<><Mail size={17} aria-hidden="true" /> E-mails</>}
+      actions={data && <Button size="sm" variant="secondary" loading={sending} onClick={test}>Envoyer un e-mail de test</Button>}>
+      {error && <ErrorState error={error} onRetry={reload} />}
+      {data && !data.configured && (
+        <Notice tone="warning">E-mail non configuré : aucune alerte ni confirmation n’est envoyée. Le serveur doit recevoir les paramètres SMTP de votre fournisseur (voir docs/PRODUCTION.md).</Notice>
+      )}
+      {data?.configured && <p>Expéditeur : <strong>{data.fromEmail}</strong> · alertes « nouvelle commande » : {data.orderNotificationRecipients} destinataire(s).</p>}
+      {data?.items.length > 0 && (
+        <ul className="adm-list adm-mt">
+          {data.items.slice(0, 8).map((e) => (
+            <li key={e.id} className="adm-list__row">
+              <div><strong>{e.subject}</strong><span className="adm-muted">{e.kind} · {e.to}{e.error ? ` · ${e.error}` : ''}</span></div>
+              <span className="adm-muted">{e.statusLabel}</span>
+            </li>
+          ))}
+        </ul>
+      )}
+    </Card>
+  );
+}
+
 /** Inscrits à la newsletter (section du thème) : nombre et export Excel — Propriétaire, Admin. */
 function NewsletterCard() {
   const { data, error, reload } = useApi('/newsletter/subscribers');
@@ -217,7 +261,9 @@ export default function SettingsPage() {
         <SettingsSection key={`${s.id}-${version}`} section={s} data={data} editable={editable} onSaved={setData} />
       ))}
       {viewStore && <ShippingCard editable={editable} />}
+      {can(user, 'viewNewsletter') && <EmailCard />}
       {can(user, 'viewNewsletter') && <NewsletterCard />}
+      <AccountSecurity />
       <PasswordCard />
     </div>
   );

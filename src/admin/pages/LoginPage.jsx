@@ -4,12 +4,13 @@ import { Clock, Lock, LogIn } from 'lucide-react';
 import logo from '../../assets/brand/logo-full.webp';
 import { safeNext, useAuth } from '../auth.jsx';
 import { Button, Field, Notice } from '../components/ui.jsx';
+import { TwoFactorGate } from '../components/TwoFactor.jsx';
 import { useTitle } from '../hooks.js';
 import { homePath } from '../permissions.js';
 
 export default function LoginPage() {
   useTitle('Connexion');
-  const { status, user, login } = useAuth();
+  const { status, user, login, twoFactor } = useAuth();
   const navigate = useNavigate();
   const [params] = useSearchParams();
   const [email, setEmail] = useState('');
@@ -18,6 +19,8 @@ export default function LoginPage() {
   const [busy, setBusy] = useState(false);
   const next = safeNext(params.get('next'));
 
+  // Mot de passe validé, code 2FA attendu : écran du code (même page, rien d'autre n'est accessible).
+  if (status === 'authenticated' && twoFactor && twoFactor.status !== 'verified') return <TwoFactorGate />;
   if (status === 'authenticated') return <Navigate to={next || homePath(user)} replace />;
 
   const submit = async (e) => {
@@ -27,7 +30,7 @@ export default function LoginPage() {
     setError('');
     try {
       const signedIn = await login(email.trim(), password);
-      navigate(next || homePath(signedIn), { replace: true });
+      if (signedIn.twoFactor?.status === 'verified') navigate(next || homePath(signedIn), { replace: true });
     } catch (err) {
       setPassword('');
       setError(err.status === 401 || err.status === 429 || err.status === 400 ? err.message : `Connexion impossible : ${err.message}`);

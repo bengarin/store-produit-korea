@@ -88,6 +88,7 @@ class OrderDetailSerializer(OrderListSerializer):
     items = OrderItemSerializer(many=True)
     history = HistorySerializer(many=True)
     allowedTransitions = serializers.SerializerMethodField()
+    invoiceNumber = serializers.SerializerMethodField()
 
     class Meta(OrderListSerializer.Meta):
         fields = [
@@ -105,7 +106,12 @@ class OrderDetailSerializer(OrderListSerializer):
             "items",
             "history",
             "allowedTransitions",
+            "invoiceNumber",
         ]
+
+    def get_invoiceNumber(self, order):
+        invoice = getattr(order, "invoice", None) if hasattr(order, "invoice") else None
+        return invoice.number if invoice else None
 
     def get_allowedTransitions(self, order):
         from .services import TRANSITIONS

@@ -16,7 +16,11 @@ class StoreSettings(models.Model):
     ice = models.CharField("ICE", max_length=20, blank=True)
     rc = models.CharField("RC", max_length=30, blank=True)
     if_number = models.CharField("IF", max_length=30, blank=True)
+    patente = models.CharField("taxe professionnelle (patente)", max_length=30, blank=True)
     invoice_footer = models.CharField("pied de facture", max_length=255, blank=True)
+    invoice_prefix = models.CharField("préfixe des factures", max_length=10, default="FAC")
+    # TVA : NULL = non renseignée (aucun taux n'est supposé). Les prix du site sont TOUJOURS TTC (prix payé).
+    vat_rate = models.DecimalField("taux de TVA (%)", max_digits=5, decimal_places=2, null=True, blank=True)
     max_qty_per_line = models.PositiveSmallIntegerField("quantité max. par produit", default=20)
     max_orders_per_phone_per_hour = models.PositiveSmallIntegerField(
         "commandes max. par téléphone et par heure", default=5

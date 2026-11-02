@@ -131,3 +131,40 @@ class OrderNumberSequence(models.Model):
 
     def __str__(self):
         return f"{self.year}: {self.last_value}"
+
+
+class InvoiceSequence(models.Model):
+    """Compteur annuel des factures (incrémenté sous verrou : numérotation continue, sans trou ni doublon)."""
+
+    year = models.PositiveSmallIntegerField(primary_key=True)
+    last_value = models.PositiveIntegerField(default=0)
+
+    def __str__(self):
+        return f"{self.year}: {self.last_value}"
+
+
+class Invoice(models.Model):
+    """
+    Facture émise à la LIVRAISON (vente conclue, paiement encaissé). Jamais modifiée ni supprimée :
+    les informations du vendeur et les montants sont figés au moment de l'émission.
+    TVA : calculée seulement si un taux est configuré dans les réglages (sinon NULL : rien n'est supposé).
+    """
+
+    order = models.OneToOneField(Order, on_delete=models.PROTECT, related_name="invoice")
+    number = models.CharField("numéro", max_length=30, unique=True)
+    year = models.PositiveSmallIntegerField()
+    sequence = models.PositiveIntegerField()
+    issued_at = models.DateTimeField("émise le", auto_now_add=True)
+    seller = models.JSONField("vendeur (copie figée)")
+    total = models.DecimalField("total TTC", max_digits=12, decimal_places=2)
+    vat_rate = models.DecimalField(max_digits=5, decimal_places=2, null=True, blank=True)
+    total_excl_vat = models.DecimalField("total HT", max_digits=12, decimal_places=2, null=True, blank=True)
+    vat_amount = models.DecimalField("TVA", max_digits=12, decimal_places=2, null=True, blank=True)
+
+    class Meta:
+        verbose_name = "facture"
+        ordering = ["-year", "-sequence"]
+        constraints = [models.UniqueConstraint(fields=["year", "sequence"], name="uniq_invoice_year_seq")]
+
+    def __str__(self):
+        return self.number

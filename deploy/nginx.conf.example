@@ -1,0 +1,90 @@
+# Exemple nginx pour Ma Petite Corée — à adapter (domaine, chemins, certificats).
+# Rôle : HTTPS, fichiers statiques (front construit + médias) et relais vers gunicorn.
+# Testé avec nginx 1.24 — AlmaLinux 9 fournit 1.20 à 1.24 (docs/PRODUCTION.md). Remplacer « boutique.exemple.ma » par le vrai domaine.
+
+upstream mpc_django {
+    server 127.0.0.1:8000;   # gunicorn (deploy/mpc-gunicorn.service)
+}
+
+# Nom de domaine inconnu (Host forgé, accès par l'IP) : connexion fermée sans réponse.
+server {
+    listen 80 default_server;
+    listen [::]:80 default_server;
+    return 444;
+}
+server {
+    listen 443 ssl http2 default_server;
+    listen [::]:443 ssl http2 default_server;
+    ssl_reject_handshake on;   # nginx ≥ 1.19.4 : refuse les noms inconnus dès le TLS
+    return 444;                # et ferme une requête dont le Host ne correspond à aucun site
+}
+
+# HTTP -> HTTPS
+server {
+    listen 80;
+    listen [::]:80;
+    server_name boutique.exemple.ma www.boutique.exemple.ma;
+    location /.well-known/acme-challenge/ { root /var/www/letsencrypt; }   # renouvellement du certificat
+    location / { return 301 https://boutique.exemple.ma$request_uri; }
+}
+
+# www -> domaine principal (une seule adresse canonique)
+server {
+    listen 443 ssl http2;   # nginx < 1.25 ; à partir de 1.25 : « listen 443 ssl; » + « http2 on; »
+    listen [::]:443 ssl http2;
+    server_name www.boutique.exemple.ma;
+    ssl_certificate     /etc/letsencrypt/live/boutique.exemple.ma/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/boutique.exemple.ma/privkey.pem;
+    return 301 https://boutique.exemple.ma$request_uri;
+}
+
+server {
+    listen 443 ssl http2;   # nginx < 1.25 ; à partir de 1.25 : « listen 443 ssl; » + « http2 on; »
+    listen [::]:443 ssl http2;
+    server_name boutique.exemple.ma;
+
+    ssl_certificate     /etc/letsencrypt/live/boutique.exemple.ma/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/boutique.exemple.ma/privkey.pem;
+    ssl_protocols TLSv1.2 TLSv1.3;
+    server_tokens off;
+
+    # Taille maximale d'un envoi (images produit) : garder ≥ MEDIA_MAX_UPLOAD_MB (10 Mo par défaut)
+    client_max_body_size 12m;
+
+    gzip on;
+    gzip_types text/css application/javascript application/json image/svg+xml application/xml text/plain;
+
+    # Front construit (npm run build) : fichiers versionnés => cache long
+    location /assets/ {
+        alias /srv/mpc/dist/assets/;
+        expires 1y;
+        add_header Cache-Control "public, immutable";
+        add_header X-Content-Type-Options nosniff;
+        access_log off;
+    }
+    location ~ ^/(favicon-\d+\.png|apple-touch-icon\.png)$ {
+        root /srv/mpc/dist;
+        expires 7d;
+    }
+
+    # Images envoyées depuis l'admin (vérifiées par Pillow à l'envoi). Jamais exécutées.
+    location /media/ {
+        alias /srv/mpc/media/;
+        expires 30d;
+        add_header X-Content-Type-Options nosniff;
+        add_header Content-Security-Policy "default-src 'none'; img-src 'self'; style-src 'unsafe-inline'; sandbox";
+        location ~* \.(php|py|pl|cgi|sh|html?|svg)$ { return 403; }
+    }
+
+    # Tout le reste (pages, API, admin, sitemap, robots) : Django
+    location / {
+        proxy_pass http://mpc_django;
+        proxy_set_header Host $host;
+        # Remplace (et n'ajoute pas) l'en-tête : un visiteur ne peut pas forger son adresse IP.
+        # Correspond à TRUSTED_PROXY_COUNT=1 côté Django.
+        proxy_set_header X-Forwarded-For $remote_addr;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_read_timeout 60s;
+        proxy_redirect off;
+    }
+}

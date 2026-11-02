@@ -17,5 +17,6 @@ REST_FRAMEWORK = {
         "orders": "1000/min",
         "promo": "1000/min",
         "newsletter": "1000/min",
+        "otp": "1000/min",
     },
 }

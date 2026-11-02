@@ -1,0 +1,24 @@
+# /etc/systemd/system/mpc-gunicorn.service — exemple à adapter (utilisateur, chemins).
+# sudo systemctl daemon-reload && sudo systemctl enable --now mpc-gunicorn
+[Unit]
+Description=Ma Petite Corée - Django (gunicorn)
+After=network.target mysqld.service
+
+[Service]
+User=mpc
+Group=mpc
+WorkingDirectory=/srv/mpc/app/backend
+# Fichier hors du dépôt, lisible seulement par l'utilisateur mpc (chmod 600) : secrets de production
+EnvironmentFile=/etc/mpc/production.env
+Environment=DJANGO_SETTINGS_MODULE=config.settings.prod
+Environment=DJANGO_ENV_FILE=none
+ExecStart=/srv/mpc/venv/bin/gunicorn config.wsgi:application --bind 127.0.0.1:8000 --workers 3 --timeout 60 --access-logfile - --error-logfile -
+Restart=on-failure
+# Durcissement
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=full
+ReadWritePaths=/srv/mpc/media
+
+[Install]
+WantedBy=multi-user.target

@@ -22,3 +22,22 @@ SESSION_COOKIE_SECURE = True
 CSRF_COOKIE_SECURE = True
 SECURE_HSTS_SECONDS = env.int("DJANGO_HSTS_SECONDS", default=60 * 60 * 24 * 30)
 SECURE_HSTS_INCLUDE_SUBDOMAINS = True
+# Préchargement HSTS : engagement difficile à annuler (tous les sous-domaines en HTTPS pour des mois).
+# À activer seulement quand le domaine définitif est en HTTPS partout (docs/PRODUCTION.md).
+SECURE_HSTS_PRELOAD = env.bool("DJANGO_HSTS_PRELOAD", default=False)
+if not SECURE_HSTS_PRELOAD:
+    SILENCED_SYSTEM_CHECKS = ["security.W021"]
+
+# Double authentification obligatoire pour les rôles qui peuvent tout modifier.
+TWO_FACTOR_REQUIRED_ROLES = env.list("TWO_FACTOR_REQUIRED_ROLES", default=["owner", "admin"])
+
+# Cache PARTAGÉ entre les processus gunicorn (table MySQL) : sans lui, chaque processus a ses propres
+# compteurs et les limites anti-abus (connexion, commandes, codes 2FA…) sont multipliées par le nombre
+# de processus. Créer la table une fois : python manage.py createcachetable
+CACHES = {
+    "default": {
+        "BACKEND": "django.core.cache.backends.db.DatabaseCache",
+        "LOCATION": "mpc_cache",
+        "OPTIONS": {"MAX_ENTRIES": 20000},
+    }
+}

@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex">
-<title>Facture {{ order.number }} — {{ settings.brand_name }}</title>
+<title>{% if invoice %}Facture {{ invoice.number }}{% else %}Bon de commande {{ order.number }}{% endif %} — {{ seller.brand_name }}</title>
 <style>
   :root { --ink: #1e2a24; --muted: #5d6b63; --line: #e2dccf; --green: #1f4d3a; }
   * { box-sizing: border-box; }
@@ -24,25 +24,30 @@
   .totals .grand td { font-size: 16px; font-weight: 700; border-top: 2px solid var(--green); padding-top: 8px; }
   footer { margin-top: 32px; padding-top: 12px; border-top: 1px solid var(--line); }
   .print { margin: 0 0 16px; }
-  @media print { body { padding: 0; } .print { display: none; } }
+  .warn { margin: 0 0 16px; padding: 10px 12px; border: 1px solid #efd9a8; border-radius: 8px; background: #fdf5e4; color: #6b450c; font-size: 13px; }
+  @media print { body { padding: 0; } .print, .warn { display: none; } }
 </style>
 </head>
 <body>
 <div class="page">
   <p class="print"><button onclick="window.print()">Imprimer</button></p>
+  {% if missing %}<p class="warn">Mentions à compléter dans Réglages → Mentions légales : {{ missing|join:", " }}. Ce message n'apparaît pas à l'impression.</p>{% endif %}
+  {% if not invoice %}<p class="warn">Bon de commande : la facture est émise automatiquement à la livraison.</p>{% endif %}
+  {% if invoice and order.status == "returned" %}<p class="warn">Commande retournée après facturation : un avoir est à établir avec votre comptable.</p>{% endif %}
   <header>
     <div>
-      <h1>{{ settings.legal_name|default:settings.brand_name }}</h1>
-      {% if settings.legal_address %}<div class="muted">{{ settings.legal_address|linebreaksbr }}</div>{% endif %}
+      <h1>{{ seller.legal_name|default:seller.brand_name }}</h1>
+      {% if seller.legal_address %}<div class="muted">{{ seller.legal_address|linebreaksbr }}</div>{% endif %}
       <div class="muted">
-        {% if settings.ice %}ICE : {{ settings.ice }} · {% endif %}{% if settings.rc %}RC : {{ settings.rc }} · {% endif %}{% if settings.if_number %}IF : {{ settings.if_number }}{% endif %}
+        {% if seller.ice %}ICE : {{ seller.ice }} · {% endif %}{% if seller.rc %}RC : {{ seller.rc }} · {% endif %}{% if seller.if_number %}IF : {{ seller.if_number }}{% endif %}{% if seller.patente %} · Patente : {{ seller.patente }}{% endif %}
       </div>
-      {% if settings.contact_phone or settings.contact_email %}<div class="muted">{{ settings.contact_phone }} {{ settings.contact_email }}</div>{% endif %}
+      {% if seller.contact_phone or seller.contact_email %}<div class="muted">{{ seller.contact_phone }} {{ seller.contact_email }}</div>{% endif %}
     </div>
     <div style="text-align:right">
-      <h1>Facture</h1>
-      <div><strong>{{ order.number }}</strong></div>
-      <div class="muted">Date : {{ placed_at|date:"d/m/Y" }}</div>
+      <h1>{% if invoice %}Facture{% else %}Bon de commande{% endif %}</h1>
+      <div><strong>{% if invoice %}{{ invoice.number }}{% else %}{{ order.number }}{% endif %}</strong></div>
+      {% if invoice %}<div class="muted">Date de facture : {{ issued_at|date:"d/m/Y" }}</div><div class="muted">Commande : {{ order.number }} du {{ placed_at|date:"d/m/Y" }}</div>
+      {% else %}<div class="muted">Date : {{ placed_at|date:"d/m/Y" }}</div>{% endif %}
       <div class="muted">Statut : {{ order.get_status_display }}</div>
     </div>
   </header>
@@ -81,13 +86,14 @@
     <tr><td>Sous-total</td><td class="num">{{ order.subtotal|floatformat:2 }} DH</td></tr>
     {% if order.discount_total %}<tr><td>Remise{% if order.coupon_code %} ({{ order.coupon_code }}){% endif %}</td><td class="num">−{{ order.discount_total|floatformat:2 }} DH</td></tr>{% endif %}
     <tr><td>Livraison</td><td class="num">{% if order.shipping_fee %}{{ order.shipping_fee|floatformat:2 }} DH{% else %}Offerte{% endif %}</td></tr>
-    <tr class="grand"><td>Total</td><td class="num">{{ order.total|floatformat:2 }} DH</td></tr>
+    {% if invoice and invoice.vat_rate is not None %}
+    <tr><td>Total HT</td><td class="num">{{ invoice.total_excl_vat|floatformat:2 }} DH</td></tr>
+    <tr><td>TVA ({{ invoice.vat_rate|floatformat:"-2" }} %)</td><td class="num">{{ invoice.vat_amount|floatformat:2 }} DH</td></tr>
+    {% endif %}
+    <tr class="grand"><td>Total{% if invoice and invoice.vat_rate is not None %} TTC{% endif %}</td><td class="num">{{ order.total|floatformat:2 }} DH</td></tr>
   </table>
 
-  <footer class="muted">
-    {{ settings.invoice_footer|default:"Merci pour votre commande." }}
-    {% if not settings.ice %}<br>Mentions légales (ICE, RC, IF) à compléter dans les réglages de la boutique.{% endif %}
-  </footer>
+  <footer class="muted">{{ seller.invoice_footer|default:"Merci pour votre commande." }}</footer>
 </div>
 </body>
 </html>

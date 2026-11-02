@@ -12,8 +12,11 @@ import environ
 BASE_DIR = Path(__file__).resolve().parent.parent.parent  # .../backend
 
 env = environ.Env()
-# Lecture de backend/.env s'il existe (les variables déjà définies dans le système priment).
-environ.Env.read_env(BASE_DIR / ".env", overwrite=False)
+# Lecture d'un fichier d'environnement (les variables déjà définies dans le système priment).
+# DJANGO_ENV_FILE : chemin d'un autre fichier (ex. /etc/mapetitecoree/env en production) ou « none ».
+_env_file = env.str("DJANGO_ENV_FILE", default=str(BASE_DIR / ".env"))
+if _env_file.lower() != "none":
+    environ.Env.read_env(_env_file, overwrite=False)
 
 APP_VERSION = "0.1.0"
 
@@ -30,6 +33,9 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "rest_framework",
     "axes",
+    "django_otp",
+    "django_otp.plugins.otp_totp",
+    "django_otp.plugins.otp_static",
     "apps.core",
     "apps.accounts",
     "apps.audit",
@@ -44,14 +50,19 @@ INSTALLED_APPS = [
     "apps.analytics",
     "apps.themes",
     "apps.newsletter",
+    "apps.seo",
+    "apps.notifications",
 ]
 
 MIDDLEWARE = [
+    # En premier : fixe REMOTE_ADDR (IP réelle) avant tout le reste.
+    "apps.core.middleware.TrustedProxyMiddleware",
     "django.middleware.security.SecurityMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
+    "django_otp.middleware.OTPMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
     # Doit rester en dernier : bloque les comptes verrouillés.
     "axes.middleware.AxesMiddleware",
@@ -129,6 +140,17 @@ AXES_RESET_ON_SUCCESS = True
 AXES_USERNAME_FORM_FIELD = "email"
 AXES_ENABLE_ADMIN = False
 AXES_LOCKOUT_CALLABLE = "apps.accounts.views.lockout_response"
+# IP = REMOTE_ADDR uniquement (fixée par TrustedProxyMiddleware) : un en-tête forgé ne change rien.
+AXES_IPWARE_META_PRECEDENCE_ORDER = ("REMOTE_ADDR",)
+
+# --- Proxy -----------------------------------------------------------------
+# Nombre de proxys de confiance devant Django (0 = accès direct ; 1 = nginx ou l'hébergeur ; voir docs/PRODUCTION.md).
+TRUSTED_PROXY_COUNT = env.int("TRUSTED_PROXY_COUNT", default=0)
+
+# --- Double authentification (django-otp, TOTP RFC 6238) -------------------
+OTP_TOTP_ISSUER = "Ma Petite Corée"
+# Rôles qui DOIVENT activer la 2FA (ex. owner,admin). Vide en développement ; prod.py impose owner,admin par défaut.
+TWO_FACTOR_REQUIRED_ROLES = env.list("TWO_FACTOR_REQUIRED_ROLES", default=[])
 
 # --- En-têtes de sécurité ------------------------------------------------
 SECURE_CONTENT_TYPE_NOSNIFF = True
@@ -157,8 +179,12 @@ REST_FRAMEWORK = {
         "orders": env.str("THROTTLE_ORDERS", default="10/hour"),
         "promo": env.str("THROTTLE_PROMO", default="30/hour"),
         "newsletter": env.str("THROTTLE_NEWSLETTER", default="10/hour"),
+        "otp": env.str("THROTTLE_OTP", default="10/min"),
     },
     "UNAUTHENTICATED_USER": "django.contrib.auth.models.AnonymousUser",
+    # 0 = les limites de débit utilisent REMOTE_ADDR (IP réelle fixée par TrustedProxyMiddleware).
+    # Sans ce réglage, DRF identifie le visiteur par X-Forwarded-For, que n'importe qui peut forger.
+    "NUM_PROXIES": 0,
     # Les prix sortent en nombres JSON (129.0), comme dans le front actuel, et non en chaînes.
     "COERCE_DECIMAL_TO_STRING": False,
 }
@@ -184,6 +210,33 @@ MEDIA_MAX_UPLOAD_BYTES = env.int("MEDIA_MAX_UPLOAD_MB", default=10) * 1024 * 102
 MEDIA_MAX_SIDE = 6000  # px : au-delà, l'image est refusée
 MEDIA_STORED_MAX_SIDE = 1600  # px : taille maximale conservée après ré-encodage
 FILE_UPLOAD_PERMISSIONS = 0o644
+
+# --- Pages HTML de la boutique (référencement, apps/seo) -------------------
+# Dossier du front construit (npm run build → dist/). SITE_URL : adresse publique (https://…), pour les URL canoniques.
+FRONTEND_DIST_DIR = Path(env.str("FRONTEND_DIST_DIR", default=str(BASE_DIR.parent / "dist")))
+SITE_URL = env.str("SITE_URL", default="")
+SITE_NAME = "Ma Petite Corée"
+# Politique de sécurité du contenu des pages de la boutique : scripts du site uniquement (aucun script en ligne),
+# polices Google, images du site, iframe de la même origine (aperçu du thème).
+STOREFRONT_CSP = (
+    "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; "
+    "font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob:; connect-src 'self'; frame-src 'self'; "
+    "frame-ancestors 'self'; base-uri 'self'; form-action 'self'; object-src 'none'"
+)
+
+# --- E-mails (apps/notifications) — UNIQUEMENT par variables d'environnement, aucun paramètre inventé ----
+# Tant que EMAIL_HOST ou DEFAULT_FROM_EMAIL est vide, aucun e-mail ne part (journalisés « non envoyés »).
+EMAIL_BACKEND = env.str("EMAIL_BACKEND", default="django.core.mail.backends.smtp.EmailBackend")
+EMAIL_HOST = env.str("EMAIL_HOST", default="")
+EMAIL_PORT = env.int("EMAIL_PORT", default=587)
+EMAIL_HOST_USER = env.str("EMAIL_HOST_USER", default="")
+EMAIL_HOST_PASSWORD = env.str("EMAIL_HOST_PASSWORD", default="")
+EMAIL_USE_TLS = env.bool("EMAIL_USE_TLS", default=True)
+EMAIL_USE_SSL = env.bool("EMAIL_USE_SSL", default=False)
+EMAIL_TIMEOUT = env.int("EMAIL_TIMEOUT", default=10)
+DEFAULT_FROM_EMAIL = env.str("DEFAULT_FROM_EMAIL", default="")
+SERVER_EMAIL = DEFAULT_FROM_EMAIL or "root@localhost"
+ORDER_NOTIFICATION_EMAILS = env.list("ORDER_NOTIFICATION_EMAILS", default=[])
 
 # --- Journalisation ------------------------------------------------------
 LOGGING = {

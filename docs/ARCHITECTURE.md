@@ -553,3 +553,11 @@ Ordre choisi pour **vendre le plus tôt possible**. Durées non estimées tant q
 | 02/11/2026 | Témoignages : uniquement saisis par l'équipe, aucun exemple, section masquée si vide | Pas de faux avis | — | — |
 | 02/11/2026 | Newsletter : inscriptions enregistrées avec consentement ; aucun envoi d'e-mail par le site | Section réellement fonctionnelle sans outil d'e-mailing | Choisir l'outil d'envoi | [À définir] |
 | 02/11/2026 | Textes du thème sans `<` ni `>` (refus plutôt que nettoyage) | Aucun HTML possible, règle simple et testable | — | — |
+| 02/11/2026 | Phase 7 : 2FA TOTP (django-otp) obligatoire en production pour Propriétaire et Admin, 10 codes de secours | Un mot de passe volé ne suffit plus | Activer la 2FA dès la 1re connexion | Avant ouverture |
+| 02/11/2026 | IP client = `REMOTE_ADDR` ; `X-Forwarded-For` lu seulement selon `TRUSTED_PROXY_COUNT` | Limites anti-abus contournables avec un en-tête forgé (démontré) | — | — |
+| 02/11/2026 | Cache partagé MySQL (`DatabaseCache`) en production | Avec plusieurs processus, les limites étaient multipliées (démontré) | `createcachetable` au déploiement | — |
+| 02/11/2026 | Facture émise uniquement à la livraison, numéro continu `PRÉFIXE-AAAA-000001`, mentions du vendeur figées ; avant : « bon de commande » | Paiement à la livraison ; ne jamais renuméroter | Mentions légales à saisir | Avant ouverture |
+| 02/11/2026 | TVA affichée seulement si un taux est saisi ; total facturé = total payé (TTC) | Ne pas supposer de régime fiscal | Taux à confirmer par le comptable | Avant ouverture |
+| 02/11/2026 | Pages HTML servies par Django avec balises SEO par page (sans rendu React côté serveur) | Robots : titre, description, canonique, JSON-LD visibles sans JavaScript, sans réécrire le front | — | — |
+| 02/11/2026 | E-mails texte brut, journalisés, envoyés après validation ; rien ne part sans SMTP configuré | Aucun paramètre inventé ; une commande n'échoue jamais à cause de l'e-mail | Choisir le fournisseur SMTP | [À définir] |
+| 02/11/2026 | Bluehost mutualisé non recommandé ; VPS faisable (Python ≥ 3.11, root) | Django exige un processus Python permanent | Confirmer l'offre réelle | Avant déploiement |

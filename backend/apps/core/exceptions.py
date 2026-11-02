@@ -31,6 +31,8 @@ MESSAGES = {
     "csrf_failed": "Jeton CSRF manquant ou invalide. Rechargez la page.",
     "conflict": "Action impossible dans l'état actuel.",
     "server_error": "Erreur interne. Réessayez plus tard.",
+    "otp_required": "Saisissez le code de votre application d'authentification.",
+    "otp_setup_required": "La double authentification est obligatoire pour votre rôle : activez-la pour continuer.",
 }
 
 

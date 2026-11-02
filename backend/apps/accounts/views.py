@@ -22,6 +22,7 @@ from rest_framework.views import APIView
 from apps.audit.services import log_action
 from apps.core.exceptions import error_body
 
+from . import twofactor
 from .serializers import LoginSerializer, PasswordChangeSerializer, user_payload
 
 INVALID_CREDENTIALS = "E-mail ou mot de passe incorrect."
@@ -73,7 +74,14 @@ class LoginView(APIView):
 
         login(django_request, user)  # nouvelle clé de session + nouveau jeton CSRF
         log_action("auth.login", actor=user, target=user, request=request)
-        return Response({"user": user_payload(user), "csrfToken": get_token(django_request)})
+        # Mot de passe correct : si la 2FA est active, la session reste limitée jusqu'à la saisie du code.
+        return Response(
+            {
+                "user": user_payload(user),
+                "csrfToken": get_token(django_request),
+                "twoFactor": twofactor.payload(django_request),
+            }
+        )
 
 
 class LogoutView(APIView):
@@ -87,8 +95,10 @@ class LogoutView(APIView):
 
 
 class MeView(APIView):
+    allow_unverified = True  # le front doit savoir s'il faut demander le code
+
     def get(self, request):
-        return Response({"user": user_payload(request.user)})
+        return Response({"user": user_payload(request.user), "twoFactor": twofactor.payload(request._request)})
 
 
 class PasswordChangeView(APIView):

@@ -1,0 +1,10 @@
+# Tâches planifiées (crontab de l'utilisateur mpc) — exemple à adapter (chemins).
+ENV_FILE=/etc/mpc/production.env
+VENV=/srv/mpc/venv
+
+# Renvoi des e-mails en attente ou en échec (toutes les 10 minutes)
+*/10 * * * * /srv/mpc/app/scripts/ops/manage.sh send_pending_emails >> /var/log/mpc/emails.log 2>&1
+# Nettoyage des sessions expirées (chaque nuit)
+17 3 * * * /srv/mpc/app/scripts/ops/manage.sh clearsessions >> /var/log/mpc/maintenance.log 2>&1
+# Sauvegarde base + médias (chaque nuit, 30 jours conservés) — puis la COPIER HORS DU SERVEUR (voir docs/PRODUCTION.md)
+41 2 * * * MYSQL_CNF=/etc/mpc/backup.cnf DB_NAME=mapetitecoree MEDIA_ROOT=/srv/mpc/media BACKUP_DIR=/srv/mpc/backups RETENTION_DAYS=30 /srv/mpc/app/scripts/ops/backup.sh >> /var/log/mpc/backup.log 2>&1

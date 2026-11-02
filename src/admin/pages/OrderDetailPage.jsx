@@ -94,7 +94,7 @@ export default function OrderDetailPage() {
         subtitle={`Passée le ${formatDate(order.placedAt)} · ${order.itemCount} article${order.itemCount > 1 ? 's' : ''}`}
         actions={(
           <>
-            <ButtonLink href={adminUrl(`/orders/${order.id}/invoice`)} target="_blank" rel="noopener noreferrer" icon={FileText}>Facture</ButtonLink>
+            <ButtonLink href={adminUrl(`/orders/${order.id}/invoice`)} target="_blank" rel="noopener noreferrer" icon={FileText}>{order.invoiceNumber ? `Facture ${order.invoiceNumber}` : 'Bon de commande'}</ButtonLink>
             {wa && <ButtonLink href={wa} target="_blank" rel="noopener noreferrer" icon={MessageCircle}>WhatsApp</ButtonLink>}
           </>
         )}
