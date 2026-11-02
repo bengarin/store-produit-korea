@@ -4,18 +4,20 @@ import { useCatalog } from '../context/CatalogContext.jsx';
 import { ORDERS_ARE_SIMULATED } from '../services/orderService.js';
 import { formatPrice } from '../utils/currency.js';
 import { normalizeMoroccanPhone } from '../utils/phone.js';
+import { useI18n } from '../i18n/I18nContext.jsx';
+import { CITY_AR } from '../i18n/content.js';
 
 const EMPTY = { fullName: '', phone: '', city: '', otherCity: '', address: '' };
 
+/** Erreurs du formulaire : codes de message (traduits à l'affichage). */
 export function validate(values) {
   const errors = {};
-  if (values.fullName.trim().length < 3) errors.fullName = 'Veuillez saisir votre nom complet.';
-  if (!values.phone.trim()) errors.phone = 'Veuillez saisir votre numéro de téléphone.';
-  else if (!normalizeMoroccanPhone(values.phone))
-    errors.phone = 'Numéro marocain invalide (ex. 06 12 34 56 78 ou +212 6 12 34 56 78).';
-  if (!values.city) errors.city = 'Veuillez choisir votre ville.';
-  else if (values.city === 'autre' && values.otherCity.trim().length < 2) errors.otherCity = 'Veuillez préciser votre ville.';
-  if (values.address.trim().length < 8) errors.address = 'Veuillez saisir une adresse complète (rue, numéro, quartier).';
+  if (values.fullName.trim().length < 3) errors.fullName = 'form.errName';
+  if (!values.phone.trim()) errors.phone = 'form.errPhoneEmpty';
+  else if (!normalizeMoroccanPhone(values.phone)) errors.phone = 'form.errPhone';
+  if (!values.city) errors.city = 'form.errCity';
+  else if (values.city === 'autre' && values.otherCity.trim().length < 2) errors.otherCity = 'form.errOtherCity';
+  if (values.address.trim().length < 8) errors.address = 'form.errAddress';
   return errors;
 }
 
@@ -35,6 +37,8 @@ function Field({ id, label, error, children }) {
 
 export default function CheckoutForm({ deliveryFee, submitting, onSubmit, alert = null, children }) {
   const { config } = useCatalog();
+  const { t, lang } = useI18n();
+  const cityLabel = (c) => (lang === 'ar' ? CITY_AR[c] || c : c);
   const allowOtherCity = config.allowOtherCity !== false;
   const [values, setValues] = useState(EMPTY);
   const [honeypot, setHoneypot] = useState('');
@@ -54,7 +58,7 @@ export default function CheckoutForm({ deliveryFee, submitting, onSubmit, alert 
     'aria-invalid': Boolean(errors[field] && touched[field]),
     'aria-describedby': errors[field] && touched[field] ? `${field}-error` : undefined,
   });
-  const err = (field) => (touched[field] ? errors[field] : undefined);
+  const err = (field) => (touched[field] && errors[field] ? t(errors[field]) : undefined);
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -80,53 +84,53 @@ export default function CheckoutForm({ deliveryFee, submitting, onSubmit, alert 
   return (
     <form className="checkout-form" onSubmit={handleSubmit} noValidate>
       <section className="checkout-section">
-        <h2>Informations de livraison</h2>
-        <Field id="fullName" label="Nom complet" error={err('fullName')}>
-          <input id="fullName" autoComplete="name" placeholder="Votre nom complet" value={values.fullName}
+        <h2>{t('form.shipping')}</h2>
+        <Field id="fullName" label={t('form.name')} error={err('fullName')}>
+          <input id="fullName" autoComplete="name" placeholder={t('form.namePh')} value={values.fullName}
             onChange={update('fullName')} onBlur={blur('fullName')} {...a11y('fullName')} />
         </Field>
-        <Field id="phone" label="Téléphone" error={err('phone')}>
+        <Field id="phone" label={t('form.phone')} error={err('phone')}>
           <input id="phone" type="tel" inputMode="tel" autoComplete="tel" placeholder="06 XX XX XX XX" value={values.phone}
             onChange={update('phone')} onBlur={blur('phone')} {...a11y('phone')} />
         </Field>
-        <Field id="city" label="Ville" error={err('city')}>
+        <Field id="city" label={t('form.city')} error={err('city')}>
           <select id="city" value={values.city} onChange={update('city')} onBlur={blur('city')} {...a11y('city')}>
-            <option value="" disabled>Choisir votre ville</option>
-            {config.cities.map((c) => <option key={c} value={c}>{c}</option>)}
-            {allowOtherCity && <option value="autre">Autre ville…</option>}
+            <option value="" disabled>{t('form.cityPh')}</option>
+            {config.cities.map((c) => <option key={c} value={c}>{cityLabel(c)}</option>)}
+            {allowOtherCity && <option value="autre">{t('form.otherCityOption')}</option>}
           </select>
         </Field>
         {values.city === 'autre' && (
-          <Field id="otherCity" label="Votre ville" error={err('otherCity')}>
-            <input id="otherCity" placeholder="Nom de votre ville" value={values.otherCity}
+          <Field id="otherCity" label={t('form.otherCity')} error={err('otherCity')}>
+            <input id="otherCity" placeholder={t('form.otherCityPh')} value={values.otherCity}
               onChange={update('otherCity')} onBlur={blur('otherCity')} {...a11y('otherCity')} />
           </Field>
         )}
-        <Field id="address" label="Adresse complète" error={err('address')}>
-          <input id="address" autoComplete="street-address" placeholder="Ex : Rue, numéro, quartier…" value={values.address}
+        <Field id="address" label={t('form.address')} error={err('address')}>
+          <input id="address" autoComplete="street-address" placeholder={t('form.addressPh')} value={values.address}
             onChange={update('address')} onBlur={blur('address')} {...a11y('address')} />
         </Field>
       </section>
 
       <section className="checkout-section">
-        <h2>Mode de livraison</h2>
+        <h2>{t('form.deliveryMode')}</h2>
         <div className="option-card is-selected">
           <Truck size={24} strokeWidth={1.5} />
           <div>
-            <strong>Livraison à domicile</strong>
-            <span>Partout au Maroc</span>
+            <strong>{t('form.home')}</strong>
+            <span>{t('form.everywhere')}</span>
           </div>
-          <span className="option-card__price">{deliveryFee === 0 ? 'Offerte' : formatPrice(deliveryFee)}</span>
+          <span className="option-card__price">{deliveryFee === 0 ? t('form.free') : formatPrice(deliveryFee)}</span>
         </div>
       </section>
 
       <section className="checkout-section">
-        <h2>Mode de paiement</h2>
+        <h2>{t('form.paymentMode')}</h2>
         <div className="option-card is-selected">
           <HandCoins size={24} strokeWidth={1.5} />
           <div>
-            <strong>Paiement à la livraison (COD)</strong>
-            <span>Vous payez en espèces en recevant votre commande</span>
+            <strong>{t('form.cod')}</strong>
+            <span>{t('form.codText')}</span>
           </div>
         </div>
       </section>
@@ -136,7 +140,7 @@ export default function CheckoutForm({ deliveryFee, submitting, onSubmit, alert 
       {/* Champ piège anti-robots (mode API) : invisible et ignoré par les humains et les lecteurs d'écran. */}
       {!ORDERS_ARE_SIMULATED && (
         <div className="hp-field" aria-hidden="true">
-          <label htmlFor="website">Ne pas remplir</label>
+          <label htmlFor="website">{t('common.honeypot')}</label>
           <input id="website" name="website" tabIndex={-1} autoComplete="off" value={honeypot}
             onChange={(e) => setHoneypot(e.target.value)} />
         </div>
@@ -146,13 +150,13 @@ export default function CheckoutForm({ deliveryFee, submitting, onSubmit, alert 
 
       <div className="sticky-actions">
         <button type="submit" className="btn btn--primary btn--lg btn--block" disabled={submitting} aria-busy={submitting}>
-          {submitting ? (<><Loader2 size={18} className="spin" /> Envoi en cours…</>) : 'Confirmer la commande'}
+          {submitting ? (<><Loader2 size={18} className="spin" /> {t('form.sending')}</>) : t('form.submit')}
         </button>
         <p className="secure-note">
           <Lock size={13} />{' '}
           {ORDERS_ARE_SIMULATED
-            ? 'Démo : aucune donnée n’est envoyée, tout reste dans votre navigateur.'
-            : 'Vos informations servent uniquement à préparer et livrer votre commande.'}
+            ? t('form.demoNote')
+            : t('form.privacyNote')}
         </p>
       </div>
     </form>

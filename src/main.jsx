@@ -4,6 +4,7 @@ import { BrowserRouter } from 'react-router-dom';
 import App from './App.jsx';
 import { ToastProvider } from './context/ToastContext.jsx';
 import './styles/global.css';
+import './styles/rtl.css';
 
 createRoot(document.getElementById('root')).render(
   <StrictMode>

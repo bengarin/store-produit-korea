@@ -6,6 +6,8 @@ import { CatalogProvider, useCatalog } from './context/CatalogContext.jsx';
 import { CartProvider } from './context/CartContext.jsx';
 import { ThemeProvider, useTheme } from './theme/ThemeContext.jsx';
 import ThemePreviewBridge from './theme/ThemePreviewBridge.jsx';
+import { I18nProvider, useI18n } from './i18n/I18nContext.jsx';
+import MetaPixelTracker from './analytics/MetaPixelTracker.jsx';
 
 const ProductsPage = lazy(() => import('./pages/ProductsPage.jsx'));
 const ProductPage = lazy(() => import('./pages/ProductPage.jsx'));
@@ -16,10 +18,11 @@ const ConfirmationPage = lazy(() => import('./pages/ConfirmationPage.jsx'));
 const AdminApp = lazy(() => import('./admin/AdminApp.jsx'));
 
 function NotFound() {
+  const { t } = useI18n();
   return (
     <main className="container empty-state">
-      <h1>Page introuvable</h1>
-      <Link className="btn btn--primary" to="/">Retour à l’accueil</Link>
+      <h1>{t('notFound.title')}</h1>
+      <Link className="btn btn--primary" to="/">{t('notFound.back')}</Link>
     </main>
   );
 }
@@ -28,38 +31,43 @@ function NotFound() {
 function CatalogGate({ children }) {
   const { status, retry } = useCatalog();
   const theme = useTheme();
+  const { t } = useI18n();
   if (status === 'ready' && theme.status === 'ready') return children;
   if (status === 'error') {
     return (
       <main className="container empty-state" role="alert">
-        <h1>Boutique momentanément indisponible</h1>
-        <p>Le catalogue n’a pas pu être chargé. Vérifiez votre connexion puis réessayez.</p>
-        <button type="button" className="btn btn--primary" onClick={retry}>Réessayer</button>
+        <h1>{t('catalog.errorTitle')}</h1>
+        <p>{t('catalog.errorText')}</p>
+        <button type="button" className="btn btn--primary" onClick={retry}>{t('common.retry')}</button>
       </main>
     );
   }
-  return <div className="page-loading" aria-label="Chargement du catalogue" />;
+  return <div className="page-loading" aria-label={t('common.loadingCatalog')} />;
 }
 
 /** Boutique publique. Catalogue et panier ne sont chargés qu'ici (jamais dans l'administration). */
 function Storefront() {
   return (
-    <CatalogProvider>
-      <ThemeProvider>
-        <CartProvider>
-          <StorefrontRoutes />
-          <ThemePreviewBridge />
-        </CartProvider>
-      </ThemeProvider>
-    </CatalogProvider>
+    <I18nProvider>
+      <CatalogProvider>
+        <ThemeProvider>
+          <CartProvider>
+            <StorefrontRoutes />
+            <ThemePreviewBridge />
+            <MetaPixelTracker />
+          </CartProvider>
+        </ThemeProvider>
+      </CatalogProvider>
+    </I18nProvider>
   );
 }
 
 function StorefrontRoutes() {
+  const { t } = useI18n();
   return (
     <div className="app">
       <CatalogGate>
-      <Suspense fallback={<div className="page-loading" aria-label="Chargement" />}>
+      <Suspense fallback={<div className="page-loading" aria-label={t('common.loading')} />}>
         <Routes>
           <Route path="/" element={<HomePage />} />
           <Route path="/produits" element={<ProductsPage />} />

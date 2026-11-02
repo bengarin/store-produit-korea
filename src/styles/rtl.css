@@ -1,0 +1,114 @@
+/*
+ * Arabe : sens de lecture de droite à gauche (RTL) et typographie arabe.
+ * Toutes les règles sont limitées à html[dir="rtl"] / html[lang="ar"] : l'affichage en français ne change pas.
+ * Les visuels dont le texte est posé sur une zone précise de la photo (bannière principale, bannière promo)
+ * gardent leur position : seule la direction du texte change (la composition dépend de l'image).
+ */
+
+/* --- Typographie : polices arabes (les polices de la marque gardent les mots latins : marques, produits) --- */
+html[lang="ar"] {
+  --font-serif: 'Cormorant Garamond', 'Noto Kufi Arabic', 'Segoe UI', Tahoma, sans-serif;
+  --font-sans: 'DM Sans', 'Noto Sans Arabic', 'Segoe UI', Tahoma, system-ui, sans-serif;
+}
+/* L'espacement entre lettres et les majuscules cassent la liaison des lettres arabes. */
+html[lang="ar"] body * { letter-spacing: 0 !important; }
+html[lang="ar"] .eyebrow, html[lang="ar"] .ingredients__eyebrow, html[lang="ar"] .beauty-banner__eyebrow, html[lang="ar"] .pdp__cat { text-transform: none; font-size: 13px; }
+/* Titres : interligne plus généreux (signes au-dessus et au-dessous des lettres), taille un peu réduite. */
+html[lang="ar"] :is(.hero h1, .section-title, .ingredients__title, .beauty-banner__title, .iwt__title, .pdp__title, .confirmation__title, .ritual-card__title, .ingredient__name, .empty-state h1, .empty-state h2, .newsletter__title) {
+  line-height: 1.45;
+  font-weight: 700;
+}
+html[lang="ar"] :is(.section-title, .ingredients__title) { font-size: calc(clamp(30px, 8.4vw, 46px) * var(--heading-scale, 1)); }
+html[lang="ar"] .hero h1 { font-size: calc(clamp(28px, 8vw, 36px) * var(--heading-scale, 1)); }
+html[lang="ar"] .beauty-banner__title { font-size: calc(clamp(28px, 8vw, 38px) * var(--heading-scale, 1)); }
+html[lang="ar"] :is(.pdp__title, .confirmation__title) { font-size: calc(clamp(26px, 7vw, 32px) * var(--heading-scale, 1)); }
+html[lang="ar"] .ingredient__name { font-size: clamp(22px, 6vw, 28px); }
+html[lang="ar"] .ritual-card__title { font-size: 21px; }
+
+/* --- Icônes directionnelles : flèches et chevrons inversés --- */
+[dir="rtl"] :is(.lucide-arrow-right, .lucide-arrow-left, .lucide-chevron-right, .lucide-chevron-left) { transform: scaleX(-1); }
+[dir="rtl"] .text-arrow:hover svg { transform: scaleX(-1) translateX(3px); }
+[dir="rtl"] .ritual-card__more:hover { transform: translateX(-2px); }
+[dir="rtl"] .beauty-banner__btn:hover svg { transform: scaleX(-1) translateX(3px); }
+@media (hover: hover) {
+  [dir="rtl"] .ingredient__link:hover svg { transform: scaleX(-1) translateX(4px); }
+}
+
+/* --- En-tête et menu --- */
+[dir="rtl"] .cart-btn__badge { right: auto; left: 1px; }
+[dir="rtl"] .drawer__panel { inset: 0 0 0 auto; animation-name: slide-in-rtl; }
+@keyframes slide-in-rtl { from { transform: translateX(100%); } }
+[dir="rtl"] .drawer__sub a { padding-left: var(--s-3); padding-right: 44px; }
+[dir="rtl"] .site-nav a.active::after { left: 0; right: 0; }
+
+/* --- Catalogue, cartes, carrousel --- */
+[dir="rtl"] .section-head .chips > :first-child { margin-left: 0; margin-right: auto; }
+[dir="rtl"] .section-head .chips > :last-child { margin-right: 0; margin-left: auto; }
+[dir="rtl"] .fav-btn { right: auto; left: 10px; }
+[dir="rtl"] .product-card__badge { left: auto; right: 12px; }
+[dir="rtl"] :is(.pdp__compare, .product-card__compare, .product-card__stock) { margin-left: 0; margin-right: 10px; }
+
+/* --- Fiche produit --- */
+[dir="rtl"] .gallery__arrow--prev { left: auto; right: 10px; }
+[dir="rtl"] .gallery__arrow--next { right: auto; left: 10px; }
+[dir="rtl"] .pdp__badge { left: auto; right: 12px; }
+[dir="rtl"] .pdp__fav { right: auto; left: 10px; }
+[dir="rtl"] .accordion__trigger { text-align: right; }
+[dir="rtl"] .pdp-list { padding-left: 0; padding-right: 20px; }
+[dir="rtl"] :is(.pdp-desc__rich ul, .pdp-desc__rich ol) { padding-left: 0; padding-right: 1.3em; }
+[dir="rtl"] .pdp-desc__rich blockquote { padding-left: 0; padding-right: var(--s-3); border-left: 0; border-right: 2px solid var(--sage); }
+
+/* --- Panier, commande, confirmation --- */
+[dir="rtl"] .cart-item__price { margin-right: 0; margin-left: auto; }
+[dir="rtl"] select { background-position: left 14px center; padding-right: 14px; padding-left: 40px; }
+[dir="rtl"] :is(.order-card, .config-hint, .checkout-alert, .newsletter__form) { text-align: right; }
+[dir="rtl"] .order-card dd { text-align: left; }
+[dir="rtl"] .checkout-alert ul { padding-left: 0; padding-right: 1.2em; }
+/* Téléphone et numéro de commande : toujours de gauche à droite. */
+[dir="rtl"] :is(#phone, .order-card__number strong) { direction: ltr; text-align: right; }
+[dir="rtl"] #phone::placeholder { direction: ltr; }
+
+@media (min-width: 700px) {
+  [dir="rtl"] .section-head--split { text-align: right; }
+}
+@media (min-width: 1000px) {
+  [dir="rtl"] .ritual-card__arrow { right: auto; left: -26px; }
+  [dir="rtl"] .carousel__arrow--prev { left: auto; right: -23px; }
+  [dir="rtl"] .carousel__arrow--next { right: auto; left: -23px; }
+}
+@media (min-width: 860px) {
+  [dir="rtl"] .gallery__arrow--prev { left: auto; right: 16px; }
+  [dir="rtl"] .gallery__arrow--next { right: auto; left: 16px; }
+  [dir="rtl"] .pdp__badge { left: auto; right: 18px; }
+  [dir="rtl"] .pdp__fav { right: auto; left: 16px; }
+}
+
+/* --- Sélecteur de langue --- */
+.lang-switch { display: inline-flex; align-items: center; justify-content: center; min-height: 40px; padding: 0 10px; border-radius: var(--r-pill); color: var(--green-deep); font-size: 14px; font-weight: 600; white-space: nowrap; transition: background 0.2s; }
+.lang-switch:hover { background: var(--surface-2); }
+.lang-switch:focus-visible { outline: 2px solid var(--sage); outline-offset: 2px; }
+.lang-switch[lang="ar"] { font-family: 'Noto Sans Arabic', 'Segoe UI', Tahoma, sans-serif; font-size: 15px; }
+.lang-switch--full { gap: 8px; padding: 0; color: var(--text-2); }
+.lang-switch__option { min-height: 40px; padding: 0 14px; border: 1px solid var(--border); border-radius: var(--r-pill); font-weight: 600; color: var(--text-2); }
+.lang-switch__option.is-active { background: var(--green-deep); border-color: var(--green-deep); color: #fff; }
+.drawer__lang { margin-top: auto; }
+.drawer__lang + .drawer__note { margin-top: 0; }
+
+/* --- Bandeau de consentement (cookies publicitaires) --- */
+.consent { position: fixed; inset-inline: 12px; bottom: calc(12px + env(safe-area-inset-bottom)); z-index: 90; display: grid; gap: 12px; max-width: 560px; margin-inline: auto; padding: 16px 18px; background: var(--surface); border: 1px solid var(--border); border-radius: var(--r-lg); box-shadow: var(--shadow-lg); font-size: 14px; color: var(--text); }
+.consent__title { font-weight: 700; color: var(--green-deep); }
+.consent__actions { display: flex; flex-wrap: wrap; gap: 10px; justify-content: flex-end; }
+.consent__actions .btn { min-height: 42px; }
+.site-footer__consent { margin-top: 6px; font-size: 13px; color: var(--muted); text-decoration: underline; text-underline-offset: 3px; }
+
+/* Champ piège anti-robots : hors écran du côté NON défilable (en RTL, le côté gauche défile). */
+[dir="rtl"] .hp-field { left: auto; right: -10000px; }
+
+/* Bandeau de consentement au-dessus des barres d'achat fixées en bas (mobile) : il ne cache jamais
+   « Ajouter au panier » ni « Confirmer la commande ». */
+@media (max-width: 859px) {
+  body:has(.pdp__buy) .consent { bottom: calc(141px + env(safe-area-inset-bottom)); }
+}
+@media (max-width: 699px) {
+  body:has(.sticky-actions) .consent { bottom: calc(133px + env(safe-area-inset-bottom)); }
+}

@@ -6,6 +6,8 @@ import MenuDrawer from './MenuDrawer.jsx';
 import AnnouncementBar from './AnnouncementBar.jsx';
 import { useCart } from '../context/CartContext.jsx';
 import { useTheme } from '../theme/ThemeContext.jsx';
+import { useI18n } from '../i18n/I18nContext.jsx';
+import LanguageSwitcher from './LanguageSwitcher.jsx';
 
 /**
  * Lien actif : même chemin (ou sous-page) et mêmes paramètres ; « / » seulement exact. Un lien sans paramètre n'est pas actif
@@ -26,6 +28,7 @@ function activeLink(links, pathname, search) {
 export default function Header() {
   const { count } = useCart();
   const { theme } = useTheme();
+  const { t, tc } = useI18n();
   const [menuOpen, setMenuOpen] = useState(false);
   const { pathname, search } = useLocation();
   const links = theme.header.items;
@@ -36,16 +39,19 @@ export default function Header() {
       <AnnouncementBar />
       <header className="site-header">
         <div className="site-header__inner container">
-          <button className="icon-btn site-header__menu" onClick={() => setMenuOpen(true)} aria-label="Ouvrir le menu" aria-expanded={menuOpen}>
+          <button className="icon-btn site-header__menu" onClick={() => setMenuOpen(true)} aria-label={t('header.openMenu')} aria-expanded={menuOpen}>
             <Menu size={22} strokeWidth={1.6} />
           </button>
           <Logo />
-          <nav className="site-nav" aria-label="Navigation principale">
+          <nav className="site-nav" aria-label={t('header.mainNav')}>
             {links.map(({ label, link }, i) => (
-              <Link key={`${i}-${link}`} to={link} aria-current={link === active ? 'page' : undefined} className={link === active ? 'active' : ''}>{label}</Link>
+              <Link key={`${i}-${link}`} to={link} aria-current={link === active ? 'page' : undefined} className={link === active ? 'active' : ''}>{tc(label)}</Link>
             ))}
           </nav>
-          <CartButton count={count} />
+          <div className="site-header__actions">
+            <LanguageSwitcher />
+            <CartButton count={count} />
+          </div>
         </div>
       </header>
       {/* Rendu hors du <header> : son flou d'arrière-plan enfermait le menu. */}
@@ -58,6 +64,7 @@ export function CartButton({ count }) {
   // Petit rebond de l'icône à chaque ajout (le compteur augmente).
   const prev = useRef(count);
   const [bump, setBump] = useState(false);
+  const { t } = useI18n();
   useEffect(() => {
     if (count > prev.current) {
       setBump(true);
@@ -70,7 +77,7 @@ export function CartButton({ count }) {
   }, [count]);
 
   return (
-    <Link to="/panier" className={`icon-btn cart-btn ${bump ? 'is-bumping' : ''}`} aria-label={`Mon panier, ${count} article${count > 1 ? 's' : ''}`}>
+    <Link to="/panier" className={`icon-btn cart-btn ${bump ? 'is-bumping' : ''}`} aria-label={t('header.cartAria', { count })}>
       <ShoppingCart size={22} strokeWidth={1.6} />
       {count > 0 && <span key={count} className="cart-btn__badge">{count > 99 ? '99+' : count}</span>}
     </Link>

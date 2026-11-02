@@ -1,6 +1,6 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import useMediaQuery from '../hooks/useMediaQuery.js';
-import { useNavigate, useParams, Link } from 'react-router-dom';
+import { useLocation, useNavigate, useParams, Link } from 'react-router-dom';
 import ProductView from '../components/ProductView.jsx';
 import Header from '../components/Header.jsx';
 import SiteFooter from '../components/SiteFooter.jsx';
@@ -9,7 +9,12 @@ import { STORE_CONFIG } from '../config/store.js';
 import { useCart } from '../context/CartContext.jsx';
 import { useToast } from '../context/ToastContext.jsx';
 import { saveDirectOrder } from '../services/orderService.js';
-import { variantLabel } from '../utils/variants.js';
+import { defaultVariant, unitPrice, variantLabel } from '../utils/variants.js';
+import { productParams, track } from '../analytics/metaPixel.js';
+
+// Fiche déjà comptée pour cette navigation (le double appel des effets en mode strict ne la recompte pas).
+let lastViewKey = null;
+import { useI18n } from '../i18n/I18nContext.jsx';
 
 export default function ProductPage() {
   const { id } = useParams();
@@ -20,15 +25,26 @@ export default function ProductPage() {
   const showToast = useToast();
   const [qty, setQty] = useState(1);
   const desktop = useMediaQuery('(min-width: 860px)');
+  const { t } = useI18n();
+  const { key: locationKey } = useLocation();
+
+  // ViewContent : une fois par consultation de fiche (prix réel de la variante affichée par défaut).
+  useEffect(() => {
+    if (!product) return;
+    const viewKey = `${locationKey}|${product.id}`;
+    if (viewKey === lastViewKey) return;
+    lastViewKey = viewKey;
+    track('ViewContent', productParams(product, unitPrice(product, defaultVariant(product))));
+  }, [product, locationKey]);
 
   if (!product) {
     return (
       <>
         <Header />
         <main className="container empty-state">
-          <h1>Produit introuvable</h1>
-          <p>Ce produit n’existe pas ou n’est plus disponible.</p>
-          <Link className="btn btn--primary" to="/produits">Voir nos produits</Link>
+          <h1>{t('pdp.notFoundTitle')}</h1>
+          <p>{t('pdp.notFoundText')}</p>
+          <Link className="btn btn--primary" to="/produits">{t('pdp.seeProducts')}</Link>
         </main>
       </>
     );
@@ -41,7 +57,7 @@ export default function ProductPage() {
   const handleAdd = (variant) => {
     addItem(product.id, qty, variant?.id);
     const label = variantLabel(product, variant);
-    showToast(`${qty} × ${product.displayName}${label ? ` (${label})` : ''} ajouté${qty > 1 ? 's' : ''} au panier`);
+    showToast(t('toast.addedQty', { qty, name: `${product.displayName}${label ? ` (${label})` : ''}` }));
   };
   const handleBuyNow = (variant) => {
     // Achat direct : n'utilise PAS le panier.

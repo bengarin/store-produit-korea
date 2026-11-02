@@ -3,12 +3,16 @@ import { ArrowRight } from 'lucide-react';
 import Reveal from './Reveal.jsx';
 import { INGREDIENTS } from '../data/ingredients.js';
 import { useCatalog } from '../context/CatalogContext.jsx';
+import { useI18n } from '../i18n/I18nContext.jsx';
 import bg from '../assets/backgrounds/ingredients-bg.webp';
 import bg960 from '../assets/backgrounds/ingredients-bg-960.webp';
 
 function Ingredient({ ingredient, index }) {
   const { getProductById } = useCatalog();
-  const { id, name, tagline, image } = ingredient;
+  const { t, tc } = useI18n();
+  const { id, image } = ingredient;
+  const name = tc(ingredient.name);
+  const tagline = tc(ingredient.tagline);
   // Seuls les produits présents dans le catalogue comptent.
   const productIds = ingredient.productIds.filter((pid) => getProductById(pid));
   return (
@@ -20,7 +24,7 @@ function Ingredient({ ingredient, index }) {
           sizes="(min-width: 1000px) 300px, 46vw"
           width="640"
           height="427"
-          alt={image.alt}
+          alt={tc(image.alt)}
           loading="lazy"
           decoding="async"
           style={{ objectPosition: `${image.focus} 50%` }}
@@ -30,18 +34,19 @@ function Ingredient({ ingredient, index }) {
       <h3 className="ingredient__name">{name}</h3>
       <p className="ingredient__tag">{tagline}</p>
       {productIds.length ? (
-        <Link to={`/produits?ingredient=${id}`} className="ingredient__link" aria-label={`Découvrir les soins ${name}`}>
-          <span>Découvrir les soins</span> <ArrowRight size={16} aria-hidden="true" />
+        <Link to={`/produits?ingredient=${id}`} className="ingredient__link" aria-label={t('ingredients.discoverNamed', { name })}>
+          <span>{t('ingredients.discover')}</span> <ArrowRight size={16} aria-hidden="true" />
         </Link>
       ) : (
-        <span className="ingredient__link is-disabled">Soins bientôt disponibles</span>
+        <span className="ingredient__link is-disabled">{t('ingredients.soon')}</span>
       )}
     </Reveal>
   );
 }
 
 export default function IngredientsSection({ section }) {
-  const { eyebrow, heading, intro } = section.settings;
+  const { tc } = useI18n();
+  const [eyebrow, heading, intro] = ['eyebrow', 'heading', 'intro'].map((k) => tc(section.settings[k]));
   const titleId = `${section.id}-title`;
   return (
     <section

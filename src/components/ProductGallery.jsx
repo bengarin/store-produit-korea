@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import ProductImage from './ProductImage.jsx';
+import { useI18n } from '../i18n/I18nContext.jsx';
 
 /**
  * Galerie produit : grande image (flèches, zoom discret au survol), vignettes cliquables.
@@ -18,6 +19,7 @@ export default function ProductGallery({ product, badge = null, actions = null, 
     setActive(focusImage ? Math.max(inGallery, 0) : 0);
   }
   const [origin, setOrigin] = useState('50% 50%');
+  const { t } = useI18n();
   const go = (d) => setActive((i) => (i + d + images.length) % images.length);
 
   const onMove = (e) => {
@@ -33,19 +35,19 @@ export default function ProductGallery({ product, badge = null, actions = null, 
         {actions}
         {images.length > 1 && (
           <>
-            <button className="gallery__arrow gallery__arrow--prev" onClick={() => go(-1)} aria-label="Photo précédente"><ChevronLeft size={20} /></button>
-            <button className="gallery__arrow gallery__arrow--next" onClick={() => go(1)} aria-label="Photo suivante"><ChevronRight size={20} /></button>
+            <button className="gallery__arrow gallery__arrow--prev" onClick={() => go(-1)} aria-label={t('gallery.prev')}><ChevronLeft size={20} /></button>
+            <button className="gallery__arrow gallery__arrow--next" onClick={() => go(1)} aria-label={t('gallery.next')}><ChevronRight size={20} /></button>
           </>
         )}
       </div>
       {images.length > 1 && (
-        <div className="gallery__thumbs" role="tablist" aria-label="Photos du produit">
+        <div className="gallery__thumbs" role="tablist" aria-label={t('gallery.thumbs')}>
           {images.map((image, i) => (
             <button
               key={image.src}
               role="tab"
               aria-selected={i === active}
-              aria-label={`Photo ${i + 1} : ${image.alt}`}
+              aria-label={t('gallery.thumb', { index: i + 1, alt: image.alt })}
               className={`gallery__thumb ${i === active ? 'is-active' : ''}`}
               onClick={() => setActive(i)}
             >

@@ -1,19 +1,21 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 import { useCatalog } from './CatalogContext.jsx';
 import { MAX_QTY, clampQty, loadCart, saveCart, loadPromo, savePromo, toItem } from '../services/cartService.js';
-import { findVariant, lineKey } from '../utils/variants.js';
+import { findVariant, lineKey, unitPrice } from '../utils/variants.js';
+import { productParams, track } from '../analytics/metaPixel.js';
 import { loadFavorites, saveFavorites } from '../services/favoritesService.js';
 import { resolveLocalPromo } from '../utils/pricing.js';
 import { DATA_SOURCE } from '../config/env.js';
 import { validatePromo } from '../services/orderService.js';
+import { useI18n } from '../i18n/I18nContext.jsx';
 
 const isLocal = DATA_SOURCE === 'local';
-const INVALID_PROMO = 'Ce code promo n’est pas valide.';
 
 const CartContext = createContext(null);
 
 export function CartProvider({ children }) {
   const { status, getProductById, config } = useCatalog();
+  const { t, lang } = useI18n();
   const [items, setItems] = useState(loadCart);
   const [promo, setPromo] = useState(() => {
     const saved = loadPromo();
@@ -48,14 +50,23 @@ export function CartProvider({ children }) {
       if (existing) return prev.map((i) => (lineKey(i) === key ? { ...i, qty: clampQty(i.qty + qty) } : i));
       return [...prev, item];
     });
-  }, []);
+    // Pixel Meta (hors du calcul d'état : jamais compté deux fois) — prix réel du catalogue.
+    const product = getProductById(id);
+    if (product) track('AddToCart', productParams(product, unitPrice(product, findVariant(product, item.variantId) || null), item.qty));
+  }, [getProductById]);
 
   /** `key` = lineKey(ligne) — l'identifiant du produit pour une ligne sans variante. */
   const setQty = useCallback((key, qty) => {
     setItems((prev) => prev.map((i) => (lineKey(i) === key ? { ...i, qty: clampQty(qty) } : i)));
   }, []);
 
-  const removeItem = useCallback((key) => setItems((prev) => prev.filter((i) => lineKey(i) !== key)), []);
+  const removeItem = useCallback((key) => {
+    const line = items.find((i) => lineKey(i) === key);
+    setItems((prev) => prev.filter((i) => lineKey(i) !== key));
+    const product = line && getProductById(line.id);
+    // « RemoveFromCart » n'est pas un événement standard Meta : envoyé en événement personnalisé.
+    if (product) track('RemoveFromCart', productParams(product, unitPrice(product, findVariant(product, line.variantId) || null), line.qty));
+  }, [items, getProductById]);
 
   const clearCart = useCallback(() => {
     setItems([]);
@@ -70,27 +81,31 @@ export function CartProvider({ children }) {
     async (code) => {
       if (isLocal) {
         const local = resolveLocalPromo(code, config);
-        if (!local) return { ok: false, message: INVALID_PROMO };
+        if (!local) return { ok: false, message: t('cart.promoInvalid') };
         setPromo(local);
         return { ok: true };
       }
       try {
         const result = await validatePromo(code.trim(), items);
-        if (!result.ok) return { ok: false, message: result.message || INVALID_PROMO };
+        // Message précis du serveur (en français) ; en arabe, message traduit.
+        if (!result.ok) return { ok: false, message: (lang === 'fr' && result.message) || t('cart.promoInvalid') };
         setPromo(result.promo);
         return { ok: true };
       } catch {
-        return { ok: false, message: 'Vérification du code impossible. Réessayez.' };
+        return { ok: false, message: t('cart.promoCheckFailed') };
       }
     },
-    [config, items],
+    [config, items, t, lang],
   );
 
   const removePromo = useCallback(() => setPromo(null), []);
 
   const toggleFavorite = useCallback((id) => {
+    const adding = !favorites.includes(id);
     setFavorites((prev) => (prev.includes(id) ? prev.filter((f) => f !== id) : [...prev, id]));
-  }, []);
+    const product = adding && getProductById(id);
+    if (product) track('AddToWishlist', productParams(product, product.price));
+  }, [favorites, getProductById]);
 
   const value = useMemo(
     () => ({

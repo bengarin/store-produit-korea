@@ -146,3 +146,11 @@ def test_variante_par_defaut_et_sku(client, sellable):
     p = sellable(slug="avec-sku", stock=5)
     Variant.objects.filter(product=p).update(sku="MPC-001")
     assert ld(client.get("/produits/avec-sku").content.decode())[0]["sku"] == "MPC-001"
+
+
+def test_csp_autorise_seulement_le_pixel_meta_sans_script_en_ligne(client):
+    header = client.get("/panier")["Content-Security-Policy"]
+    csp = dict(part.strip().split(" ", 1) for part in header.split(";") if part.strip())
+    assert csp["script-src"] == "'self' https://connect.facebook.net"  # aucun 'unsafe-inline' ni autre domaine
+    assert "https://www.facebook.com" in csp["connect-src"] and "https://www.facebook.com" in csp["img-src"]
+    assert csp["object-src"] == "'none'" and csp["frame-ancestors"] == "'self'"

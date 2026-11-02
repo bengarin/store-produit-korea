@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom';
 import { STORE_CONFIG } from '../config/store.js';
+import { useI18n } from '../i18n/I18nContext.jsx';
 import logoFull from '../assets/brand/logo-full.webp';
 import logoCompact from '../assets/brand/logo-compact.webp';
 
@@ -10,6 +11,7 @@ import logoCompact from '../assets/brand/logo-compact.webp';
  */
 export default function Logo({ variant = 'compact', link = true, className = '' }) {
   const full = variant === 'full';
+  const { t } = useI18n();
   const img = (
     <img
       className="logo__img"
@@ -22,7 +24,7 @@ export default function Logo({ variant = 'compact', link = true, className = '' 
   );
   if (!link) return <span className={`logo logo--${variant} ${className}`}>{img}</span>;
   return (
-    <Link to="/" className={`logo logo--${variant} ${className}`} aria-label={`${STORE_CONFIG.brandName} — accueil`}>
+    <Link to="/" className={`logo logo--${variant} ${className}`} aria-label={t('logo.home', { brand: STORE_CONFIG.brandName })}>
       {img}
     </Link>
   );

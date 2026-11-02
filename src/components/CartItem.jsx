@@ -4,11 +4,12 @@ import { Trash2 } from 'lucide-react';
 import ProductImage from './ProductImage.jsx';
 import QuantitySelector from './QuantitySelector.jsx';
 import { formatPrice } from '../utils/currency.js';
-import { STATUS_LABELS } from '../utils/variants.js';
+import { useI18n } from '../i18n/I18nContext.jsx';
 
 /** `line` = ligne résolue (utils/pricing.js → resolveLines) : produit, variante, prix, libellé, disponibilité. */
 function CartItem({ line, maxQty, onQtyChange, onRemove }) {
   const { product, variant, qty, price, label, status, key } = line;
+  const { t } = useI18n();
   const name = label ? `${product.displayName} (${label})` : product.displayName;
   return (
     <li className={status === 'available' ? 'cart-item' : 'cart-item is-unavailable'}>
@@ -21,7 +22,7 @@ function CartItem({ line, maxQty, onQtyChange, onRemove }) {
         </h2>
         {label && <p className="cart-item__variant">{label}</p>}
         {status !== 'available' && (
-          <p className="cart-item__stock" role="status">{STATUS_LABELS[status]} — retirez cet article pour commander.</p>
+          <p className="cart-item__stock" role="status">{t('cart.itemUnavailable', { status: t(`status.${status}`) })}</p>
         )}
         <div className="cart-item__row">
           <span className="cart-item__price">{formatPrice(price)}</span>
@@ -30,9 +31,9 @@ function CartItem({ line, maxQty, onQtyChange, onRemove }) {
             value={qty}
             max={maxQty}
             onChange={(q) => onQtyChange(key, q)}
-            label={`Quantité de ${name}`}
+            label={t('qty.of', { name })}
           />
-          <button className="icon-btn icon-btn--sm" onClick={() => onRemove(line)} aria-label={`Retirer ${name} du panier`}>
+          <button className="icon-btn icon-btn--sm" onClick={() => onRemove(line)} aria-label={t('cart.remove', { name })}>
             <Trash2 size={20} strokeWidth={1.6} />
           </button>
         </div>

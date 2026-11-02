@@ -1,6 +1,5 @@
 import { matchVariant, variantStatus } from '../utils/variants.js';
-
-const STATE_TEXT = { out_of_stock: 'épuisé', unavailable: 'indisponible', missing: 'combinaison indisponible' };
+import { useI18n } from '../i18n/I18nContext.jsx';
 
 /**
  * Choix des options (contenance, teinte…). Chaque valeur indique si la combinaison existe et si elle est
@@ -8,6 +7,7 @@ const STATE_TEXT = { out_of_stock: 'épuisé', unavailable: 'indisponible', miss
  */
 export default function VariantPicker({ product, variant, onChange }) {
   const selection = variant?.options || {};
+  const { t, lang } = useI18n();
 
   const stateOf = (name, value) => {
     const candidate = matchVariant(product, { ...selection, [name]: value });
@@ -30,7 +30,7 @@ export default function VariantPicker({ product, variant, onChange }) {
       {product.options.map((option) => (
         <fieldset className="pdp-option" key={option.name}>
           <legend className="pdp-option__label">
-            {option.name} : <strong>{selection[option.name] || '—'}</strong>
+            {option.name}{lang === 'ar' ? ': ' : ' : '}<strong>{selection[option.name] || '—'}</strong>
           </legend>
           <div className="pdp-option__values">
             {option.values.map((value) => {
@@ -44,7 +44,7 @@ export default function VariantPicker({ product, variant, onChange }) {
                   type="button"
                   className={`pdp-option__value ${selected ? 'is-selected' : ''} ${state !== 'available' ? 'is-unavailable' : ''}`}
                   aria-pressed={selected}
-                  aria-label={state === 'available' ? value : `${value} (${STATE_TEXT[state]})`}
+                  aria-label={state === 'available' ? value : `${value} (${t(`variant.${state}`)})`}
                   onClick={() => choose(option.name, value)}
                 >
                   {value}

@@ -4,6 +4,7 @@ import Reveal from './Reveal.jsx';
 import { DATA_SOURCE } from '../config/env.js';
 import { api } from '../api/client.js';
 import { ENDPOINTS } from '../api/endpoints.js';
+import { useI18n } from '../i18n/I18nContext.jsx';
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
 
@@ -12,7 +13,9 @@ const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
  * explicite (case à cocher). Mode démo : rien n'est envoyé, un message le dit clairement.
  */
 export default function NewsletterSection({ section }) {
-  const { heading, text, buttonLabel, consentText } = section.settings;
+  const { t, tc, lang } = useI18n();
+  // Le texte de consentement enregistré par le serveur est celui réellement affiché (dans la langue de la page).
+  const [heading, text, buttonLabel, consentText] = ['heading', 'text', 'buttonLabel', 'consentText'].map((k) => tc(section.settings[k]));
   const [email, setEmail] = useState('');
   const [consent, setConsent] = useState(false);
   const [website, setWebsite] = useState(''); // champ piège invisible (anti-robots)
@@ -22,18 +25,19 @@ export default function NewsletterSection({ section }) {
 
   const submit = async (e) => {
     e.preventDefault();
-    if (!EMAIL_RE.test(email.trim())) return setState({ status: 'error', message: 'Saisissez une adresse e-mail valide.' });
-    if (!consent) return setState({ status: 'error', message: 'Cochez la case pour accepter de recevoir nos e-mails.' });
+    if (!EMAIL_RE.test(email.trim())) return setState({ status: 'error', message: t('newsletter.invalidEmail') });
+    if (!consent) return setState({ status: 'error', message: t('newsletter.consentRequired') });
     if (DATA_SOURCE === 'local') {
-      return setState({ status: 'done', message: 'Boutique de démonstration : aucune inscription n’est enregistrée.' });
+      return setState({ status: 'done', message: t('newsletter.demo') });
     }
     setState({ status: 'sending', message: '' });
     try {
       await api.post(ENDPOINTS.newsletter, { email: email.trim(), consent: true, consentText, website });
-      setState({ status: 'done', message: 'Merci ! Votre inscription est bien prise en compte.' });
+      setState({ status: 'done', message: t('newsletter.done') });
     } catch (err) {
-      const fieldMessage = err?.data?.error?.fields?.email?.[0];
-      setState({ status: 'error', message: fieldMessage || 'Inscription impossible pour le moment. Réessayez plus tard.' });
+      // Message du serveur (en français) affiché seulement en français ; sinon message traduit.
+      const fieldMessage = lang === 'fr' ? err?.data?.error?.fields?.email?.[0] : null;
+      setState({ status: 'error', message: fieldMessage || t('newsletter.error') });
     }
   };
 
@@ -49,8 +53,8 @@ export default function NewsletterSection({ section }) {
           ) : (
             <form className="newsletter__form" onSubmit={submit} noValidate>
               <div className="newsletter__row">
-                <label htmlFor={`${idBase}-email`} className="sr-only">Adresse e-mail</label>
-                <input id={`${idBase}-email`} type="email" autoComplete="email" placeholder="Votre adresse e-mail" value={email}
+                <label htmlFor={`${idBase}-email`} className="sr-only">{t('newsletter.emailLabel')}</label>
+                <input id={`${idBase}-email`} type="email" autoComplete="email" placeholder={t('newsletter.emailPlaceholder')} value={email}
                   onChange={(e) => setEmail(e.target.value)} maxLength={254} aria-invalid={state.status === 'error'} />
                 <button type="submit" className="btn btn--primary" disabled={state.status === 'sending'}>{buttonLabel}</button>
               </div>
@@ -59,7 +63,7 @@ export default function NewsletterSection({ section }) {
                 <span>{consentText}</span>
               </label>
               <div className="hp-field" aria-hidden="true">
-                <label htmlFor={`${idBase}-website`}>Ne pas remplir</label>
+                <label htmlFor={`${idBase}-website`}>{t('common.honeypot')}</label>
                 <input id={`${idBase}-website`} tabIndex={-1} autoComplete="off" value={website} onChange={(e) => setWebsite(e.target.value)} />
               </div>
               {state.status === 'error' && <p className="field__error" role="alert">{state.message}</p>}

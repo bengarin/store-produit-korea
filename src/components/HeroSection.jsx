@@ -2,11 +2,14 @@ import { ArrowDown, ArrowRight } from 'lucide-react';
 import ThemeLink from '../theme/ThemeLink.jsx';
 import { resolveImage } from '../theme/assets.js';
 import { useTheme } from '../theme/ThemeContext.jsx';
+import { useI18n } from '../i18n/I18nContext.jsx';
 
 /** Bannière principale de l'accueil (section « hero » du thème). */
 export default function HeroSection({ section }) {
   const { media } = useTheme();
-  const { eyebrow, heading, text, buttonLabel, buttonLink, imageDesktop, imageMobile, imageAlt } = section.settings;
+  const { tc } = useI18n();
+  const { buttonLink, imageDesktop, imageMobile } = section.settings;
+  const [eyebrow, heading, text, buttonLabel, imageAlt] = ['eyebrow', 'heading', 'text', 'buttonLabel', 'imageAlt'].map((k) => tc(section.settings[k]));
   const desktop = resolveImage(imageDesktop, media);
   const mobile = resolveImage(imageMobile, media) || desktop;
   const titleId = `${section.id}-title`;

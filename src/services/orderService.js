@@ -7,6 +7,7 @@ import { DATA_SOURCE } from '../config/env.js';
 import { api } from '../api/client.js';
 import { ENDPOINTS } from '../api/endpoints.js';
 import { STORE_CONFIG } from '../config/store.js';
+import { currentLang, translate } from '../i18n/I18nContext.jsx';
 import { readJSON, writeJSON, safeSession } from '../utils/storage.js';
 import { STORAGE_KEYS } from './storageKeys.js';
 
@@ -84,5 +85,5 @@ export const loadLastOrder = () => readJSON(safeSession(), STORAGE_KEYS.lastOrde
 export function buildWhatsAppLink(orderNumber, config = STORE_CONFIG) {
   const number = (config.whatsappNumber || '').replace(/\D/g, '');
   if (!number) return null;
-  return `https://wa.me/${number}?text=${encodeURIComponent(`Bonjour, je souhaite suivre ma commande ${orderNumber}.`)}`;
+  return `https://wa.me/${number}?text=${encodeURIComponent(translate(currentLang(), 'confirm.waMessage', { number: orderNumber }))}`;
 }

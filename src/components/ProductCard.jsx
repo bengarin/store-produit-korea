@@ -5,10 +5,12 @@ import ProductImage from './ProductImage.jsx';
 import useReveal from '../hooks/useReveal.js';
 import { formatPrice } from '../utils/currency.js';
 import { useCatalog } from '../context/CatalogContext.jsx';
-import { STATUS_LABELS, compareAtPrice, hasChoice, productStatus } from '../utils/variants.js';
+import { compareAtPrice, hasChoice, productStatus } from '../utils/variants.js';
+import { useI18n } from '../i18n/I18nContext.jsx';
 
 function ProductCard({ product, index = 0, isFavorite, onToggleFavorite, onAdd, animate = true, variant = 'default' }) {
   const { categoryLabel } = useCatalog();
+  const { t, tc, autoDir } = useI18n();
   const scene = variant === 'scene';
   const url = `/produits/${product.id}`;
   const [revealRef, visible] = useReveal();
@@ -20,6 +22,8 @@ function ProductCard({ product, index = 0, isFavorite, onToggleFavorite, onAdd, 
   const canBuy = status === 'available';
   const choice = hasChoice(product);
   const compare = compareAtPrice(product, null);
+  const statusLabel = canBuy ? '' : t(`status.${status}`);
+  const name = product.displayName;
 
   const handleAdd = () => {
     if (onAdd(product) === false) return; // fiche ouverte pour choisir une option, ou produit indisponible
@@ -38,11 +42,11 @@ function ProductCard({ product, index = 0, isFavorite, onToggleFavorite, onAdd, 
         className={`fav-btn ${isFavorite ? 'is-active' : ''}`}
         onClick={() => onToggleFavorite(product.id)}
         aria-pressed={isFavorite}
-        aria-label={isFavorite ? `Retirer ${product.displayName} des favoris` : `Ajouter ${product.displayName} aux favoris`}
+        aria-label={isFavorite ? t('card.favRemove', { name }) : t('card.favAdd', { name })}
       >
         <Heart size={19} strokeWidth={1.6} />
       </button>
-      <span className="product-card__badge"><Leaf size={13} aria-hidden="true" />{product.categories.map(categoryLabel).join(' · ')}</span>
+      <span className="product-card__badge"><Leaf size={13} aria-hidden="true" />{product.categories.map((c) => tc(categoryLabel(c))).join(' · ')}</span>
       <Link to={url} className="product-card__media" tabIndex={-1} aria-hidden="true">
         <ProductImage image={scene ? product.image : product.cardImage} />
         {scene && product.hoverImage && (
@@ -53,23 +57,23 @@ function ProductCard({ product, index = 0, isFavorite, onToggleFavorite, onAdd, 
         <h3 className="product-card__name">
           <Link to={url}>{product.displayName}</Link>
         </h3>
-        <p className="product-card__line">{product.cardLine}</p>
+        <p className="product-card__line" dir={autoDir}>{product.cardLine}</p>
         <p className="product-card__price">
           {formatPrice(product.price)}
-          {compare && <s className="product-card__compare"><span className="sr-only">Prix habituel : </span>{formatPrice(compare)}</s>}
-          {!canBuy && <span className="product-card__stock">{STATUS_LABELS[status]}</span>}
+          {compare && <s className="product-card__compare"><span className="sr-only">{t('common.compareAt')}</span>{formatPrice(compare)}</s>}
+          {!canBuy && <span className="product-card__stock">{statusLabel}</span>}
         </p>
         <div className="product-card__actions">
-          {!scene && <Link to={url} className="btn btn--soft">Voir détails</Link>}
+          {!scene && <Link to={url} className="btn btn--soft">{t('card.details')}</Link>}
           <button
             className={`btn btn--primary ${added ? 'is-added' : ''}`}
             onClick={handleAdd}
             disabled={!canBuy}
-            aria-label={!canBuy ? `${product.displayName} : ${STATUS_LABELS[status].toLowerCase()}`
-              : choice ? `Choisir une option de ${product.displayName}` : `Ajouter ${product.displayName} au panier`}
+            aria-label={!canBuy ? t('card.statusNamed', { name, status: statusLabel })
+              : choice ? t('card.chooseOptionOf', { name }) : t('card.addNamed', { name })}
           >
             {added ? <Check size={17} aria-hidden="true" /> : <ShoppingCart size={17} aria-hidden="true" />}
-            <span>{added ? 'Ajouté' : !canBuy ? STATUS_LABELS[status] : choice ? 'Choisir une option' : 'Ajouter au panier'}</span>
+            <span>{added ? t('card.added') : !canBuy ? statusLabel : choice ? t('card.chooseOption') : t('common.addToCart')}</span>
           </button>
         </div>
       </div>

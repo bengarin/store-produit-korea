@@ -218,9 +218,13 @@ SITE_URL = env.str("SITE_URL", default="")
 SITE_NAME = "Ma Petite Corée"
 # Politique de sécurité du contenu des pages de la boutique : scripts du site uniquement (aucun script en ligne),
 # polices Google, images du site, iframe de la même origine (aperçu du thème).
+# Pixel Meta (chargé seulement après consentement) : script connect.facebook.net, envois vers www.facebook.com/tr.
+# Aucun script en ligne n'est autorisé.
 STOREFRONT_CSP = (
-    "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; "
-    "font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob:; connect-src 'self'; frame-src 'self'; "
+    "default-src 'self'; script-src 'self' https://connect.facebook.net; "
+    "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; "
+    "img-src 'self' data: blob: https://www.facebook.com; "
+    "connect-src 'self' https://www.facebook.com https://connect.facebook.net; frame-src 'self'; "
     "frame-ancestors 'self'; base-uri 'self'; form-action 'self'; object-src 'none'"
 )
 

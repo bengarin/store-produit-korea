@@ -5,10 +5,11 @@ import ProductGallery from './ProductGallery.jsx';
 import ProductDetails from './ProductDetails.jsx';
 import NamedIcon from './NamedIcon.jsx';
 import QuantitySelector from './QuantitySelector.jsx';
-import { REASSURANCE_ITEMS } from './Reassurance.jsx';
+import { reassuranceItems } from './Reassurance.jsx';
 import VariantPicker from './VariantPicker.jsx';
 import { formatPrice } from '../utils/currency.js';
-import { STATUS_LABELS, compareAtPrice, defaultVariant, hasChoice, unitPrice, variantStatus } from '../utils/variants.js';
+import { compareAtPrice, defaultVariant, hasChoice, unitPrice, variantStatus } from '../utils/variants.js';
+import { useI18n } from '../i18n/I18nContext.jsx';
 
 /** Variante affichée à l'ouverture : celle par défaut si elle est disponible, sinon la 1re disponible. */
 function initialVariant(product) {
@@ -26,8 +27,10 @@ function initialVariant(product) {
 export default function ProductView({
   product, categoryLabel, qty, onQtyChange, maxQty, isFav, onToggleFavorite, onAdd, onBuyNow, showDemoNotices, desktop,
 }) {
+  const { t, tc, autoDir } = useI18n();
   const mainCat = product.categories[0];
-  const categories = product.categories.map(categoryLabel).join(' · ');
+  const catLabel = (id) => tc(categoryLabel(id));
+  const categories = product.categories.map(catLabel).join(' · ');
   const changeQty = onQtyChange;
   const toggleFavorite = onToggleFavorite;
   const [variant, setVariant] = useState(() => initialVariant(product));
@@ -36,17 +39,18 @@ export default function ProductView({
   const canBuy = status === 'available';
   const price = unitPrice(product, variant);
   const compare = compareAtPrice(product, variant);
+  const statusLabel = canBuy ? '' : t(`status.${status}`);
   const handleAdd = () => canBuy && onAdd(variant);
   const handleBuyNow = () => canBuy && onBuyNow(variant);
 
   return (
     <main className="pdp">
-        <nav className="pdp__crumbs container" aria-label="Fil d’Ariane">
-          <Link to="/">Accueil</Link>
+        <nav className="pdp__crumbs container" aria-label={t('pdp.crumbs')}>
+          <Link to="/">{t('nav.home')}</Link>
           <ChevronRight size={13} aria-hidden="true" />
-          <Link to="/produits">Nos produits</Link>
+          <Link to="/produits">{t('nav.products')}</Link>
           <ChevronRight size={13} aria-hidden="true" />
-          <Link to={`/produits?categorie=${mainCat}`}>{categoryLabel(mainCat)}</Link>
+          <Link to={`/produits?categorie=${mainCat}`}>{catLabel(mainCat)}</Link>
           <ChevronRight size={13} aria-hidden="true" />
           <span aria-current="page">{product.displayName}</span>
         </nav>
@@ -57,13 +61,13 @@ export default function ProductView({
               key={product.id}
               product={product}
               focusImage={variant?.image || null}
-              badge={<span className="pdp__badge"><Leaf size={13} aria-hidden="true" />{categoryLabel(mainCat)}</span>}
+              badge={<span className="pdp__badge"><Leaf size={13} aria-hidden="true" />{catLabel(mainCat)}</span>}
               actions={(
                 <button
                   className={`pdp__fav fav-toggle ${isFav ? 'is-active' : ''}`}
                   onClick={() => toggleFavorite(product.id)}
                   aria-pressed={isFav}
-                  aria-label={isFav ? 'Retirer des favoris' : 'Ajouter aux favoris'}
+                  aria-label={isFav ? t('pdp.favRemove') : t('pdp.favAdd')}
                 >
                   <Heart size={20} strokeWidth={1.7} />
                 </button>
@@ -76,13 +80,13 @@ export default function ProductView({
             <h1 className="pdp__title">{product.displayName}</h1>
             <p className="pdp__price">
               {formatPrice(price)}
-              {compare && <s className="pdp__compare"><span className="sr-only">Prix habituel : </span>{formatPrice(compare)}</s>}
+              {compare && <s className="pdp__compare"><span className="sr-only">{t('common.compareAt')}</span>{formatPrice(compare)}</s>}
             </p>
-            <p className="pdp__desc">{product.summary}</p>
+            <p className="pdp__desc" dir={autoDir}>{product.summary}</p>
 
-            <ul className="pdp-tiles" aria-label="Caractéristiques">
+            <ul className="pdp-tiles" aria-label={t('pdp.features')}>
               {product.highlights.map(({ icon, label }) => (
-                <li key={label}><NamedIcon name={icon} size={22} strokeWidth={1.4} aria-hidden="true" /><span>{label}</span></li>
+                <li key={label}><NamedIcon name={icon} size={22} strokeWidth={1.4} aria-hidden="true" /><span dir={autoDir}>{label}</span></li>
               ))}
             </ul>
 
@@ -91,16 +95,16 @@ export default function ProductView({
               <div className="pdp__variant-info" aria-live="polite">
                 {!canBuy && (
                   <p className={`pdp__stock pdp__stock--${status}`}>
-                    {STATUS_LABELS[status]}
+                    {statusLabel}
                     {choice && variant?.title ? ` — ${variant.title}` : ''}
                     <small>
                       {status === 'out_of_stock'
-                        ? `${choice ? 'Cette variante' : 'Ce produit'} n’est plus en stock pour le moment.`
-                        : `${choice ? 'Cette variante ne peut pas être commandée' : 'Ce produit ne peut pas être commandé'} pour le moment.`}
+                        ? t(choice ? 'pdp.oosVariant' : 'pdp.oosProduct')
+                        : t(choice ? 'pdp.unavailableVariant' : 'pdp.unavailableProduct')}
                     </small>
                   </p>
                 )}
-                {variant?.sku && <p className="pdp__sku">Réf. {variant.sku}</p>}
+                {variant?.sku && <p className="pdp__sku">{t('pdp.sku', { sku: variant.sku })}</p>}
               </div>
             )}
 
@@ -108,11 +112,11 @@ export default function ProductView({
               <div className="pdp__buy-row">
                 <QuantitySelector value={qty} onChange={changeQty} max={maxQty} size="buy" />
                 <button className="btn pdp__add" onClick={handleAdd} disabled={!canBuy}>
-                  <ShoppingCart size={18} aria-hidden="true" /> {canBuy ? 'Ajouter au panier' : STATUS_LABELS[status]}
+                  <ShoppingCart size={18} aria-hidden="true" /> {canBuy ? t('common.addToCart') : statusLabel}
                 </button>
               </div>
               <button className="btn btn--primary btn--block pdp__now" onClick={handleBuyNow} disabled={!canBuy}>
-                <Zap size={17} aria-hidden="true" /> Commander maintenant
+                <Zap size={17} aria-hidden="true" /> {t('pdp.buyNow')}
                 {canBuy && <span className="pdp__now-total">· {formatPrice(price * qty)}</span>}
               </button>
             </div>
@@ -121,7 +125,7 @@ export default function ProductView({
             {!desktop && <ProductDetails product={product} desktop={false} />}
 
             <ul className="pdp__trust">
-              {REASSURANCE_ITEMS.map(({ icon: Icon, title, text }) => (
+              {reassuranceItems(t).map(({ icon: Icon, title, text }) => (
                 <li key={title}>
                   <span className="pdp__trust-icon"><Icon size={19} strokeWidth={1.5} aria-hidden="true" /></span>
                   <span><strong>{title}</strong><small>{text}</small></span>
@@ -132,7 +136,7 @@ export default function ProductView({
             {showDemoNotices && (
               <p className="pdp__note">
                 <Info size={13} aria-hidden="true" />
-                Description indicative : vérifiez la composition sur l’emballage.
+                {t('pdp.demoNote')}
               </p>
             )}
           </div>

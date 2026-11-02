@@ -5,17 +5,19 @@ import ProductImage from './ProductImage.jsx';
 import AddToCartIcon from './AddToCartIcon.jsx';
 import { useCatalog } from '../context/CatalogContext.jsx';
 import { formatPrice } from '../utils/currency.js';
+import { useI18n } from '../i18n/I18nContext.jsx';
 
 /** Produits mis en avant (« le rituel ») : étapes du thème, chacune reliée à un produit réel du catalogue. */
 export default function RitualSection({ section }) {
   const { getProductById } = useCatalog();
-  const { eyebrow, heading, intro } = section.settings;
+  const { t, tc } = useI18n();
+  const [eyebrow, heading, intro] = ['eyebrow', 'heading', 'intro'].map((k) => tc(section.settings[k]));
   const titleId = `${section.id}-title`;
   // Un produit absent du catalogue (archivé, supprimé) : l'étape n'est pas affichée.
   const steps = (section.items || []).map((s) => {
     const product = getProductById(s.product);
     if (!product) return null;
-    return { title: s.title, text: s.text, product, image: product.sceneImage };
+    return { title: tc(s.title), text: tc(s.text), product, image: product.sceneImage };
   }).filter(Boolean).map((s, i) => ({ ...s, step: i + 1 }));
   if (!steps.length) return null;
 
@@ -34,10 +36,10 @@ export default function RitualSection({ section }) {
               <div className="ritual-card__head">
                 <span className="ritual-card__num" aria-hidden="true">{step}</span>
                 <div>
-                  <h3 className="ritual-card__title"><span className="sr-only">Étape {step} : </span>{title}</h3>
+                  <h3 className="ritual-card__title"><span className="sr-only">{t('ritual.step', { step })}</span>{title}</h3>
                   {text && <p className="ritual-card__text">{text}</p>}
                 </div>
-                <Link to={`/produits/${product.id}`} className="ritual-card__more" aria-label={`Voir ${product.displayName}`}>
+                <Link to={`/produits/${product.id}`} className="ritual-card__more" aria-label={t('ritual.view', { name: product.displayName })}>
                   <ChevronRight size={18} aria-hidden="true" />
                 </Link>
               </div>
