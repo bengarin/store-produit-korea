@@ -12,6 +12,7 @@ from apps.audit.services import log_action
 from apps.core.money import number
 from apps.core.phone import normalize_moroccan_phone
 from apps.promotions import services as promotions
+from apps.shipping import services as shipping_svc
 from apps.shipping.models import City, ShippingZone
 from apps.store_settings.models import StoreSettings
 
@@ -67,12 +68,14 @@ class StoreConfigView(PublicView):
         settings = StoreSettings.load()
         default_zone = ShippingZone.objects.filter(is_default=True, is_active=True).first()
         reference = default_zone or ShippingZone.objects.filter(is_active=True).order_by("fee").first()
+        fee, free_over = shipping_svc.delivery_rule(reference)  # même règle que le calcul de la commande
         return Response(
             {
                 "brandName": settings.brand_name,
                 "whatsappNumber": settings.whatsapp_number,
-                "deliveryFee": number(reference.fee) if reference else None,
-                "freeDeliveryThreshold": number(reference.free_over_subtotal) if reference else None,
+                "deliveryMode": settings.delivery_mode,
+                "deliveryFee": number(fee) if fee is not None else None,
+                "freeDeliveryThreshold": number(free_over) if free_over is not None else None,
                 "cities": list(
                     City.objects.filter(is_active=True, zone__is_active=True).values_list("name", flat=True)
                 ),

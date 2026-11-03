@@ -36,6 +36,18 @@ class SettingsSerializer(serializers.ModelSerializer):
     vatRate = serializers.DecimalField(
         source="vat_rate", max_digits=5, decimal_places=2, min_value=0, max_value=100, allow_null=True, required=False
     )
+    deliveryMode = serializers.ChoiceField(
+        source="delivery_mode", choices=StoreSettings.DeliveryMode.choices, required=False
+    )
+    deliveryFee = serializers.DecimalField(
+        source="delivery_fee",
+        max_digits=10,
+        decimal_places=2,
+        min_value=0,
+        max_value=10000,
+        allow_null=True,
+        required=False,
+    )
     maxQtyPerLine = serializers.IntegerField(source="max_qty_per_line", min_value=1, max_value=100, required=False)
     maxOrdersPerPhonePerHour = serializers.IntegerField(
         source="max_orders_per_phone_per_hour", min_value=1, max_value=100, required=False
@@ -57,9 +69,21 @@ class SettingsSerializer(serializers.ModelSerializer):
             "invoiceFooter",
             "invoicePrefix",
             "vatRate",
+            "deliveryMode",
+            "deliveryFee",
             "maxQtyPerLine",
             "maxOrdersPerPhonePerHour",
         ]
+
+    def validate(self, attrs):
+        # Valeurs finales (modification partielle) : le mode payant exige un montant > 0, saisi par l'admin.
+        mode = attrs.get("delivery_mode", self.instance.delivery_mode if self.instance else None)
+        fee = attrs.get("delivery_fee", self.instance.delivery_fee if self.instance else None)
+        if mode == StoreSettings.DeliveryMode.PAID and (fee is None or fee <= 0):
+            raise serializers.ValidationError(
+                {"deliveryFee": ["Indiquez le montant des frais de livraison (supérieur à 0 DH)."]}
+            )
+        return attrs
 
 
 class SettingsView(APIView):

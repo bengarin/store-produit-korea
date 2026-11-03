@@ -40,7 +40,7 @@ Plus sûr (aucune donnée de test ne peut passer en production) et plus simple (
 | Catégories | ✅ | Hydratation, Anti-âge, Éclat ; noms arabes vides |
 | Stocks | ❌ | Valeurs de test ; nouveau produit « non renseigné » |
 | Prix | ⏳ À définir | Les produits restent en brouillon tant que le prix vaut 0 |
-| Frais de livraison | ⚠️ `[DÉMO]` | 20 DH partout, pas de seuil de gratuité, pas de délai |
+| Frais de livraison | ✅ réglable dans l'Admin | Réglages → « Configuration de livraison » : gratuite / payante (montant unique) / par zone. Calculé par le serveur ; commandes passées inchangées. Mode actuel : par zone (20 DH `[DÉMO]`) — à choisir |
 | Panier, validation, statuts, paiement à la livraison | ✅ testés | Tests automatiques backend + navigateur (audit du 3 nov.) |
 | Confirmation client | ✅ **décision : téléphone / WhatsApp** (pas d'e-mail) | Fiche commande (admin) → bouton « WhatsApp » : message pré-rempli (articles, total à payer à la livraison, adresse, demande « OUI »), envoyé à la main par l'admin. Numéros enregistrés au format +212 (82/82 commandes) |
 | Notification administrateur | ⚠️ prête, mais SMTP non configuré | Part dès que `EMAIL_HOST`, `DEFAULT_FROM_EMAIL` et `ORDER_NOTIFICATION_EMAILS` sont remplis |

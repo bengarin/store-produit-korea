@@ -377,9 +377,12 @@ class Command(BaseCommand):
             label = Path(m["file"]).name
             attrs = {"category": m["category"], "language": m["language"], "alt": m["alt"], "position": position}
             if row is None:
-                r["marketing"].append(f"{label} — créé (média {status})")
+                r["marketing"].append(f"{label} — créé{' MASQUÉ' if m.get('active') is False else ''} (média {status})")
                 if not self.dry:
-                    ProductMarketingImage.objects.create(product=product, media=media, is_active=True, **attrs)
+                    # « active »: false = importé masqué (ex. traduction à corriger) ; ensuite, l'admin décide.
+                    ProductMarketingImage.objects.create(
+                        product=product, media=media, is_active=m.get("active", True), **attrs
+                    )
             else:
                 keep.add(row.pk)
                 if any(getattr(row, k) != v for k, v in attrs.items()):

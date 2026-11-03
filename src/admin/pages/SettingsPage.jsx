@@ -90,7 +90,79 @@ function SettingsSection({ section, data, editable, onSaved }) {
   );
 }
 
-function ShippingCard({ editable }) {
+const DELIVERY_MODES = [
+  ['free', 'Livraison gratuite', 'Frais de livraison : 0 DH pour toutes les commandes.'],
+  ['paid', 'Livraison payante', 'Un montant unique, que vous fixez ci-dessous, pour toutes les commandes.'],
+  ['zones', 'Tarifs par zone', 'Le tarif (et le seuil de gratuité) de chaque zone de livraison, plus bas.'],
+];
+
+/** Configuration de livraison : gratuite / payante (montant) / par zone. Appliquée au checkout par le serveur. */
+function DeliveryConfigCard({ data, editable, onSaved }) {
+  const showToast = useToast();
+  const [mode, setMode] = useState(data.deliveryMode || 'zones');
+  const [fee, setFee] = useState(data.deliveryFee ?? '');
+  const [error, setError] = useState(null);
+  const [busy, setBusy] = useState(false);
+  const dirty = mode !== data.deliveryMode || (mode === 'paid' && String(fee) !== String(data.deliveryFee ?? ''));
+
+  const save = async (e) => {
+    e.preventDefault();
+    setError(null);
+    const amount = String(fee).trim().replace(',', '.');
+    if (mode === 'paid' && !(Number(amount) > 0)) return setError('Indiquez le montant des frais de livraison (supérieur à 0 DH).');
+    setBusy(true);
+    try {
+      onSaved(await admin.patch('/settings', mode === 'paid' ? { deliveryMode: mode, deliveryFee: amount } : { deliveryMode: mode }));
+      showToast('Configuration de livraison enregistrée');
+    } catch (err) {
+      setError(err.fieldMessage?.('deliveryFee') || err.message);
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const current = DELIVERY_MODES.find(([id]) => id === data.deliveryMode);
+  return (
+    <Card title={<><Truck size={17} aria-hidden="true" /> Configuration de livraison</>}>
+      {!editable ? (
+        <p>
+          <strong>{current?.[1]}</strong>
+          {data.deliveryMode === 'paid' && ` : ${formatMoney(data.deliveryFee)}`}
+          {data.deliveryMode === 'free' && ' : 0 DH'}
+        </p>
+      ) : (
+        <form onSubmit={save} className="adm-form-grid" noValidate>
+          <fieldset className="adm-radio-group adm-form-grid__full">
+            <legend>Mode de livraison</legend>
+            {DELIVERY_MODES.map(([id, labelText, hint]) => (
+              <label key={id}>
+                <input type="radio" name="deliveryMode" value={id} checked={mode === id} onChange={() => setMode(id)} />{' '}
+                <strong>{labelText}</strong> <span className="adm-muted">— {hint}</span>
+              </label>
+            ))}
+          </fieldset>
+          {mode === 'paid' && (
+            <Field label="Montant des frais de livraison (DH)" error={error} htmlFor="set-deliveryFee">
+              <input id="set-deliveryFee" className="adm-input" type="number" min="0.01" step="0.01" inputMode="decimal"
+                value={fee} onChange={(e) => setFee(e.target.value)} />
+            </Field>
+          )}
+          {mode === 'free' && <p className="adm-form-grid__full">Frais appliqués : <strong>0 DH</strong>.</p>}
+          {mode !== 'paid' && error && <div className="adm-form-grid__full"><Notice tone="danger">{error}</Notice></div>}
+          <p className="adm-footnote adm-form-grid__full">
+            Appliqué immédiatement au panier et à la commande. Le montant est toujours recalculé par le serveur ;
+            les commandes déjà passées gardent leurs frais d’origine.
+          </p>
+          <div className="adm-form-grid__full">
+            <Button type="submit" icon={Save} loading={busy} disabled={!dirty}>Enregistrer</Button>
+          </div>
+        </form>
+      )}
+    </Card>
+  );
+}
+
+function ShippingCard({ editable, mode }) {
   const showToast = useToast();
   const { data: zones, error, reload } = useApi('/shipping/zones');
   const [edit, setEdit] = useState({});
@@ -116,7 +188,13 @@ function ShippingCard({ editable }) {
   };
 
   return (
-    <Card title={<><Truck size={17} aria-hidden="true" /> Livraison</>}>
+    <Card title={<><Truck size={17} aria-hidden="true" /> Zones et villes de livraison</>}>
+      {mode !== 'zones' && (
+        <Notice tone="info">
+          Mode « {mode === 'free' ? 'Livraison gratuite' : 'Livraison payante'} » actif : les tarifs ci-dessous ne
+          s’appliquent pas. Les zones servent à la liste des villes proposées aux clients.
+        </Notice>
+      )}
       {zones.map((z) => {
         const e = edit[z.id] || {};
         return (
@@ -260,7 +338,8 @@ export default function SettingsPage() {
       {viewStore && data && SECTIONS.map((s) => (
         <SettingsSection key={`${s.id}-${version}`} section={s} data={data} editable={editable} onSaved={setData} />
       ))}
-      {viewStore && <ShippingCard editable={editable} />}
+      {viewStore && data && <DeliveryConfigCard key={`delivery-${version}`} data={data} editable={editable} onSaved={setData} />}
+      {viewStore && <ShippingCard editable={editable} mode={data?.deliveryMode || 'zones'} />}
       {can(user, 'viewNewsletter') && <EmailCard />}
       {can(user, 'viewNewsletter') && <NewsletterCard />}
       <AccountSecurity />

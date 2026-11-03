@@ -18,7 +18,7 @@ import { useI18n } from '../i18n/I18nContext.jsx';
 
 export default function ProductPage() {
   const { id } = useParams();
-  const { getProductById, categoryLabel } = useCatalog();
+  const { getProductById, categoryLabel, config } = useCatalog();
   const product = getProductById(id);
   const navigate = useNavigate();
   const { addItem, favorites, toggleFavorite, maxQty } = useCart();
@@ -72,6 +72,7 @@ export default function ProductPage() {
         key={product.id}
         product={product}
         categoryLabel={categoryLabel}
+        deliveryFee={config?.deliveryFee}
         qty={qty}
         onQtyChange={changeQty}
         maxQty={maxQty}

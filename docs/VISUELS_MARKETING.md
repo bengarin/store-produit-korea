@@ -65,3 +65,22 @@ offerte » (Quret) ; « élasticité, nutrition », « collagène hydrolysé, ge
   `PATCH/DELETE /api/v1/admin/marketing-images/{id}` (PATCH `mediaId` = remplacer l'image).
 - Public : champ `marketing` de la fiche produit (visuels affichables uniquement ; absent s'il n'y en a pas).
 - Base : table `catalog_productmarketingimage` (migration `catalog 0005`, ajout seul).
+
+## Visuels arabes (3 nov. 2026)
+
+Ajoutés en langue « ar » via `backend/catalog_import/catalogue.json` (originaux : `originaux/<produit>/visuels_ar/`).
+La version **française n'est pas modifiée** ; la version arabe affiche les visuels arabes du produit (règle existante :
+si un produit a au moins un visuel arabe affiché, la fiche arabe ne montre que ceux-ci + « sans texte » ; sinon repli
+sur le français — jamais de mélange de langues sur une fiche).
+
+| Produit | Visuels arabes affichés | Masqués (à corriger) | Version arabe de la fiche |
+|---|---|---|---|
+| ORJENA | Bienfaits ×2, Mode d'utilisation | Présentation : « كبسولات » = « capsules » (le produit est une émulsion) | 3 visuels arabes |
+| Baroness | Présentation (contient un faux bouton « اطلب الآن ») | Bienfaits : « (4 مجاني) » = « 4 gratuits » (traduction littérale de « 4 Free ») | 1 visuel arabe |
+| Biovène | Bienfaits | — | 1 visuel arabe |
+| Quret Vital Cream | Mode d'utilisation | — | 1 visuel arabe |
+| SOME BY MI, Quret Eye Cream | — (aucun visuel arabe hors avant/après) | — | visuels français (repli) |
+
+Non importés : 10 « avant / après » (images générées, non authentiques ; 3 portent des libellés français) →
+`originaux/_non_importes/visuels_ar/`. Un visuel masqué s'active dans Administration → Visuels marketing après
+correction du texte.

@@ -21,6 +21,20 @@ class StoreSettings(models.Model):
     invoice_prefix = models.CharField("préfixe des factures", max_length=10, default="FAC")
     # TVA : NULL = non renseignée (aucun taux n'est supposé). Les prix du site sont TOUJOURS TTC (prix payé).
     vat_rate = models.DecimalField("taux de TVA (%)", max_digits=5, decimal_places=2, null=True, blank=True)
+
+    # Configuration de livraison (choisie dans l'administration). « Par zone » = tarifs des zones de livraison
+    # (fonctionnement d'origine, valeur par défaut : aucun montant n'est inventé à l'installation).
+    class DeliveryMode(models.TextChoices):
+        ZONES = "zones", "Tarifs des zones de livraison"
+        FREE = "free", "Livraison gratuite"
+        PAID = "paid", "Livraison payante (montant unique)"
+
+    delivery_mode = models.CharField(
+        "mode de livraison", max_length=10, choices=DeliveryMode.choices, default=DeliveryMode.ZONES
+    )
+    delivery_fee = models.DecimalField(
+        "frais de livraison (DH, mode payant)", max_digits=10, decimal_places=2, null=True, blank=True
+    )
     max_qty_per_line = models.PositiveSmallIntegerField("quantité max. par produit", default=20)
     max_orders_per_phone_per_hour = models.PositiveSmallIntegerField(
         "commandes max. par téléphone et par heure", default=5
@@ -29,7 +43,18 @@ class StoreSettings(models.Model):
 
     class Meta:
         verbose_name = "réglages de la boutique"
-        constraints = [models.CheckConstraint(condition=models.Q(id=1), name="store_settings_singleton")]
+        constraints = [
+            models.CheckConstraint(condition=models.Q(id=1), name="store_settings_singleton"),
+            models.CheckConstraint(
+                condition=models.Q(delivery_fee__isnull=True) | models.Q(delivery_fee__gte=0),
+                name="store_delivery_fee_gte_0",
+            ),
+            # Mode payant : un montant strictement positif est obligatoire.
+            models.CheckConstraint(
+                condition=~models.Q(delivery_mode="paid") | models.Q(delivery_fee__gt=0),
+                name="store_paid_delivery_has_fee",
+            ),
+        ]
 
     def __str__(self):
         return self.brand_name

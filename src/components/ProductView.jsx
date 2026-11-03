@@ -13,8 +13,8 @@ import { compareAtPrice, defaultVariant, hasChoice, unitPrice, variantStatus } f
 import { useI18n } from '../i18n/I18nContext.jsx';
 
 /** Engagements en fin de fiche (mobile) : une icône illustrée par engagement, présentation en cartes. */
-function MobileTrust({ t }) {
-  const items = reassuranceItems(t);
+function MobileTrust({ t, deliveryFee }) {
+  const items = reassuranceItems(t, deliveryFee);
   // Ordre demandé : paiement à la livraison, livraison, produits authentiques, service client.
   const ordered = [items[0], items[2], items[1], items[3]];
   return (
@@ -47,7 +47,7 @@ function initialVariant(product) {
  * (null en mode démo, sans variantes).
  */
 export default function ProductView({
-  product, categoryLabel, qty, onQtyChange, maxQty, isFav, onToggleFavorite, onAdd, onBuyNow, showDemoNotices, desktop,
+  product, categoryLabel, qty, onQtyChange, maxQty, isFav, onToggleFavorite, onAdd, onBuyNow, showDemoNotices, desktop, deliveryFee = null,
 }) {
   const { t, tc, autoDir } = useI18n();
   const mainCat = product.categories[0];
@@ -147,7 +147,7 @@ export default function ProductView({
             {desktop ? (
               <>
                 <ul className="pdp__trust">
-                  {reassuranceItems(t).map(({ icon: Icon, title, text }) => (
+                  {reassuranceItems(t, deliveryFee).map(({ icon: Icon, title, text }) => (
                     <li key={title}>
                       <span className="pdp__trust-icon"><Icon size={19} strokeWidth={1.5} aria-hidden="true" /></span>
                       <span><strong>{title}</strong><small>{text}</small></span>
@@ -176,7 +176,7 @@ export default function ProductView({
                     {t('pdp.demoNote')}
                   </p>
                 )}
-                <MobileTrust t={t} />
+                <MobileTrust t={t} deliveryFee={deliveryFee} />
               </>
             )}
           </div>
