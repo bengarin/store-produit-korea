@@ -87,6 +87,8 @@ différence.
 
 ```bash
 cd backend
+# 0. Base neuve : `migrate` crée aussi les 3 catégories (hydratation, anti-age, eclat — migration catalog 0006)
+python manage.py migrate
 # 1. (seulement si les originaux changent) refaire les images optimisées — résultat identique à chaque fois
 python manage.py prepare_catalog_images
 # 2. Aperçu : AUCUNE écriture, liste exacte de ce qui changerait

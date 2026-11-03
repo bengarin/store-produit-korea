@@ -1,9 +1,11 @@
 """Import des 6 produits (backend/catalog_import) : aperçu sans écriture, idempotence, prix et stock protégés."""
 
+import importlib
 from decimal import Decimal
 from io import StringIO
 
 import pytest
+from django.conf import settings
 from django.core.management import call_command
 
 from apps.catalog.models import Category, Product, ProductImage, ProductMarketingImage, Variant
@@ -19,10 +21,42 @@ SLUGS = {
 }
 
 
-@pytest.fixture
-def categories(db):
-    for i, (slug, name) in enumerate([("hydratation", "Hydratation"), ("anti-age", "Anti-âge"), ("eclat", "Éclat")]):
-        Category.objects.get_or_create(slug=slug, defaults={"name": name, "position": i})
+# Catégories exigées par catalogue.json : créées par la migration catalog 0006 (aucun fixture ici).
+BASE_CATEGORIES = {"hydratation": "Hydratation", "anti-age": "Anti-âge", "eclat": "Éclat"}
+# Photos en galerie et visuels marketing attendus par produit (catalogue.json).
+EXPECTED_MEDIA = {
+    "baroness-aloe-vera-gel": (3, 2),
+    "some-by-mi-yuja-niacin-cream": (4, 2),
+    "biovene-eye-patches": (5, 4),
+    "vitamin-collagen-vital-cream": (2, 4),
+    "vitamin-collagen-vital-eye-cream": (3, 3),
+    "orjena-power-collagen-emulsion": (3, 4),
+}
+
+
+@pytest.mark.django_db
+def test_categories_creees_par_migrate():
+    # Base « sans catégories », puis vraie exécution de `migrate` : la migration catalog 0006 les recrée.
+    Category.objects.filter(slug__in=BASE_CATEGORIES).delete()
+    call_command("migrate", "catalog", "0005", verbosity=0)
+    assert not Category.objects.filter(slug__in=BASE_CATEGORIES).exists()
+    call_command("migrate", verbosity=0)
+    rows = list(Category.objects.filter(slug__in=BASE_CATEGORIES).values_list("slug", "name"))
+    assert dict(rows) == BASE_CATEGORIES
+    assert len(rows) == 3  # une seule ligne par slug
+    assert Category.objects.filter(slug__in=BASE_CATEGORIES, is_active=True).count() == 3
+
+
+@pytest.mark.django_db
+def test_migration_des_categories_rejouable_sans_doublon():
+    from django.apps import apps as django_apps
+
+    migration = importlib.import_module("apps.catalog.migrations.0006_seed_categories")
+    Category.objects.filter(slug="eclat").update(name="Éclat (renommée dans l'admin)")
+    migration.create_categories(django_apps, None)
+    migration.create_categories(django_apps, None)
+    assert Category.objects.filter(slug__in=BASE_CATEGORIES).count() == 3
+    assert Category.objects.get(slug="eclat").name == "Éclat (renommée dans l'admin)"  # jamais écrasée
 
 
 def run(*args):
@@ -42,7 +76,7 @@ def counts():
 
 
 @pytest.mark.django_db
-def test_apercu_n_ecrit_rien(categories):
+def test_apercu_n_ecrit_rien(db):
     before = counts()
     text = run("--dry-run")
     assert counts() == before
@@ -50,7 +84,7 @@ def test_apercu_n_ecrit_rien(categories):
 
 
 @pytest.mark.django_db
-def test_import_complet_et_idempotent(categories):
+def test_import_complet_et_idempotent(db):
     run()
     assert set(Product.objects.values_list("slug", flat=True)) == SLUGS
     first = counts()
@@ -61,9 +95,13 @@ def test_import_complet_et_idempotent(categories):
         assert v.stock_quantity is None  # jamais inventé
         assert p.images.filter(in_gallery=True).exists()
         assert not p.marketing_images.filter(category="before_after").exists()
-    eye = Product.objects.get(slug="vitamin-collagen-vital-eye-cream")
-    assert eye.images.filter(in_gallery=True).count() == 3 and eye.marketing_images.count() == 3
+    for slug, (photos, visuels) in EXPECTED_MEDIA.items():
+        p = Product.objects.get(slug=slug)
+        assert p.images.filter(in_gallery=True).count() == photos, slug
+        assert p.marketing_images.filter(is_active=True).count() == visuels, slug
+        assert all(i.media.file and (settings.MEDIA_ROOT / i.media.file.name).is_file() for i in p.images.all())
     assert ProductMarketingImage.objects.count() == 19
+    assert set(Product.objects.values_list("categories__slug", flat=True)) == set(BASE_CATEGORIES)
 
     text = run()  # 2e passage : aucun doublon, rien à modifier
     assert counts() == first
@@ -72,7 +110,7 @@ def test_import_complet_et_idempotent(categories):
 
 
 @pytest.mark.django_db
-def test_stock_arabe_et_photo_masquee(categories):
+def test_stock_arabe_et_photo_masquee(db):
     run()
     vital = Product.objects.get(slug="vitamin-collagen-vital-cream")
     v = vital.variants.get(is_default=True)

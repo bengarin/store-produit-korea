@@ -52,11 +52,15 @@ def test_api_publique_expose_seulement_les_champs_arabes_remplis(client, staff, 
 @pytest.mark.django_db
 def test_categorie_en_arabe(client, staff, category):
     c = category(slug="eclat", name="Éclat")
-    assert "translations" not in client.get("/api/v1/store/categories").json()["items"][0]
+
+    def public_eclat():  # la boutique liste aussi les autres catégories de base (migration catalog 0006)
+        return next(i for i in client.get("/api/v1/store/categories").json()["items"] if i["id"] == "eclat")
+
+    assert "translations" not in public_eclat()
     r = staff(Role.ADMIN).patch(f"/api/v1/admin/categories/{c.pk}", {"nameAr": "الإشراق"}, format="json")
     assert r.status_code == 200 and r.json()["nameAr"] == "الإشراق"
     assert Category.objects.get(pk=c.pk).name == "Éclat"
-    item = client.get("/api/v1/store/categories").json()["items"][0]
+    item = public_eclat()
     assert item["label"] == "Éclat" and item["translations"] == {"ar": {"label": "الإشراق"}}
 
 

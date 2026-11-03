@@ -127,7 +127,7 @@ class Command(BaseCommand):
                 errors.append(f"{s} : galerie vide.")
             for c in p["categories"]:
                 if c not in known_categories:
-                    errors.append(f"{s} : catégorie inconnue « {c} ».")
+                    errors.append(f"{s} : catégorie inconnue « {c} » (lancer `python manage.py migrate`).")
             for h in p["highlights"]:
                 if h["icon"] not in icons or len(h["label"]) > 60:
                     errors.append(f"{s} : picto invalide « {h['label']} ».")

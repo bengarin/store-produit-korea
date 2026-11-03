@@ -24,7 +24,7 @@ Le site n'a jamais été public : **aucune donnée client réelle**. Tout ce qui
 **Recommandation : ne pas nettoyer la base de développement, démarrer la production avec une base NEUVE.**
 Plus sûr (aucune donnée de test ne peut passer en production) et plus simple (le journal de stock ne se supprime pas) :
 
-1. base vide + `migrate` ;
+1. base vide + `migrate` (crée les rôles et les 3 catégories du catalogue) ;
 2. `createcachetable` ;
 3. `import_store_config` puis vos vrais tarifs de livraison ;
 4. `import_catalog` ;

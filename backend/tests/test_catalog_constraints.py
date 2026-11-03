@@ -82,4 +82,4 @@ def test_sous_categorie_survit_a_sa_parente(category):
     parent.delete()
     child.refresh_from_db()
     assert child.parent is None
-    assert Category.objects.count() == 1
+    assert not Category.objects.filter(slug="soins").exists() and Category.objects.filter(slug="serums").exists()

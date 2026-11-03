@@ -10,16 +10,22 @@ PASSWORD = "Un-Mot-De-Passe-Solide-2026"
 @pytest.fixture(autouse=True)
 def _role_groups(request, django_db_blocker):
     """
-    Les tests de concurrence (transaction=True) vident la base à la fin, y compris les 5 groupes créés
-    par la migration 0002. On les recrée avant chaque test qui utilise la base.
+    Les tests de concurrence (transaction=True) vident la base à la fin, y compris les données créées par
+    les migrations : 5 groupes (accounts 0002) et 3 catégories de base (catalog 0006). On les recrée avant
+    chaque test qui utilise la base, avec la fonction même de la migration (aucune liste recopiée).
     """
     if request.node.get_closest_marker("django_db") is None and "db" not in request.fixturenames:
         return
+    import importlib
+
+    from django.apps import apps as django_apps
     from django.contrib.auth.models import Group
 
+    seed_categories = importlib.import_module("apps.catalog.migrations.0006_seed_categories").create_categories
     with django_db_blocker.unblock():
         for role in Role:
             Group.objects.get_or_create(name=role.value)
+        seed_categories(django_apps, None)
 
 
 @pytest.fixture
@@ -106,7 +112,9 @@ def category(db):
     from apps.catalog.models import Category
 
     def _category(slug="hydratation", name="Hydratation", **extra):
-        return Category.objects.create(slug=slug, name=name, **extra)
+        # Les catégories de base existent déjà (migration catalog 0006) : on les réutilise, sans doublon.
+        cat, _ = Category.objects.update_or_create(slug=slug, defaults={"name": name, **extra})
+        return cat
 
     return _category
 
