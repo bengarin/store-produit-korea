@@ -241,6 +241,27 @@
           "category": "ingredients",
           "language": "fr",
           "alt": "Boîte SOME BY MI Yuja Niacin : niacinamide 5 %, extrait de yuja, format 60 g"
+        },
+        {
+          "file": "images/some-by-mi-yuja-niacin-cream/visuels/some-by-mi-yuja-niacin-cream-utilisation-ar-01.webp",
+          "original": "some-by-mi-yuja-niacin-cream/visuels_ar/hf_20261102_144830_63745651-0504-46cc-9157-104201d8c610.png",
+          "category": "usage",
+          "language": "ar",
+          "alt": "طريقة الاستعمال في 3 خطوات: التنظيف، أخذ كمية صغيرة، وضع طبقة رقيقة"
+        },
+        {
+          "file": "images/some-by-mi-yuja-niacin-cream/visuels/some-by-mi-yuja-niacin-cream-ingredients-ar-01.webp",
+          "original": "some-by-mi-yuja-niacin-cream/visuels_ar/hf_20261102_145100_f8856a9f-19bf-4ba7-84fa-10d197b064e3.png",
+          "category": "ingredients",
+          "language": "ar",
+          "alt": "علبة SOME BY MI يوجا نياسين: نياسيناميد 5 %، مستخلص يوجا، الحجم 60 غرام"
+        },
+        {
+          "file": "images/some-by-mi-yuja-niacin-cream/visuels/some-by-mi-yuja-niacin-cream-presentation-ar-01.webp",
+          "original": "some-by-mi-yuja-niacin-cream/visuels_ar/hf_20261102_145116_35f649ec-0ca1-4c0b-b554-e169a5404694.png",
+          "category": "banner",
+          "language": "ar",
+          "alt": "كريم SOME BY MI يوجا نياسين المضاد للشوائب محاط بثمار اليوجا"
         }
       ],
       "missing": [
@@ -249,7 +270,8 @@
         "Code-barres / SKU"
       ],
       "to_verify": [
-        "Le visuel « Ingrédients clés » affiche « Testé non comédogène » : mention non lisible sur les photos réelles, à confirmer sur la boîte."
+        "Le visuel « Ingrédients clés » affiche « Testé non comédogène » : mention non lisible sur les photos réelles, à confirmer sur la boîte.",
+        "Les visuels arabes « Présentation » et « Ingrédients clés » reprennent « testé non comédogène » : même vérification que la version française."
       ]
     },
     {
@@ -514,6 +536,20 @@
           "category": "usage",
           "language": "ar",
           "alt": "طريقة الاستعمال في 3 خطوات: التنظيف، أخذ كمية صغيرة، التدليك بلطف"
+        },
+        {
+          "file": "images/vitamin-collagen-vital-cream/visuels/vitamin-collagen-vital-cream-presentation-ar-01.webp",
+          "original": "vitamin-collagen-vital-cream/visuels_ar/hf_20261102_142919_5bca6817-21ab-4f69-91e0-470064411cec.png",
+          "category": "banner",
+          "language": "ar",
+          "alt": "كريم Quret فيتامين كولاجين الحيوي: 50 غرام + كريم محيط العين 10 مل مجاناً"
+        },
+        {
+          "file": "images/vitamin-collagen-vital-cream/visuels/vitamin-collagen-vital-cream-bienfaits-ar-01.webp",
+          "original": "vitamin-collagen-vital-cream/visuels_ar/hf_20261102_143310_59f4e845-4a88-419f-9765-c324f80a69cb.png",
+          "category": "benefits",
+          "language": "ar",
+          "alt": "فيتامين وكولاجين: عناية بالفيتامين، عناية بالكولاجين، قوام كريمي، هدية متضمنة"
         }
       ],
       "missing": [
@@ -625,6 +661,27 @@
           "category": "usage",
           "language": "fr",
           "alt": "Mode d'utilisation en 3 étapes : peau propre, applicateur, tapoter doucement"
+        },
+        {
+          "file": "images/vitamin-collagen-vital-eye-cream/visuels/vitamin-collagen-vital-eye-cream-presentation-ar-01.webp",
+          "original": "vitamin-collagen-vital-eye-cream/visuels_ar/hf_20261102_144000_378a7b66-1965-47bd-b1d8-b2a8284d7358.png",
+          "category": "banner",
+          "language": "ar",
+          "alt": "كريم Quret فيتامين كولاجين لمحيط العينين: 25 مل + 10 مل مجاناً"
+        },
+        {
+          "file": "images/vitamin-collagen-vital-eye-cream/visuels/vitamin-collagen-vital-eye-cream-bienfaits-ar-01.webp",
+          "original": "vitamin-collagen-vital-eye-cream/visuels_ar/hf_20261102_144409_58591f2c-670a-41b3-9ce0-27e361f44ee6.png",
+          "category": "benefits",
+          "language": "ar",
+          "alt": "مطبق سهل، عناية بالفيتامينات مع الكولاجين، حجم 25 مل، هدية 10 مل مجاناً"
+        },
+        {
+          "file": "images/vitamin-collagen-vital-eye-cream/visuels/vitamin-collagen-vital-eye-cream-utilisation-ar-01.webp",
+          "original": "vitamin-collagen-vital-eye-cream/visuels_ar/hf_20261102_144545_11d62503-75f5-42e6-8e85-4b30c9303979.png",
+          "category": "usage",
+          "language": "ar",
+          "alt": "طريقة الاستعمال في 3 خطوات: بشرة نظيفة وجافة، الوضع بأداة التطبيق، التربيت برفق"
         }
       ],
       "missing": [

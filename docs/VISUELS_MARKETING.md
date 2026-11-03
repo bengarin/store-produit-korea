@@ -78,9 +78,10 @@ sur le français — jamais de mélange de langues sur une fiche).
 | ORJENA | Bienfaits ×2, Mode d'utilisation | Présentation : « كبسولات » = « capsules » (le produit est une émulsion) | 3 visuels arabes |
 | Baroness | Présentation (contient un faux bouton « اطلب الآن ») | Bienfaits : « (4 مجاني) » = « 4 gratuits » (traduction littérale de « 4 Free ») | 1 visuel arabe |
 | Biovène | Bienfaits | — | 1 visuel arabe |
-| Quret Vital Cream | Mode d'utilisation | — | 1 visuel arabe |
-| SOME BY MI, Quret Eye Cream | — (aucun visuel arabe hors avant/après) | — | visuels français (repli) |
+| Quret Vital Cream | Présentation, Bienfaits, Mode d'utilisation | — | 3 visuels arabes |
+| Quret Eye Cream | Présentation, Bienfaits, Mode d'utilisation | — | 3 visuels arabes |
+| SOME BY MI | Présentation, Ingrédients clés, Mode d'utilisation | — (« testé non comédogène » : [À VÉRIFIER] comme en français) | 3 visuels arabes |
 
-Non importés : 10 « avant / après » (images générées, non authentiques ; 3 portent des libellés français) →
+Non importés : 12 « avant / après » (images générées, non authentiques ; 4 portent des libellés français) →
 `originaux/_non_importes/visuels_ar/`. Un visuel masqué s'active dans Administration → Visuels marketing après
 correction du texte.
