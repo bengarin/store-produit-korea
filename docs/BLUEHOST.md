@@ -23,6 +23,8 @@
 | **VPS (auto-géré)** | ⚠️ Faisable | AlmaLinux (8, 9 ou 10 au choix selon la page Bluehost consultée le 2026-11-03 ; 9 testé dans ce guide), accès root SSH ; MySQL non fourni en version précise par Bluehost [NON VÉRIFIÉ] ; on installe soi-même Python 3.11/3.12, MySQL 8.4 (dépôt officiel MySQL), nginx, certbot. Bluehost indique ne **pas** installer Django lui-même : l'exploitation (mises à jour, sécurité, sauvegardes) est à votre charge. |
 | **Dédié** | ⚠️ Faisable mais surdimensionné | Même chose que le VPS, plus cher. |
 
+**Lieu du serveur** : choisir **Frankfurt** (centre de données VPS autogéré annoncé par Bluehost, le plus proche du Maroc) ; il ne peut plus être changé après la création. Héberger hors du Maroc = transfert de données personnelles à l'étranger : vérifier l'autorisation CNDP (voir `PREPARATION_MISE_EN_LIGNE.md`).
+
 **Recommandation** : VPS uniquement, et seulement si quelqu'un peut administrer un serveur Linux (mises à jour
 mensuelles, surveillance, restauration). Sinon, une plateforme gérée pour Python (ex. un PaaS) réduit le risque
 d'exploitation — à comparer sur prix et localisation [NON VÉRIFIÉ, comparatif non fait].

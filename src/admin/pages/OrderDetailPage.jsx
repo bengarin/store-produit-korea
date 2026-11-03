@@ -5,7 +5,7 @@ import { admin, adminUrl } from '../api.js';
 import { useAuth } from '../auth.jsx';
 import { Badge, Button, ButtonLink, Card, ErrorState, Field, Modal, Notice, PageHeader, PaymentBadge, SkeletonRows, StatusBadge } from '../components/ui.jsx';
 import { useToast } from '../../context/ToastContext.jsx';
-import { ORDER_STATUS, STATUS_ACTION, formatDate, formatMoney, formatPhone, whatsappLink } from '../format.js';
+import { ORDER_STATUS, STATUS_ACTION, formatDate, formatMoney, formatPhone, orderWhatsappMessage, whatsappLink } from '../format.js';
 import { useApi, useTitle } from '../hooks.js';
 import { can } from '../permissions.js';
 
@@ -69,7 +69,7 @@ export default function OrderDetailPage() {
   if (error) return <div className="adm-page"><PageHeader title="Commande" back={{ to: '/admin/orders', label: 'Commandes' }} /><ErrorState error={error} onRetry={reload} /></div>;
   if (!order) return <div className="adm-page"><SkeletonRows rows={8} /></div>;
 
-  const wa = whatsappLink(order.phone, `Bonjour ${order.customerName}, nous vous contactons au sujet de votre commande ${order.number} sur Ma Petite Corée.`);
+  const wa = whatsappLink(order.phone, orderWhatsappMessage(order));
   const noteValue = note ?? order.internalNote;
 
   const saveNote = async () => {

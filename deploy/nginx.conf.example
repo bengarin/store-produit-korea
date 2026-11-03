@@ -76,6 +76,9 @@ server {
         location ~* \.(php|py|pl|cgi|sh|html?|svg)$ { return 403; }
     }
 
+    # Fichiers cachés (.env, .git…) : jamais servis, même par erreur de configuration.
+    location ~ /\.(?!well-known/) { return 404; }
+
     # Tout le reste (pages, API, admin, sitemap, robots) : Django
     location / {
         proxy_pass http://mpc_django;

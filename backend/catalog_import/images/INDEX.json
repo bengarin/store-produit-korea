@@ -1,0 +1,398 @@
+{
+ "images/baroness-aloe-vera-gel/baroness-aloe-vera-gel-01-packshot.webp": {
+  "bytes": 35406,
+  "key_sha256": "517d650398a7bbe9cd22509ce5c150fd81bdf7d100ef777aa8d14ee30cd3b021",
+  "mode": "copie",
+  "original": "baroness-aloe-vera-gel/photos/0TF17566_1_3d60.webp",
+  "original_bytes": 24502
+ },
+ "images/baroness-aloe-vera-gel/baroness-aloe-vera-gel-02-ingredient.webp": {
+  "bytes": 52524,
+  "key_sha256": "0f043983c068cfefa89b83480532c32829c06fcfa848ca47b623b9f456a75ec1",
+  "mode": "copie",
+  "original": "baroness-aloe-vera-gel/photos/Baroness-Aloe-Vera-gel.jpg",
+  "original_bytes": 102253
+ },
+ "images/baroness-aloe-vera-gel/baroness-aloe-vera-gel-03-en-main.webp": {
+  "bytes": 55570,
+  "key_sha256": "bfd6d41a8a0457b4ee5a1e101ad37ddb7d1432ded4278de9894ed4a9dcd2f09f",
+  "mode": "copie",
+  "original": "baroness-aloe-vera-gel/photos/images.jpg",
+  "original_bytes": 44388
+ },
+ "images/baroness-aloe-vera-gel/baroness-aloe-vera-gel-scene.webp": {
+  "bytes": 89924,
+  "bytes_640": 41944,
+  "file_640": "images/baroness-aloe-vera-gel/baroness-aloe-vera-gel-scene-640.webp",
+  "key_sha256": "f6164dc9e3caad748997d3b21441d9370d14597ea74ee71182b7bceca0361cb0",
+  "mode": "copie",
+  "original": null,
+  "original_bytes": null
+ },
+ "images/baroness-aloe-vera-gel/visuels/baroness-aloe-vera-gel-presentation-01.webp": {
+  "bytes": 154828,
+  "bytes_640": 45568,
+  "file_640": "images/baroness-aloe-vera-gel/visuels/baroness-aloe-vera-gel-presentation-01-640.webp",
+  "height": 1600,
+  "key_sha256": "27ff4537a6c6925806fde237a3ad12bda5b991d3682ad3585034ea6b1398be58",
+  "mode": "conversion",
+  "original": "baroness-aloe-vera-gel/visuels/hf_20261030_093926_09769a8d-b435-4186-9e56-c72c8416570b.png",
+  "original_bytes": 5793464,
+  "width": 1600
+ },
+ "images/baroness-aloe-vera-gel/visuels/baroness-aloe-vera-gel-utilisation-01.webp": {
+  "bytes": 146502,
+  "bytes_640": 41302,
+  "file_640": "images/baroness-aloe-vera-gel/visuels/baroness-aloe-vera-gel-utilisation-01-640.webp",
+  "height": 1600,
+  "key_sha256": "639dd0b1d784034bc0c7fe17d75a6c24a55642e155dbee6db181c9dff64c1c2d",
+  "mode": "conversion",
+  "original": "baroness-aloe-vera-gel/visuels/hf_20261030_102010_5de22ca2-f64d-429d-beb5-c2f8e20929ea (1).png",
+  "original_bytes": 6728984,
+  "width": 1600
+ },
+ "images/biovene-eye-patches/biovene-eye-patches-01-packshot.webp": {
+  "bytes": 12170,
+  "key_sha256": "7017f1e2c4e5bf46bf6e43db24552698b646a5e9bd51ee08e743e02142e865c2",
+  "mode": "copie",
+  "original": "biovene-eye-patches/photos/8436575098029_1_EYE_MASK_TRIPEPTIDE_AGE_DEFY_BV_HEP25_2_2761.webp",
+  "original_bytes": 9598
+ },
+ "images/biovene-eye-patches/biovene-eye-patches-02-texture.webp": {
+  "bytes": 54318,
+  "key_sha256": "64381a539ca108a605b7dbe5b1c52d10ea5ad5e465059df8608c09a4f541bb42",
+  "mode": "copie",
+  "original": "biovene-eye-patches/photos/8436575098029_2_EYE_MASK_TRIPEPTIDE_AGE_DEFY_BV_HEP25_2_3ea1.webp",
+  "original_bytes": 32844
+ },
+ "images/biovene-eye-patches/biovene-eye-patches-03-boite.webp": {
+  "bytes": 31634,
+  "key_sha256": "60d1da56f77e77ff02e0a050e65baa1e04b396502694d4999297893f445cbcc3",
+  "mode": "copie",
+  "original": "biovene-eye-patches/photos/8436575098029_3_EYE_MASK_TRIPEPTIDE_AGE_DEFY_BV_HEP25_2_222f.webp",
+  "original_bytes": 21894
+ },
+ "images/biovene-eye-patches/biovene-eye-patches-04-ambiance.webp": {
+  "bytes": 32498,
+  "key_sha256": "e894e4b34eb266e7af2f2473fc96ca7808eb1e92f067359824ba1d0898336c7d",
+  "mode": "copie",
+  "original": "biovene-eye-patches/photos/FullSizeRender_ae3cb8a2-e109-4bb2-a18a-ca9360223d41.webp",
+  "original_bytes": 39284
+ },
+ "images/biovene-eye-patches/biovene-eye-patches-05-ambiance-boite.webp": {
+  "bytes": 56352,
+  "key_sha256": "853b5f30738512d46900594e25ff16aba7d67ac55713b0a6f19302d6475d3720",
+  "mode": "copie",
+  "original": "biovene-eye-patches/photos/rn-image_picker_lib_temp_878be93c-3eaf-4129-9826-c9ff4f34edef.webp",
+  "original_bytes": 63726
+ },
+ "images/biovene-eye-patches/biovene-eye-patches-scene.webp": {
+  "bytes": 88242,
+  "bytes_640": 41196,
+  "file_640": "images/biovene-eye-patches/biovene-eye-patches-scene-640.webp",
+  "key_sha256": "a793b35d7ccfe5c319f9ff08aa1b3509470dfde3852b610a4b9782742dc8fe65",
+  "mode": "copie",
+  "original": null,
+  "original_bytes": null
+ },
+ "images/biovene-eye-patches/visuels/biovene-eye-patches-bienfaits-01.webp": {
+  "bytes": 101588,
+  "bytes_640": 30576,
+  "file_640": "images/biovene-eye-patches/visuels/biovene-eye-patches-bienfaits-01-640.webp",
+  "height": 1600,
+  "key_sha256": "58bb737b9c9abd470df7bb054ee90ae8959e4479c3104b43b26f6dcf7103f8b1",
+  "mode": "conversion",
+  "original": "biovene-eye-patches/visuels/hf_20261030_093943_423b0c90-0f2c-4c00-88f2-c09892dcb6ac.png",
+  "original_bytes": 4539034,
+  "width": 1600
+ },
+ "images/biovene-eye-patches/visuels/biovene-eye-patches-bienfaits-02.webp": {
+  "bytes": 104396,
+  "bytes_640": 29214,
+  "file_640": "images/biovene-eye-patches/visuels/biovene-eye-patches-bienfaits-02-640.webp",
+  "height": 1600,
+  "key_sha256": "2df9e6066d5520e43d1fc3322dc077bf540d45260ccd38f0a8a0ba6c229298a2",
+  "mode": "conversion",
+  "original": "biovene-eye-patches/visuels/hf_20261030_094142_bd047e30-1778-4d12-9a3c-ff15c6a4466e.png",
+  "original_bytes": 4937939,
+  "width": 1600
+ },
+ "images/biovene-eye-patches/visuels/biovene-eye-patches-presentation-01.webp": {
+  "bytes": 108972,
+  "bytes_640": 28696,
+  "file_640": "images/biovene-eye-patches/visuels/biovene-eye-patches-presentation-01-640.webp",
+  "height": 1600,
+  "key_sha256": "2e4123a637a4f50653f35792875128b647c488ee71912810516c7e2905b20097",
+  "mode": "conversion",
+  "original": "biovene-eye-patches/visuels/hf_20261030_094124_e9fbde6c-a509-4f84-b178-199443a9bac8.png",
+  "original_bytes": 5376865,
+  "width": 1600
+ },
+ "images/biovene-eye-patches/visuels/biovene-eye-patches-utilisation-01.webp": {
+  "bytes": 139418,
+  "bytes_640": 40336,
+  "file_640": "images/biovene-eye-patches/visuels/biovene-eye-patches-utilisation-01-640.webp",
+  "height": 1600,
+  "key_sha256": "45ff17748f0bb0fae9032aa6feab721b06976139a1dc67bc93af909cc001b237",
+  "mode": "conversion",
+  "original": "biovene-eye-patches/visuels/hf_20261030_102043_d059fbe3-5816-4b8b-8eb1-4aaac1e7a332.png",
+  "original_bytes": 5346956,
+  "width": 1600
+ },
+ "images/orjena-power-collagen-emulsion/orjena-power-collagen-emulsion-01-packshot.webp": {
+  "bytes": 14106,
+  "key_sha256": "86af8e99e49e20a4d3f2c614d3397ab92edf9cc09a502fcae8bb47fd98f9b8dc",
+  "mode": "copie",
+  "original": "orjena-power-collagen-emulsion/photos/4_3903cff0-98b2-482b-822b-b758556d5ca1_720x.webp",
+  "original_bytes": 16642
+ },
+ "images/orjena-power-collagen-emulsion/orjena-power-collagen-emulsion-02-boite.webp": {
+  "bytes": 26270,
+  "key_sha256": "cec8c658fba17f33b362e134adb5f13d9cda271e436535641a598cf6b74e4c6e",
+  "mode": "copie",
+  "original": "orjena-power-collagen-emulsion/photos/Power_Collagen_Emulsion_720x.webp",
+  "original_bytes": 32032
+ },
+ "images/orjena-power-collagen-emulsion/orjena-power-collagen-emulsion-03-en-main.webp": {
+  "bytes": 18168,
+  "key_sha256": "3d60c4aeee094b2008c2f2fdb9f596fe32612f7eb9c021d6ac3c414cd34d78a6",
+  "mode": "copie",
+  "original": "orjena-power-collagen-emulsion/photos/4_2_6486eb7f-c620-4c5a-8625-31f9af6b89e5_720x.webp",
+  "original_bytes": 22788
+ },
+ "images/orjena-power-collagen-emulsion/orjena-power-collagen-emulsion-scene.webp": {
+  "bytes": 88634,
+  "bytes_640": 40962,
+  "file_640": "images/orjena-power-collagen-emulsion/orjena-power-collagen-emulsion-scene-640.webp",
+  "key_sha256": "f0bcda1a1f2f0c14440606574381555f9b3693590b68ffc42cfe718f1d835302",
+  "mode": "copie",
+  "original": null,
+  "original_bytes": null
+ },
+ "images/orjena-power-collagen-emulsion/visuels/orjena-power-collagen-emulsion-bienfaits-01.webp": {
+  "bytes": 76322,
+  "bytes_640": 27054,
+  "file_640": "images/orjena-power-collagen-emulsion/visuels/orjena-power-collagen-emulsion-bienfaits-01-640.webp",
+  "height": 1600,
+  "key_sha256": "aa2c1a855fceb7ac40451d0f7b8e20a48b0a7b18c52f2cfd1856bc090a4a9e75",
+  "mode": "conversion",
+  "original": "orjena-power-collagen-emulsion/visuels/hf_20261030_094232_1c50694a-dd47-40bf-8bcc-beb869601097.png",
+  "original_bytes": 5235456,
+  "width": 1600
+ },
+ "images/orjena-power-collagen-emulsion/visuels/orjena-power-collagen-emulsion-bienfaits-02.webp": {
+  "bytes": 64368,
+  "bytes_640": 19598,
+  "file_640": "images/orjena-power-collagen-emulsion/visuels/orjena-power-collagen-emulsion-bienfaits-02-640.webp",
+  "height": 1600,
+  "key_sha256": "612556e819055dafba1c64fe1fb31e5906d4579ea9342b10f5e21196385a3e03",
+  "mode": "conversion",
+  "original": "orjena-power-collagen-emulsion/visuels/hf_20261030_094257_4144fae9-e4c7-4e56-9a1a-cd5ccf976c4e.png",
+  "original_bytes": 4011008,
+  "width": 1600
+ },
+ "images/orjena-power-collagen-emulsion/visuels/orjena-power-collagen-emulsion-presentation-01.webp": {
+  "bytes": 64890,
+  "bytes_640": 21206,
+  "file_640": "images/orjena-power-collagen-emulsion/visuels/orjena-power-collagen-emulsion-presentation-01-640.webp",
+  "height": 1600,
+  "key_sha256": "b233ac1120494cd478a30620e0dac4ec1e52f9cd29d0a9dab2ba25ffb5216ab8",
+  "mode": "conversion",
+  "original": "orjena-power-collagen-emulsion/visuels/hf_20261030_094220_94b93032-34de-4243-b63a-86943750c213.png",
+  "original_bytes": 4476654,
+  "width": 1600
+ },
+ "images/orjena-power-collagen-emulsion/visuels/orjena-power-collagen-emulsion-utilisation-01.webp": {
+  "bytes": 101158,
+  "bytes_640": 31604,
+  "file_640": "images/orjena-power-collagen-emulsion/visuels/orjena-power-collagen-emulsion-utilisation-01-640.webp",
+  "height": 1600,
+  "key_sha256": "63f088f8e760c365bf152e2b02e9e142aa8b011e540262c18b25a51865d1da31",
+  "mode": "conversion",
+  "original": "orjena-power-collagen-emulsion/visuels/hf_20261030_103329_a080f747-8990-402b-890d-7d368c3e88ef.png",
+  "original_bytes": 4951119,
+  "width": 1600
+ },
+ "images/some-by-mi-yuja-niacin-cream/some-by-mi-yuja-niacin-cream-01-packshot.webp": {
+  "bytes": 15098,
+  "key_sha256": "d439f49aed66e184f4e5a6392b7743e1c4cc03b1a9b42584d8f1dc84c58deacc",
+  "mode": "copie",
+  "original": "some-by-mi-yuja-niacin-cream/photos/UnYYYtitled-1.webp",
+  "original_bytes": 18712
+ },
+ "images/some-by-mi-yuja-niacin-cream/some-by-mi-yuja-niacin-cream-02-ambiance.webp": {
+  "bytes": 80082,
+  "key_sha256": "fe34ab496e86acc33ece0ab2d1c645ea89f2df22aae861dd8b72863f594bbae9",
+  "mode": "copie",
+  "original": "some-by-mi-yuja-niacin-cream/photos/some-by-mi-yuja-niacin-anti-blemish-cream-788635.webp",
+  "original_bytes": 94782
+ },
+ "images/some-by-mi-yuja-niacin-cream/some-by-mi-yuja-niacin-cream-03-texture.webp": {
+  "bytes": 8776,
+  "key_sha256": "540012f88489e66c82e3bb4555cd354678d58166df5a753b238d7507a5474b2f",
+  "mode": "copie",
+  "original": "some-by-mi-yuja-niacin-cream/photos/some-by-mi-yuja-niacin-anti-blemish-cream-364275.webp",
+  "original_bytes": 11206
+ },
+ "images/some-by-mi-yuja-niacin-cream/some-by-mi-yuja-niacin-cream-04-application.webp": {
+  "bytes": 33828,
+  "key_sha256": "e9c047e1a8867bc6160f814489659ff9847f07b42bd27167af90e77ed8e3d645",
+  "mode": "copie",
+  "original": "some-by-mi-yuja-niacin-cream/photos/some-by-mi-yuja-niacin-anti-blemish-cream-427317.webp",
+  "original_bytes": 38780
+ },
+ "images/some-by-mi-yuja-niacin-cream/some-by-mi-yuja-niacin-cream-scene.webp": {
+  "bytes": 88440,
+  "bytes_640": 39190,
+  "file_640": "images/some-by-mi-yuja-niacin-cream/some-by-mi-yuja-niacin-cream-scene-640.webp",
+  "key_sha256": "0713de0f0505a919f976b8163ea5ae63c0d35f617b3857b526a65281195ec37f",
+  "mode": "copie",
+  "original": null,
+  "original_bytes": null
+ },
+ "images/some-by-mi-yuja-niacin-cream/visuels/some-by-mi-yuja-niacin-cream-ingredients-01.webp": {
+  "bytes": 104458,
+  "bytes_640": 35040,
+  "file_640": "images/some-by-mi-yuja-niacin-cream/visuels/some-by-mi-yuja-niacin-cream-ingredients-01-640.webp",
+  "height": 1600,
+  "key_sha256": "d803fd42bb288339bb8577453b9688ee209ef9c501f6cf7dd994d638adff5a56",
+  "mode": "conversion",
+  "original": "some-by-mi-yuja-niacin-cream/visuels/hf_20261030_093830_0f8f3094-2ce4-4d52-84de-2ca5c3d877e7.png",
+  "original_bytes": 4539528,
+  "width": 1600
+ },
+ "images/some-by-mi-yuja-niacin-cream/visuels/some-by-mi-yuja-niacin-cream-presentation-01.webp": {
+  "bytes": 115932,
+  "bytes_640": 35426,
+  "file_640": "images/some-by-mi-yuja-niacin-cream/visuels/some-by-mi-yuja-niacin-cream-presentation-01-640.webp",
+  "height": 1600,
+  "key_sha256": "05924b8cfe9c59a32890719dae3da3a41cb15931fb1457df562db41ca5b154f2",
+  "mode": "conversion",
+  "original": "some-by-mi-yuja-niacin-cream/visuels/hf_20261029_161705_9a6d79db-ad6c-43b4-b7a3-6342983c2910.png",
+  "original_bytes": 5086822,
+  "width": 1195
+ },
+ "images/vitamin-collagen-vital-cream/visuels/vitamin-collagen-vital-cream-bienfaits-01.webp": {
+  "bytes": 82190,
+  "bytes_640": 26804,
+  "file_640": "images/vitamin-collagen-vital-cream/visuels/vitamin-collagen-vital-cream-bienfaits-01-640.webp",
+  "height": 1600,
+  "key_sha256": "8939a7be6448ee9e92c06fdb8253fbabbb8d08b47e2d9b32a459c822aeb5f8a9",
+  "mode": "conversion",
+  "original": "vitamin-collagen-vital-cream/visuels/hf_20261030_093756_4af58037-d47a-4bd5-bb93-e158c3497bc5.png",
+  "original_bytes": 4267831,
+  "width": 1600
+ },
+ "images/vitamin-collagen-vital-cream/visuels/vitamin-collagen-vital-cream-presentation-01.webp": {
+  "bytes": 92958,
+  "bytes_640": 28958,
+  "file_640": "images/vitamin-collagen-vital-cream/visuels/vitamin-collagen-vital-cream-presentation-01-640.webp",
+  "height": 1600,
+  "key_sha256": "10565c3df559a96b7e7508445015e999e0a8a638e6772832b44703d1acc2ef75",
+  "mode": "conversion",
+  "original": "vitamin-collagen-vital-cream/visuels/hf_20261029_152939_94f69d93-add0-4781-bc46-64cddef508cc.png",
+  "original_bytes": 5241220,
+  "width": 1600
+ },
+ "images/vitamin-collagen-vital-cream/visuels/vitamin-collagen-vital-cream-presentation-02.webp": {
+  "bytes": 112226,
+  "bytes_640": 33770,
+  "file_640": "images/vitamin-collagen-vital-cream/visuels/vitamin-collagen-vital-cream-presentation-02-640.webp",
+  "height": 1600,
+  "key_sha256": "c406ebe72369ae6acfc371cc0aac57e1d44cb8db7153a87337233a163bd76c1b",
+  "mode": "conversion",
+  "original": "vitamin-collagen-vital-cream/visuels/hf_20261030_093714_b2e8daaa-0d57-4775-9fc0-e1d4884b18b0.png",
+  "original_bytes": 5395162,
+  "width": 1600
+ },
+ "images/vitamin-collagen-vital-cream/visuels/vitamin-collagen-vital-cream-utilisation-01.webp": {
+  "bytes": 122998,
+  "bytes_640": 35104,
+  "file_640": "images/vitamin-collagen-vital-cream/visuels/vitamin-collagen-vital-cream-utilisation-01-640.webp",
+  "height": 1600,
+  "key_sha256": "31b0abe008da35bf4d08105fac03e14ca3e59c93c227f7599d9f953013f17760",
+  "mode": "conversion",
+  "original": "vitamin-collagen-vital-cream/visuels/hf_20261030_101737_14085994-1b96-49f7-8cd0-9cdd10514dec.png",
+  "original_bytes": 6470642,
+  "width": 1600
+ },
+ "images/vitamin-collagen-vital-cream/vitamin-collagen-vital-cream-01-packshot.webp": {
+  "bytes": 22276,
+  "key_sha256": "e395c5119dd3570c58dc3919ed0abf9dfa46351263c591b0aa4b8e8c6723821b",
+  "mode": "copie",
+  "original": "vitamin-collagen-vital-cream/photos/00-10027313_1.png",
+  "original_bytes": 436196
+ },
+ "images/vitamin-collagen-vital-cream/vitamin-collagen-vital-cream-02-coffret.webp": {
+  "bytes": 12370,
+  "key_sha256": "2a543c24520ce83cb2b8de707ad57960f9767471f3b4a29f2d2aa6007c41abbe",
+  "mode": "copie",
+  "original": "vitamin-collagen-vital-cream/photos/Quret_Vitamin_Collagen_Vital_Cream.webp",
+  "original_bytes": 11784
+ },
+ "images/vitamin-collagen-vital-cream/vitamin-collagen-vital-cream-scene.webp": {
+  "bytes": 82946,
+  "bytes_640": 38702,
+  "file_640": "images/vitamin-collagen-vital-cream/vitamin-collagen-vital-cream-scene-640.webp",
+  "key_sha256": "4eb4d02530744f56f40ad731ea9ea1151c72af804da079e9a6adc192406d479e",
+  "mode": "copie",
+  "original": null,
+  "original_bytes": null
+ },
+ "images/vitamin-collagen-vital-eye-cream/visuels/vitamin-collagen-vital-eye-cream-bienfaits-01.webp": {
+  "bytes": 89124,
+  "bytes_640": 28618,
+  "file_640": "images/vitamin-collagen-vital-eye-cream/visuels/vitamin-collagen-vital-eye-cream-bienfaits-01-640.webp",
+  "height": 1600,
+  "key_sha256": "ce230ce48b6518c42eb50abd316c11b608321b6d42e126cdde2d6fa731e7a9ce",
+  "mode": "conversion",
+  "original": "vitamin-collagen-vital-eye-cream/visuels/hf_20261030_093808_07ae46e7-2a14-43d4-b219-1dec03b7f88b.png",
+  "original_bytes": 4957663,
+  "width": 1600
+ },
+ "images/vitamin-collagen-vital-eye-cream/visuels/vitamin-collagen-vital-eye-cream-presentation-01.webp": {
+  "bytes": 121480,
+  "bytes_640": 36454,
+  "file_640": "images/vitamin-collagen-vital-eye-cream/visuels/vitamin-collagen-vital-eye-cream-presentation-01-640.webp",
+  "height": 1600,
+  "key_sha256": "d387fc0280c7ee9b00d356d2deb45bd1b80bee3a76a66f335c1e0ca1dc638856",
+  "mode": "conversion",
+  "original": "vitamin-collagen-vital-eye-cream/visuels/hf_20261030_094408_2a807e03-fd78-475b-949b-086757eac2ce.png",
+  "original_bytes": 5865054,
+  "width": 1600
+ },
+ "images/vitamin-collagen-vital-eye-cream/visuels/vitamin-collagen-vital-eye-cream-utilisation-01.webp": {
+  "bytes": 129992,
+  "bytes_640": 37648,
+  "file_640": "images/vitamin-collagen-vital-eye-cream/visuels/vitamin-collagen-vital-eye-cream-utilisation-01-640.webp",
+  "height": 1600,
+  "key_sha256": "ead3a6aaf4c1377e66cfea6cff5fd06ba0d80ffc11f9dc5d1e332f5299f4b79d",
+  "mode": "conversion",
+  "original": "vitamin-collagen-vital-eye-cream/visuels/hf_20261030_101805_13d38455-0817-4f9d-abbb-580ce170a062.png",
+  "original_bytes": 5180893,
+  "width": 1600
+ },
+ "images/vitamin-collagen-vital-eye-cream/vitamin-collagen-vital-eye-cream-01-packshot.webp": {
+  "bytes": 19442,
+  "height": 500,
+  "key_sha256": "03e5fa5138fab203066e845cf41325478ba92c0494c5a64dc1ee8c55a275e4a4",
+  "mode": "conversion",
+  "original": "vitamin-collagen-vital-eye-cream/photos/720af36445c3d4df0f93275bb4021280.png",
+  "original_bytes": 115870,
+  "width": 500
+ },
+ "images/vitamin-collagen-vital-eye-cream/vitamin-collagen-vital-eye-cream-02-boite.webp": {
+  "bytes": 13026,
+  "key_sha256": "8c92e0391275b6f77d91b4a9e5ac461f7e2c09dbeb566d66d13880ac8ff6d196",
+  "mode": "copie",
+  "original": "vitamin-collagen-vital-eye-cream/photos/_0025_8809632524753_fdf6.webp",
+  "original_bytes": 9546
+ },
+ "images/vitamin-collagen-vital-eye-cream/vitamin-collagen-vital-eye-cream-03-tube-10ml.webp": {
+  "bytes": 5268,
+  "key_sha256": "af32c916175353de5fd5c333f46baf458de5e09ee20cb236ae011e8d61fb2544",
+  "mode": "copie",
+  "original": "vitamin-collagen-vital-eye-cream/photos/Quret_Vitamin_Collagen_Vital_Cream (1).webp",
+  "original_bytes": 5032
+ }
+}

@@ -32,6 +32,32 @@ export function whatsappLink(e164, message = '') {
   return `https://wa.me/${digits}${message ? `?text=${encodeURIComponent(message)}` : ''}`;
 }
 
+/**
+ * Message WhatsApp pré-rempli. Commande « en attente » : récapitulatif à faire confirmer par le client
+ * (articles, total à payer à la livraison, adresse). Rien n'est envoyé automatiquement : l'admin relit et envoie.
+ */
+export function orderWhatsappMessage(order) {
+  const greeting = `Bonjour ${order.customerName},`;
+  if (order.status !== 'pending') {
+    return `${greeting} nous vous contactons au sujet de votre commande ${order.number} sur Ma Petite Corée.`;
+  }
+  const lines = (order.items || []).map((it) => {
+    const variant = it.variantTitle && it.variantTitle !== 'Par défaut' ? ` (${it.variantTitle})` : '';
+    return `- ${it.quantity} × ${it.productName}${variant} : ${formatMoney(it.lineTotal)}`;
+  });
+  const fee = Number(order.shippingFee) === 0 ? 'offerte' : formatMoney(order.shippingFee);
+  return [
+    `${greeting} merci pour votre commande ${order.number} sur Ma Petite Corée.`,
+    '',
+    ...lines,
+    `Livraison : ${fee}`,
+    `Total à payer à la livraison : ${formatMoney(order.total)}`,
+    `Adresse : ${order.address}, ${order.city}`,
+    '',
+    'Pouvez-vous confirmer votre commande en répondant « OUI » ? Merci !',
+  ].join('\n');
+}
+
 export const ORDER_STATUS = {
   pending: { label: 'En attente', tone: 'warning' },
   confirmed: { label: 'Confirmée', tone: 'info' },

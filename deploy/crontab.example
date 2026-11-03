@@ -8,3 +8,5 @@ VENV=/srv/mpc/venv
 17 3 * * * /srv/mpc/app/scripts/ops/manage.sh clearsessions >> /var/log/mpc/maintenance.log 2>&1
 # Sauvegarde base + médias (chaque nuit, 30 jours conservés) — puis la COPIER HORS DU SERVEUR (voir docs/PRODUCTION.md)
 41 2 * * * MYSQL_CNF=/etc/mpc/backup.cnf DB_NAME=mapetitecoree MEDIA_ROOT=/srv/mpc/media BACKUP_DIR=/srv/mpc/backups RETENTION_DAYS=30 /srv/mpc/app/scripts/ops/backup.sh >> /var/log/mpc/backup.log 2>&1
+# Copie de la dernière sauvegarde HORS du serveur (rclone configuré une fois, remote chiffré « crypt »)
+11 3 * * * BACKUP_DIR=/srv/mpc/backups RCLONE_REMOTE=mpc-backup-chiffre:mapetitecoree /srv/mpc/app/scripts/ops/offsite.sh >> /var/log/mpc/backup.log 2>&1

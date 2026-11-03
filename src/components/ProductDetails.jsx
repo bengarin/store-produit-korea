@@ -27,7 +27,7 @@ function useSections(product) {
             <h3 className="pdp-desc__title">{t('pdp.about')}</h3>
             <p dir={autoDir}>{product.summary}</p>
             <RichDescription html={product.descriptionHtml} />
-            <p className="pdp-desc__meta"><strong>{t('pdp.skinType')}</strong> {autoDir ? <span dir={autoDir}>{product.skinTypes}</span> : product.skinTypes}</p>
+            {product.skinTypes && <p className="pdp-desc__meta"><strong>{t('pdp.skinType')}</strong> {autoDir ? <span dir={autoDir}>{product.skinTypes}</span> : product.skinTypes}</p>}
           </div>
           <ProductImage image={visual} className="pdp-desc__visual" />
           <ul className="pdp-tiles pdp-tiles--wide">
@@ -46,7 +46,7 @@ function useSections(product) {
       body: (
         <>
           <ul className="pdp-list">{product.benefits.map((x) => <li key={x} dir={autoDir}>{x}</li>)}</ul>
-          <p className="pdp-desc__meta"><strong>{t('pdp.skinType')}</strong> {autoDir ? <span dir={autoDir}>{product.skinTypes}</span> : product.skinTypes}</p>
+          {product.skinTypes && <p className="pdp-desc__meta"><strong>{t('pdp.skinType')}</strong> {autoDir ? <span dir={autoDir}>{product.skinTypes}</span> : product.skinTypes}</p>}
         </>
       ),
     },
@@ -68,7 +68,7 @@ export default function ProductDetails({ product, desktop }) {
           <h3 className="pdp-card__subtitle">{t('pdp.about')}</h3>
           <p dir={autoDir}>{product.summary}</p>
           <RichDescription html={product.descriptionHtml} />
-          <p className="pdp-desc__meta"><strong>{t('pdp.skinType')}</strong> {autoDir ? <span dir={autoDir}>{product.skinTypes}</span> : product.skinTypes}</p>
+          {product.skinTypes && <p className="pdp-desc__meta"><strong>{t('pdp.skinType')}</strong> {autoDir ? <span dir={autoDir}>{product.skinTypes}</span> : product.skinTypes}</p>}
         </>
       ) : sec.body;
     return (

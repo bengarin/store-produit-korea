@@ -1,0 +1,280 @@
+{
+  "version": 1,
+  "notes": [
+    "Catalogue des 6 produits de Ma Petite Corée. Chaque information vient des photos réelles des emballages (archive produit.rar) ou du nom du produit.",
+    "Prix : non renseignés. L'import met la variante par défaut à 0 DH et le produit en BROUILLON (état « en attente de tarification » : le serveur refuse la mise en ligne tant que le prix vaut 0).",
+    "Stock : jamais modifié par l'import (un nouveau produit démarre « non renseigné »).",
+    "Arabe : aucun champ arabe n'est écrit ni effacé (les propositions de docs/GUIDE_TRADUCTION_PRODUITS.md ne sont pas relues).",
+    "Avant / Après : aucun visuel importé (images générées, non authentiques)."
+  ],
+  "products": [
+    {
+      "slug": "baroness-aloe-vera-gel",
+      "position": 0,
+      "brand": "Baroness",
+      "name": "Aloe Vera Soothing Gel",
+      "display_name": "Baroness Aloe Vera Soothing Gel",
+      "format": "Pot — contenance non visible sur les photos",
+      "short_description": "Gel apaisant à l'aloe vera (99,85 % selon l'emballage).",
+      "summary": "Gel coréen à l'aloe vera de la marque Baroness. L'emballage indique une pureté d'aloe vera de 99,85 % et une formule « 4 Free ».",
+      "description_html": "<p>Le <strong>Aloe Vera Soothing Gel</strong> de Baroness est un gel à l'aloe vera fabriqué en Corée.</p><h3>Mentions de l'emballage</h3><ul><li>Aloe vera : pureté de 99,85 %.</li><li>« 4 Free » : sans paraben, sans colorant artificiel, sans huile minérale, sans benzophénone.</li><li>Aloe vera certifié USDA et IASC.</li></ul>",
+      "ingredients": ["Aloe vera — pureté de 99,85 % selon l'emballage"],
+      "benefits": [
+        "Texture gel",
+        "Sans paraben, colorant artificiel, huile minérale ni benzophénone (mention « 4 Free »)",
+        "Aloe vera certifié USDA et IASC (selon l'emballage)"
+      ],
+      "usage_steps": [
+        "Appliquer sur une peau propre.",
+        "Prélever une petite quantité de gel.",
+        "Faire pénétrer en tapotant doucement.",
+        "Faire un test sur une petite zone avant la première utilisation."
+      ],
+      "skin_types": "",
+      "categories": ["hydratation"],
+      "highlights": [
+        {"icon": "leaf", "label": "Aloe vera 99,85 %"},
+        {"icon": "droplets", "label": "Texture gel"},
+        {"icon": "flask", "label": "Formule « 4 Free »"},
+        {"icon": "sparkles", "label": "Aloe certifié USDA & IASC"}
+      ],
+      "gallery": [
+        {"file": "images/baroness-aloe-vera-gel/baroness-aloe-vera-gel-01-packshot.webp", "copy_from": "src/assets/products/baroness-aloe-vera-gel/packshot.webp", "original": "baroness-aloe-vera-gel/photos/0TF17566_1_3d60.webp", "alt": "Pot Baroness Aloe Vera Soothing Gel, vue de face", "kind": "packshot", "fit": "contain"},
+        {"file": "images/baroness-aloe-vera-gel/baroness-aloe-vera-gel-02-ingredient.webp", "copy_from": "src/assets/products/baroness-aloe-vera-gel/splash.webp", "original": "baroness-aloe-vera-gel/photos/Baroness-Aloe-Vera-gel.jpg", "alt": "Pot Baroness Aloe Vera entouré de feuilles d'aloe vera", "kind": "ingredient", "fit": "contain"},
+        {"file": "images/baroness-aloe-vera-gel/baroness-aloe-vera-gel-03-en-main.webp", "copy_from": "src/assets/products/baroness-aloe-vera-gel/in-hand.webp", "original": "baroness-aloe-vera-gel/photos/images.jpg", "alt": "Pot Baroness Aloe Vera Soothing Gel tenu en main", "kind": "in-hand", "fit": "cover"}
+      ],
+      "hover": {"gallery_index": 2, "position": ""},
+      "scene": {"file": "images/baroness-aloe-vera-gel/baroness-aloe-vera-gel-scene.webp", "file_640": "images/baroness-aloe-vera-gel/baroness-aloe-vera-gel-scene-640.webp", "copy_from": "src/assets/scenes/baroness-aloe-vera-gel.webp", "copy_from_640": "src/assets/scenes/baroness-aloe-vera-gel-640.webp", "alt": "Baroness Aloe Vera Soothing Gel parmi des feuilles d'aloe vera", "kind": "scene", "fit": "cover"},
+      "marketing": [
+        {"file": "images/baroness-aloe-vera-gel/visuels/baroness-aloe-vera-gel-presentation-01.webp", "original": "baroness-aloe-vera-gel/visuels/hf_20261030_093926_09769a8d-b435-4186-9e56-c72c8416570b.png", "category": "banner", "language": "fr", "alt": "Gel apaisant Baroness Aloe Vera 99,85 %, sans paraben, colorant artificiel, huile minérale ni benzophénone"},
+        {"file": "images/baroness-aloe-vera-gel/visuels/baroness-aloe-vera-gel-utilisation-01.webp", "original": "baroness-aloe-vera-gel/visuels/hf_20261030_102010_5de22ca2-f64d-429d-beb5-c2f8e20929ea (1).png", "category": "usage", "language": "fr", "alt": "Mode d'utilisation en 3 étapes : peau propre, petite quantité, tapoter doucement"}
+      ],
+      "missing": ["Contenance (ml) : non visible sur les photos", "Liste INCI complète", "Types de peau", "Mode d'emploi officiel de la marque", "Code-barres / SKU"],
+      "to_verify": []
+    },
+    {
+      "slug": "some-by-mi-yuja-niacin-cream",
+      "position": 1,
+      "brand": "SOME BY MI",
+      "name": "Yuja Niacin Anti Blemish Cream",
+      "display_name": "SOME BY MI Yuja Niacin Anti Blemish Cream",
+      "format": "Pot de 60 g",
+      "short_description": "Crème au yuja (70 %) et à la niacinamide (5 %), pot de 60 g.",
+      "summary": "Crème de la gamme Yuja Niacin de SOME BY MI. L'emballage indique 70 % d'extrait de yuja (agrume coréen) et 5 % de niacinamide.",
+      "description_html": "<p>La <strong>Yuja Niacin Anti Blemish Cream</strong> de SOME BY MI est une crème présentée par la marque comme anti-imperfections (« Anti Blemish »).</p><h3>Mentions de l'emballage</h3><ul><li>Extrait de yuja : 70 %.</li><li>Niacinamide : 5 %.</li><li>Poids net : 60 g.</li></ul>",
+      "ingredients": ["Extrait de yuja — 70 % selon l'emballage", "Niacinamide — 5 % selon l'emballage"],
+      "benefits": [
+        "Associe extrait de yuja et niacinamide",
+        "Présentée par la marque comme crème anti-imperfections (« Anti Blemish »)",
+        "Texture crème"
+      ],
+      "usage_steps": [
+        "Après le nettoyage, prélever une petite quantité.",
+        "Appliquer sur le visage en évitant le contour des yeux.",
+        "Faire pénétrer par légers tapotements."
+      ],
+      "skin_types": "",
+      "categories": ["eclat"],
+      "highlights": [
+        {"icon": "citrus", "label": "Extrait de yuja 70 %"},
+        {"icon": "sparkles", "label": "Niacinamide 5 %"},
+        {"icon": "droplets", "label": "Texture crème"},
+        {"icon": "flask", "label": "Pot de 60 g"}
+      ],
+      "gallery": [
+        {"file": "images/some-by-mi-yuja-niacin-cream/some-by-mi-yuja-niacin-cream-01-packshot.webp", "copy_from": "src/assets/products/some-by-mi-yuja-niacin-cream/packshot.webp", "original": "some-by-mi-yuja-niacin-cream/photos/UnYYYtitled-1.webp", "alt": "Pot SOME BY MI Yuja Niacin Anti Blemish Cream, vue de face", "kind": "packshot", "fit": "contain"},
+        {"file": "images/some-by-mi-yuja-niacin-cream/some-by-mi-yuja-niacin-cream-02-ambiance.webp", "copy_from": "src/assets/products/some-by-mi-yuja-niacin-cream/lifestyle.webp", "original": "some-by-mi-yuja-niacin-cream/photos/some-by-mi-yuja-niacin-anti-blemish-cream-788635.webp", "alt": "Crème SOME BY MI Yuja Niacin avec des tranches de yuja", "kind": "lifestyle", "fit": "cover"},
+        {"file": "images/some-by-mi-yuja-niacin-cream/some-by-mi-yuja-niacin-cream-03-texture.webp", "copy_from": "src/assets/products/some-by-mi-yuja-niacin-cream/texture.webp", "original": "some-by-mi-yuja-niacin-cream/photos/some-by-mi-yuja-niacin-anti-blemish-cream-364275.webp", "alt": "Texture de la crème SOME BY MI Yuja Niacin", "kind": "texture", "fit": "cover"},
+        {"file": "images/some-by-mi-yuja-niacin-cream/some-by-mi-yuja-niacin-cream-04-application.webp", "copy_from": "src/assets/products/some-by-mi-yuja-niacin-cream/in-use.webp", "original": "some-by-mi-yuja-niacin-cream/photos/some-by-mi-yuja-niacin-anti-blemish-cream-427317.webp", "alt": "Application de la crème SOME BY MI Yuja Niacin sur la joue", "kind": "in-use", "fit": "cover"}
+      ],
+      "hover": {"gallery_index": 1, "position": "50% 88%"},
+      "scene": {"file": "images/some-by-mi-yuja-niacin-cream/some-by-mi-yuja-niacin-cream-scene.webp", "file_640": "images/some-by-mi-yuja-niacin-cream/some-by-mi-yuja-niacin-cream-scene-640.webp", "copy_from": "src/assets/scenes/some-by-mi-yuja-niacin-cream.webp", "copy_from_640": "src/assets/scenes/some-by-mi-yuja-niacin-cream-640.webp", "alt": "SOME BY MI Yuja Niacin Cream entourée de fruits de yuja", "kind": "scene", "fit": "cover"},
+      "marketing": [
+        {"file": "images/some-by-mi-yuja-niacin-cream/visuels/some-by-mi-yuja-niacin-cream-presentation-01.webp", "original": "some-by-mi-yuja-niacin-cream/visuels/hf_20261029_161705_9a6d79db-ad6c-43b4-b7a3-6342983c2910.png", "category": "banner", "language": "fr", "alt": "Crème SOME BY MI Yuja Niacin Anti Blemish Cream entourée de yuzus"},
+        {"file": "images/some-by-mi-yuja-niacin-cream/visuels/some-by-mi-yuja-niacin-cream-ingredients-01.webp", "original": "some-by-mi-yuja-niacin-cream/visuels/hf_20261030_093830_0f8f3094-2ce4-4d52-84de-2ca5c3d877e7.png", "category": "ingredients", "language": "fr", "alt": "Boîte SOME BY MI Yuja Niacin : niacinamide 5 %, extrait de yuja, format 60 g"}
+      ],
+      "missing": ["Liste INCI complète", "Types de peau", "Code-barres / SKU"],
+      "to_verify": ["Le visuel « Ingrédients clés » affiche « Testé non comédogène » : mention non lisible sur les photos réelles, à confirmer sur la boîte."]
+    },
+    {
+      "slug": "biovene-eye-patches",
+      "position": 2,
+      "brand": "BIOVÈNE",
+      "name": "Tripeptide Cucumber Age-Defy Under Eye Patches",
+      "display_name": "Biovène Age-Defy Eye Patches",
+      "format": "Boîte de 60 patchs (30 paires) + spatule",
+      "short_description": "Patchs contour des yeux au tripeptide et au concombre, 60 patchs.",
+      "summary": "Patchs pour le dessous des yeux de la marque Biovène (Barcelona), associant tripeptide et concombre. Boîte de 60 patchs, soit 30 paires, avec spatule, selon l'emballage.",
+      "description_html": "<p>Les <strong>Tripeptide Cucumber Age-Defy Under Eye Patches</strong> de Biovène sont des patchs à poser sous les yeux.</p><h3>Mentions de l'emballage</h3><ul><li>Tripeptide et concombre (« Tripeptide · Cucumber »).</li><li>60 patchs / 30 paires + spatule.</li><li>Biovène Barcelona.</li></ul>",
+      "ingredients": ["Tripeptide (indiqué sur l'emballage)", "Concombre (indiqué sur l'emballage)"],
+      "benefits": [
+        "Patchs à poser sous les yeux",
+        "60 patchs (30 paires) avec spatule",
+        "Associe tripeptide et concombre"
+      ],
+      "usage_steps": [
+        "Sur une peau propre et sèche, poser un patch sous chaque œil.",
+        "Respecter le temps de pose indiqué sur la boîte.",
+        "Retirer les patchs et faire pénétrer le reste de produit en tapotant."
+      ],
+      "skin_types": "",
+      "categories": ["anti-age"],
+      "highlights": [
+        {"icon": "eye", "label": "Contour des yeux"},
+        {"icon": "flask", "label": "Tripeptide"},
+        {"icon": "leaf", "label": "Concombre"},
+        {"icon": "layers", "label": "60 patchs + spatule"}
+      ],
+      "gallery": [
+        {"file": "images/biovene-eye-patches/biovene-eye-patches-01-packshot.webp", "copy_from": "src/assets/products/biovene-eye-patches/packshot.webp", "original": "biovene-eye-patches/photos/8436575098029_1_EYE_MASK_TRIPEPTIDE_AGE_DEFY_BV_HEP25_2_2761.webp", "alt": "Pot de patchs yeux BIOVÈNE Age-Defy avec spatule", "kind": "packshot", "fit": "contain"},
+        {"file": "images/biovene-eye-patches/biovene-eye-patches-02-texture.webp", "copy_from": "src/assets/products/biovene-eye-patches/texture.webp", "original": "biovene-eye-patches/photos/8436575098029_2_EYE_MASK_TRIPEPTIDE_AGE_DEFY_BV_HEP25_2_3ea1.webp", "alt": "Patchs yeux BIOVÈNE vus de dessus dans leur pot", "kind": "texture", "fit": "contain"},
+        {"file": "images/biovene-eye-patches/biovene-eye-patches-03-boite.webp", "copy_from": "src/assets/products/biovene-eye-patches/box.webp", "original": "biovene-eye-patches/photos/8436575098029_3_EYE_MASK_TRIPEPTIDE_AGE_DEFY_BV_HEP25_2_222f.webp", "alt": "Boîte des patchs BIOVÈNE Tripeptide Cucumber Under Eye Patches, 60 patchs", "kind": "packaging", "fit": "contain"},
+        {"file": "images/biovene-eye-patches/biovene-eye-patches-04-ambiance.webp", "copy_from": "src/assets/products/biovene-eye-patches/lifestyle.webp", "original": "biovene-eye-patches/photos/FullSizeRender_ae3cb8a2-e109-4bb2-a18a-ca9360223d41.webp", "alt": "Pot de patchs BIOVÈNE ouvert avec des rondelles de concombre", "kind": "lifestyle", "fit": "cover"},
+        {"file": "images/biovene-eye-patches/biovene-eye-patches-05-ambiance-boite.webp", "copy_from": "src/assets/products/biovene-eye-patches/lifestyle-box.webp", "original": "biovene-eye-patches/photos/rn-image_picker_lib_temp_878be93c-3eaf-4129-9826-c9ff4f34edef.webp", "alt": "Pot et boîte BIOVÈNE avec des rondelles de concombre", "kind": "lifestyle", "fit": "cover"}
+      ],
+      "hover": {"gallery_index": 3, "position": ""},
+      "scene": {"file": "images/biovene-eye-patches/biovene-eye-patches-scene.webp", "file_640": "images/biovene-eye-patches/biovene-eye-patches-scene-640.webp", "copy_from": "src/assets/scenes/biovene-eye-patches.webp", "copy_from_640": "src/assets/scenes/biovene-eye-patches-640.webp", "alt": "Patchs BIOVÈNE entourés de rondelles de concombre", "kind": "scene", "fit": "cover"},
+      "marketing": [
+        {"file": "images/biovene-eye-patches/visuels/biovene-eye-patches-presentation-01.webp", "original": "biovene-eye-patches/visuels/hf_20261030_094124_e9fbde6c-a509-4f84-b178-199443a9bac8.png", "category": "banner", "language": "fr", "alt": "Patchs contour des yeux Biovène Tripeptide + Concombre avec leur boîte"},
+        {"file": "images/biovene-eye-patches/visuels/biovene-eye-patches-bienfaits-01.webp", "original": "biovene-eye-patches/visuels/hf_20261030_093943_423b0c90-0f2c-4c00-88f2-c09892dcb6ac.png", "category": "benefits", "language": "fr", "alt": "Patchs Biovène : tripeptide, concombre, patchs hydrogel, rituel express"},
+        {"file": "images/biovene-eye-patches/visuels/biovene-eye-patches-bienfaits-02.webp", "original": "biovene-eye-patches/visuels/hf_20261030_094142_bd047e30-1778-4d12-9a3c-ff15c6a4466e.png", "category": "benefits", "language": "fr", "alt": "Pot de patchs Biovène ouvert : tripeptide, concombre, patchs hydrogel, rituel express"},
+        {"file": "images/biovene-eye-patches/visuels/biovene-eye-patches-utilisation-01.webp", "original": "biovene-eye-patches/visuels/hf_20261030_102043_d059fbe3-5816-4b8b-8eb1-4aaac1e7a332.png", "category": "usage", "language": "fr", "alt": "Mode d'utilisation des patchs en 3 étapes"}
+      ],
+      "missing": ["Liste INCI complète", "Types de peau", "Temps de pose officiel", "Code-barres : 8436575098029 figure dans le nom des fichiers fournisseur, non vérifié sur l'emballage"],
+      "to_verify": ["Le visuel « Mode d'utilisation » indique « Laissez poser 10-20 minutes » : à confirmer sur la boîte.", "Les visuels « Bienfaits » mentionnent des « patchs hydrogel » : mention non lisible sur les photos réelles."]
+    },
+    {
+      "slug": "vitamin-collagen-vital-cream",
+      "position": 3,
+      "brand": "Quret",
+      "name": "Vitamin Collagen Vital Cream",
+      "display_name": "Quret Vitamin Collagen Vital Cream",
+      "format": "Coffret : pot de 50 g + crème contour des yeux 10 ml offerte",
+      "short_description": "Crème vitamines et collagène 50 g + crème contour des yeux 10 ml offerte.",
+      "summary": "Crème de la gamme Vitamin de Quret, associant vitamines et collagène. Le coffret contient un pot de 50 g et une crème contour des yeux de 10 ml offerte, selon l'emballage.",
+      "description_html": "<p>La <strong>Vitamin Collagen Vital Cream</strong> de Quret est une crème pour le visage.</p><h3>Mentions de l'emballage</h3><ul><li>« brightening &amp; elasticity » (éclat et élasticité).</li><li>Poids net : 50 g, avec une crème contour des yeux de 10 ml offerte.</li><li>« #VitaminEnergy #CollagenCare ».</li></ul>",
+      "ingredients": ["Vitamines (indiquées dans le nom du produit)", "Collagène (indiqué dans le nom du produit)"],
+      "benefits": [
+        "Mention de l'emballage : « brightening & elasticity » (éclat et élasticité)",
+        "Texture crème",
+        "Crème contour des yeux 10 ml offerte dans le coffret"
+      ],
+      "usage_steps": [
+        "Nettoyer le visage.",
+        "Prélever une petite quantité de crème.",
+        "Masser doucement jusqu'à absorption."
+      ],
+      "skin_types": "",
+      "categories": ["anti-age", "eclat"],
+      "highlights": [
+        {"icon": "citrus", "label": "Vitamines"},
+        {"icon": "sparkles", "label": "Collagène"},
+        {"icon": "flask", "label": "Pot de 50 g"},
+        {"icon": "eye", "label": "Contour des yeux 10 ml offert"}
+      ],
+      "gallery": [
+        {"file": "images/vitamin-collagen-vital-cream/vitamin-collagen-vital-cream-01-packshot.webp", "copy_from": "src/assets/products/vitamin-collagen-vital-cream/packshot.webp", "original": "vitamin-collagen-vital-cream/photos/00-10027313_1.png", "alt": "Pot Quret Vitamin Collagen Vital Cream 50 g et tube contour des yeux offert", "kind": "packshot", "fit": "contain"},
+        {"file": "images/vitamin-collagen-vital-cream/vitamin-collagen-vital-cream-02-coffret.webp", "copy_from": "src/assets/products/vitamin-collagen-vital-cream/set-box.webp", "original": "vitamin-collagen-vital-cream/photos/Quret_Vitamin_Collagen_Vital_Cream.webp", "alt": "Coffret Quret Vitamin Collagen Vital Cream avec pot et tube contour des yeux", "kind": "packaging", "fit": "contain"}
+      ],
+      "hover": {"gallery_index": 1, "position": ""},
+      "scene": {"file": "images/vitamin-collagen-vital-cream/vitamin-collagen-vital-cream-scene.webp", "file_640": "images/vitamin-collagen-vital-cream/vitamin-collagen-vital-cream-scene-640.webp", "copy_from": "src/assets/scenes/vitamin-collagen-vital-cream.webp", "copy_from_640": "src/assets/scenes/vitamin-collagen-vital-cream-640.webp", "alt": "Crème Quret Vitamin Collagen et son tube près d'une texture crème", "kind": "scene", "fit": "cover"},
+      "marketing": [
+        {"file": "images/vitamin-collagen-vital-cream/visuels/vitamin-collagen-vital-cream-presentation-01.webp", "original": "vitamin-collagen-vital-cream/visuels/hf_20261029_152939_94f69d93-add0-4781-bc46-64cddef508cc.png", "category": "banner", "language": "fr", "alt": "Quret Vitamin Collagen Vital Cream : 50 g + crème contour des yeux 10 ml offerte"},
+        {"file": "images/vitamin-collagen-vital-cream/visuels/vitamin-collagen-vital-cream-presentation-02.webp", "original": "vitamin-collagen-vital-cream/visuels/hf_20261030_093714_b2e8daaa-0d57-4775-9fc0-e1d4884b18b0.png", "category": "banner", "language": "fr", "alt": "Coffret Quret Vitamin Collagen Vital Cream entouré d'oranges"},
+        {"file": "images/vitamin-collagen-vital-cream/visuels/vitamin-collagen-vital-cream-bienfaits-01.webp", "original": "vitamin-collagen-vital-cream/visuels/hf_20261030_093756_4af58037-d47a-4bd5-bb93-e158c3497bc5.png", "category": "benefits", "language": "fr", "alt": "Vitamin & Collagen : soin vitaminé, collagen care, texture crème, cadeau inclus"},
+        {"file": "images/vitamin-collagen-vital-cream/visuels/vitamin-collagen-vital-cream-utilisation-01.webp", "original": "vitamin-collagen-vital-cream/visuels/hf_20261030_101737_14085994-1b96-49f7-8cd0-9cdd10514dec.png", "category": "usage", "language": "fr", "alt": "Mode d'utilisation en 3 étapes : nettoyer, prélever, masser"}
+      ],
+      "missing": ["Liste INCI complète", "Types de peau", "Liste précise des vitamines", "Code-barres / SKU"],
+      "to_verify": ["Le 10 ml offert est la même crème contour des yeux que le produit n° 6 (tube identique sur les photos) : confirmer avec le fournisseur."]
+    },
+    {
+      "slug": "vitamin-collagen-vital-eye-cream",
+      "position": 4,
+      "brand": "Quret",
+      "name": "Vitamin Collagen Vital Eye Cream",
+      "display_name": "Quret Vitamin Collagen Vital Eye Cream",
+      "format": "Tube de 25 ml + tube de 10 ml offert",
+      "short_description": "Crème contour des yeux vitamines et collagène, 25 ml + 10 ml offerts.",
+      "summary": "Crème pour le contour des yeux de la gamme Vitamin de Quret. Tube de 25 ml muni d'un applicateur pour le contour des yeux, avec un tube de 10 ml offert, selon l'emballage.",
+      "description_html": "<p>La <strong>Vitamin Collagen Vital Eye Cream</strong> de Quret est une crème pour le contour des yeux.</p><h3>Mentions de l'emballage</h3><ul><li>« Easy applicator for eye around » : applicateur pour le contour des yeux.</li><li>« brightening &amp; elasticity » (éclat et élasticité).</li><li>25 ml + 10 ml offerts (« Special gift 10 ml eye cream »).</li><li>Fabriqué en Corée (« Made in Korea »).</li></ul>",
+      "ingredients": ["Vitamines (indiquées dans le nom du produit)", "Collagène (indiqué dans le nom du produit)"],
+      "benefits": [
+        "Applicateur pour le contour des yeux (mention de l'emballage)",
+        "Mention de l'emballage : « brightening & elasticity » (éclat et élasticité)",
+        "Tube de 10 ml offert"
+      ],
+      "usage_steps": [
+        "Appliquer sur une peau propre et sèche.",
+        "Déposer la crème sur le contour des yeux avec l'applicateur.",
+        "Tapoter doucement pour faire pénétrer."
+      ],
+      "skin_types": "",
+      "categories": ["anti-age", "eclat"],
+      "highlights": [
+        {"icon": "eye", "label": "Contour des yeux"},
+        {"icon": "hand", "label": "Applicateur intégré"},
+        {"icon": "citrus", "label": "Vitamines & collagène"},
+        {"icon": "flask", "label": "25 ml + 10 ml offerts"}
+      ],
+      "gallery": [
+        {"file": "images/vitamin-collagen-vital-eye-cream/vitamin-collagen-vital-eye-cream-01-packshot.webp", "convert_from": "vitamin-collagen-vital-eye-cream/photos/720af36445c3d4df0f93275bb4021280.png", "original": "vitamin-collagen-vital-eye-cream/photos/720af36445c3d4df0f93275bb4021280.png", "alt": "Boîte Quret Vitamin Collagen Vital Eye Cream avec tube de 25 ml et tube de 10 ml", "kind": "packshot", "fit": "contain"},
+        {"file": "images/vitamin-collagen-vital-eye-cream/vitamin-collagen-vital-eye-cream-02-boite.webp", "copy_from": "src/assets/products/vitamin-collagen-vital-cream/tube-box.webp", "original": "vitamin-collagen-vital-eye-cream/photos/_0025_8809632524753_fdf6.webp", "alt": "Boîte Quret Vitamin Collagen Vital Eye Cream 25 ml + 10 ml", "kind": "packaging", "fit": "contain"},
+        {"file": "images/vitamin-collagen-vital-eye-cream/vitamin-collagen-vital-eye-cream-03-tube-10ml.webp", "copy_from": "src/assets/products/vitamin-collagen-vital-cream/tube.webp", "original": "vitamin-collagen-vital-eye-cream/photos/Quret_Vitamin_Collagen_Vital_Cream (1).webp", "alt": "Tube Quret Vitamin Collagen Vital Eye Cream 10 ml offert", "kind": "packshot", "fit": "contain"}
+      ],
+      "hover": {"gallery_index": 1, "position": ""},
+      "scene": null,
+      "marketing": [
+        {"file": "images/vitamin-collagen-vital-eye-cream/visuels/vitamin-collagen-vital-eye-cream-presentation-01.webp", "original": "vitamin-collagen-vital-eye-cream/visuels/hf_20261030_094408_2a807e03-fd78-475b-949b-086757eac2ce.png", "category": "banner", "language": "fr", "alt": "Quret Vitamin Collagen Vital Eye Cream, contour des yeux, 25 ml + 10 ml offerts"},
+        {"file": "images/vitamin-collagen-vital-eye-cream/visuels/vitamin-collagen-vital-eye-cream-bienfaits-01.webp", "original": "vitamin-collagen-vital-eye-cream/visuels/hf_20261030_093808_07ae46e7-2a14-43d4-b219-1dec03b7f88b.png", "category": "benefits", "language": "fr", "alt": "Applicateur facile, soin vitaminé au collagène, format 25 ml, cadeau 10 ml offerts"},
+        {"file": "images/vitamin-collagen-vital-eye-cream/visuels/vitamin-collagen-vital-eye-cream-utilisation-01.webp", "original": "vitamin-collagen-vital-eye-cream/visuels/hf_20261030_101805_13d38455-0817-4f9d-abbb-580ce170a062.png", "category": "usage", "language": "fr", "alt": "Mode d'utilisation en 3 étapes : peau propre, applicateur, tapoter doucement"}
+      ],
+      "missing": ["Liste INCI complète", "Types de peau", "Photo seule du tube de 25 ml", "Photo haute définition (la meilleure fait 500 × 500 px : zoom limité)", "Code-barres : 8809632524753 figure dans le nom d'un fichier fournisseur, non vérifié sur l'emballage"],
+      "to_verify": ["Le côté de la boîte (photo floue) semble citer la niacinamide et un « 97 % » : illisible, non repris."]
+    },
+    {
+      "slug": "orjena-power-collagen-emulsion",
+      "position": 5,
+      "brand": "ORJENA",
+      "name": "Power Collagen Emulsion",
+      "display_name": "ORJENA Power Collagen Emulsion",
+      "format": "Flacon de 100 ml",
+      "short_description": "Émulsion au collagène hydrolysé, tous types de peau, flacon de 100 ml.",
+      "summary": "Émulsion de la gamme Power Collagen d'ORJENA. L'emballage cite du collagène hydrolysé, du Gelidium cartilagineum et de l'adénosine.",
+      "description_html": "<p>La <strong>Power Collagen Emulsion</strong> d'ORJENA est une émulsion pour le visage.</p><h3>Mentions de l'emballage</h3><ul><li>Hydrolyzed collagen, Gelidium cartilagineum, Adenosine.</li><li>Boîte : « Skin elasticity · Skin nutrition · Refresh » (élasticité, nutrition, fraîcheur).</li><li>Flacon : « Anti-wrinkle · Skin nutrition · Refresh ».</li><li>« For all skin types » (tous types de peau).</li><li>100 ml.</li></ul>",
+      "ingredients": ["Collagène hydrolysé (indiqué sur l'emballage)", "Gelidium cartilagineum (indiqué sur l'emballage)", "Adénosine (indiquée sur l'emballage)"],
+      "benefits": [
+        "Mentions de la boîte : élasticité de la peau, nutrition de la peau, fraîcheur",
+        "Texture émulsion",
+        "Pour tous types de peau (mention de l'emballage)"
+      ],
+      "usage_steps": [
+        "Nettoyer et tonifier le visage.",
+        "Verser une petite quantité dans la paume.",
+        "Appliquer sur le visage par pressions douces."
+      ],
+      "skin_types": "Tous types de peau (mention de l'emballage)",
+      "categories": ["hydratation", "anti-age"],
+      "highlights": [
+        {"icon": "sparkles", "label": "Collagène hydrolysé"},
+        {"icon": "leaf", "label": "Gelidium cartilagineum"},
+        {"icon": "droplets", "label": "Tous types de peau"},
+        {"icon": "flask", "label": "Flacon de 100 ml"}
+      ],
+      "gallery": [
+        {"file": "images/orjena-power-collagen-emulsion/orjena-power-collagen-emulsion-01-packshot.webp", "copy_from": "src/assets/products/orjena-power-collagen-emulsion/packshot.webp", "original": "orjena-power-collagen-emulsion/photos/4_3903cff0-98b2-482b-822b-b758556d5ca1_720x.webp", "alt": "Flacon ORJENA Power Collagen Emulsion 100 ml, vue de face", "kind": "packshot", "fit": "contain"},
+        {"file": "images/orjena-power-collagen-emulsion/orjena-power-collagen-emulsion-02-boite.webp", "copy_from": "src/assets/products/orjena-power-collagen-emulsion/box.webp", "original": "orjena-power-collagen-emulsion/photos/Power_Collagen_Emulsion_720x.webp", "alt": "Flacon ORJENA Power Collagen Emulsion et sa boîte", "kind": "packaging", "fit": "contain"},
+        {"file": "images/orjena-power-collagen-emulsion/orjena-power-collagen-emulsion-03-en-main.webp", "copy_from": "src/assets/products/orjena-power-collagen-emulsion/in-hand.webp", "original": "orjena-power-collagen-emulsion/photos/4_2_6486eb7f-c620-4c5a-8625-31f9af6b89e5_720x.webp", "alt": "Flacon ORJENA Power Collagen Emulsion tenu en main", "kind": "in-hand", "fit": "contain"}
+      ],
+      "hover": {"gallery_index": 2, "position": ""},
+      "scene": {"file": "images/orjena-power-collagen-emulsion/orjena-power-collagen-emulsion-scene.webp", "file_640": "images/orjena-power-collagen-emulsion/orjena-power-collagen-emulsion-scene-640.webp", "copy_from": "src/assets/scenes/orjena-power-collagen-emulsion.webp", "copy_from_640": "src/assets/scenes/orjena-power-collagen-emulsion-640.webp", "alt": "Flacon ORJENA Power Collagen Emulsion près d'une texture crème", "kind": "scene", "fit": "cover"},
+      "marketing": [
+        {"file": "images/orjena-power-collagen-emulsion/visuels/orjena-power-collagen-emulsion-presentation-01.webp", "original": "orjena-power-collagen-emulsion/visuels/hf_20261030_094220_94b93032-34de-4243-b63a-86943750c213.png", "category": "banner", "language": "fr", "alt": "ORJENA Power Collagen Emulsion : élasticité, nutrition, fraîcheur, tous types de peau"},
+        {"file": "images/orjena-power-collagen-emulsion/visuels/orjena-power-collagen-emulsion-bienfaits-01.webp", "original": "orjena-power-collagen-emulsion/visuels/hf_20261030_094232_1c50694a-dd47-40bf-8bcc-beb869601097.png", "category": "benefits", "language": "fr", "alt": "Bienfaits indiqués : élasticité de la peau, nutrition, fraîcheur, tous types de peau"},
+        {"file": "images/orjena-power-collagen-emulsion/visuels/orjena-power-collagen-emulsion-bienfaits-02.webp", "original": "orjena-power-collagen-emulsion/visuels/hf_20261030_094257_4144fae9-e4c7-4e56-9a1a-cd5ccf976c4e.png", "category": "benefits", "language": "fr", "alt": "Flacon ORJENA entouré de bulles : élasticité, nutrition, fraîcheur, tous types de peau"},
+        {"file": "images/orjena-power-collagen-emulsion/visuels/orjena-power-collagen-emulsion-utilisation-01.webp", "original": "orjena-power-collagen-emulsion/visuels/hf_20261030_103329_a080f747-8990-402b-890d-7d368c3e88ef.png", "category": "usage", "language": "fr", "alt": "Mode d'utilisation en 3 étapes : nettoyer, verser dans la paume, appliquer par pressions"}
+      ],
+      "missing": ["Liste INCI complète", "Code-barres / SKU"],
+      "to_verify": ["Le flacon porte « Anti-wrinkle » (anti-rides) : allégation non reprise dans la fiche, à décider (risque réglementaire).", "Contenance : 100 ml / 3.4 fl oz sur le flacon, 3.38 fl oz sur la boîte (différence d'arrondi)."]
+    }
+  ]
+}
