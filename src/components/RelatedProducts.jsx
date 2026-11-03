@@ -22,7 +22,8 @@ export default function RelatedProducts({ product }) {
           <h2 className="section-title related__title" id="related-title">{t('related.title')}</h2>
           <p className="section-intro">{t('related.intro')}</p>
         </header>
-        <div className="product-grid product-grid--related">
+        {/* Nombre de colonnes adapté au nombre de produits : cartes centrées, sans grand vide. */}
+        <div className="product-grid product-grid--related" style={{ '--related-count': list.length }}>
           {list.map((p, i) => (
             <ProductCard key={p.id} product={p} index={i} linked
               isFavorite={favorites.includes(p.id)} onToggleFavorite={toggleFavorite} onAdd={handleAdd} />
