@@ -21,6 +21,15 @@ const inPreview = typeof window !== 'undefined'
  */
 export const trackingAvailable = DATA_SOURCE === 'api' && Boolean(META_PIXEL_ID) && !inPreview;
 
+/** Raison pour laquelle le pixel est inactif (affichée en développement uniquement), ou null. */
+export const trackingDisabledReason = DATA_SOURCE !== 'api'
+  ? 'mode démo (VITE_API_BASE_URL vide) : le pixel ne fonctionne qu\'en mode API, voir .env.example'
+  : !META_PIXEL_ID
+    ? 'VITE_META_PIXEL_ID absent, invalide ou « off »'
+    : inPreview
+      ? 'aperçu de l\'éditeur de thème'
+      : null;
+
 let listeners = [];
 
 /** 'granted' | 'denied' | null (pas encore choisi). */

@@ -1,8 +1,14 @@
 import { useEffect, useState } from 'react';
 import { useLocation } from 'react-router-dom';
-import { getConsent, onConsentChange, trackingAvailable } from './consent.js';
+import { getConsent, onConsentChange, trackingAvailable, trackingDisabledReason } from './consent.js';
 import { ensurePixel, revokePixel, track } from './metaPixel.js';
 import ConsentBanner from './ConsentBanner.jsx';
+
+// Développement uniquement : explique dans la console pourquoi Meta Pixel Helper ne voit aucun pixel.
+if (import.meta.env.DEV) {
+  if (trackingDisabledReason) console.info(`[Meta Pixel] inactif : ${trackingDisabledReason}.`);
+  else if (getConsent() !== 'granted') console.info('[Meta Pixel] en attente du consentement : cliquer « Accepter » sur le bandeau cookies.');
+}
 
 // Navigation déjà comptée (au niveau du module : le double appel des effets en mode strict ne la recompte pas).
 let lastPageKey = null;

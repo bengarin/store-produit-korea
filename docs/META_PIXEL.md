@@ -92,3 +92,19 @@ simple commande. La déduplication est prévue : même `event_id` = `purchase.<n
 - Politique de confidentialité : page `/confidentialite` (FR/AR), liée depuis le bandeau et le pied de page.
   Texte d'information **non validé juridiquement** (mention visible tant que `privacyPolicyReviewed` vaut false).
 - Désactiver le pixel : `VITE_META_PIXEL_ID=off` au moment du build.
+
+## 8. Dépannage : Meta Pixel Helper affiche « No Pixels found »
+
+C'est **normal** dans 3 cas (aucun bug) ; en développement, la console du navigateur indique lequel :
+
+| Message dans la console (`npm run dev`) | Cause | Solution |
+|---|---|---|
+| `[Meta Pixel] inactif : mode démo…` | `VITE_API_BASE_URL` vide : le site affiche les produits de démo et le pixel est volontairement coupé (commandes simulées) | Créer `.env.local` avec `VITE_API_BASE_URL=/api/v1/store`, lancer Django (`python manage.py runserver`), relancer `npm run dev` |
+| `[Meta Pixel] en attente du consentement…` | Le visiteur n'a pas cliqué « Accepter » (ou a refusé) : rien n'est chargé, conformément au consentement | Cliquer « Accepter » sur le bandeau (ou lien « Cookies » du pied de page pour changer d'avis) |
+| `[Meta Pixel] inactif : VITE_META_PIXEL_ID…` | Identifiant absent, invalide ou `off` | Mettre `VITE_META_PIXEL_ID=1665012938525216` (ou supprimer la ligne : valeur par défaut) |
+
+En mode API, les fiches **en brouillon** n'apparaissent pas : pour tester ViewContent / AddToCart / Purchase, au moins
+un produit doit être **Actif** (prix > 0, stock renseigné). Test vérifié le 3 nov. 2026 sur `localhost:5173` (Vite dev,
+mode API) : `fbevents.js` chargé 1 fois, `init 1665012938525216` 1 fois, PageView à chaque page, ViewContent,
+AddToCart, InitiateCheckout, AddPaymentInfo, Purchase unique (`eventID purchase.<numéro>`), aucun Purchase au
+rechargement ni en visite directe de `/confirmation`.
