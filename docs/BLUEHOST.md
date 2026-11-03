@@ -11,7 +11,7 @@
 | Processus Python permanent (gunicorn) + relais web (nginx/Apache) | Django n'est pas du PHP |
 | MySQL 8.x (testé 8.4), utf8mb4 | base de données |
 | Tâches planifiées (cron) | e-mails en attente, sessions, sauvegardes |
-| Accès SSH | installation, migrations, récupération de compte (`reset_2fa`…) |
+| Accès SSH | installation, migrations, récupération de compte (`revoke_sessions`, `changepassword`) |
 | HTTPS (certificat) | cookies `Secure`, HSTS |
 | ~1 Go de RAM minimum conseillé [HYPOTHÈSE] | MySQL + 3 processus gunicorn |
 

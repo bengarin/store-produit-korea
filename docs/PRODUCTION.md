@@ -37,7 +37,6 @@ et robots.txt. nginx ne sert que les fichiers statiques.
 | `MEDIA_ROOT` | oui | `/srv/mpc/media` |
 | `FRONTEND_DIST_DIR` | oui | `/srv/mpc/dist` |
 | `TRUSTED_PROXY_COUNT` | oui | `1` avec nginx seul ; **voir §8 si Cloudflare** |
-| `TWO_FACTOR_REQUIRED_ROLES` | non | défaut production : `owner,admin` |
 | `EMAIL_HOST`, `EMAIL_PORT`, `EMAIL_HOST_USER`, `EMAIL_HOST_PASSWORD`, `EMAIL_USE_TLS`/`EMAIL_USE_SSL`, `DEFAULT_FROM_EMAIL`, `ORDER_NOTIFICATION_EMAILS` | non | vides = aucun e-mail ne part (tout est journalisé « non envoyé ») |
 | `DJANGO_HSTS_PRELOAD` | non | `false` tant que le domaine n'est pas en HTTPS partout |
 
@@ -68,7 +67,7 @@ Puis copier et adapter `deploy/nginx.conf.example`, `deploy/mpc-gunicorn.service
 ## 5. Données réelles — avant l'ouverture
 
 1. **Ne jamais copier la base de développement** : elle contient des commandes et stocks de test.
-2. Base de production vide → `migrate` → créer le compte Propriétaire (`createsuperuser`, puis rôle owner) → la 2FA est demandée dès la 1re connexion.
+2. Base de production vide → `migrate` → créer le compte Propriétaire (`createsuperuser`, puis rôle owner) → connexion par e-mail + mot de passe (pas de double authentification depuis le 3 nov. 2026).
 3. Saisir dans l'admin : mentions légales (raison sociale, adresse, ICE, RC, IF, patente), taux de TVA confirmé par le comptable, coordonnées, zones de livraison, les 5 produits avec **leur stock réel compté**.
 4. Lancer la vérification (lecture seule, ne modifie rien) :
 
@@ -76,7 +75,7 @@ Puis copier et adapter `deploy/nginx.conf.example`, `deploy/mpc-gunicorn.service
 ENV_FILE=/etc/mpc/production.env VENV=/srv/mpc/venv scripts/ops/manage.sh launch_check
 ```
 
-Elle signale : DEBUG, secret, HTTPS, 2FA, cache partagé, migrations, front, mentions légales, stock non renseigné ou
+Elle signale : DEBUG, secret, HTTPS, cache partagé, migrations, front, mentions légales, stock non renseigné ou
 à 0, prix, produits/commandes/codes promo de test, comptes `@exemple.ma`. Code de sortie 1 tant qu'un point
 bloquant reste. 5. Relire **à la main** chaque prix et chaque fiche produit.
 
@@ -126,8 +125,7 @@ basculer : arrêter gunicorn, changer `DB_NAME` (et `MEDIA_ROOT`), redémarrer, 
 |-----------|--------|
 | Serveur perdu | Nouveau serveur (§4) → restaurer la dernière copie externe → `launch_check` → DNS. Perte maximale : 24 h de commandes (sauvegarde nocturne). |
 | Base corrompue / erreur humaine | Restaurer dans une nouvelle base, comparer, basculer. Ne jamais restaurer par-dessus. |
-| Compte admin compromis | `manage.py revoke_sessions --email X --deactivate`, puis `changepassword X`, `reset_2fa --email X`, réactiver. |
-| Téléphone 2FA perdu | Se connecter avec un code de secours ; sinon un autre Propriétaire/Admin, ou en SSH : `manage.py reset_2fa --email X` (ferme ses sessions). |
+| Compte admin compromis | `manage.py revoke_sessions --email X --deactivate`, puis `changepassword X`, réactiver. |
 | Mot de passe oublié | En SSH : `manage.py changepassword X` (il n'y a pas de réinitialisation par e-mail : choix volontaire tant que l'e-mail n'est pas configuré). |
 | E-mails non reçus | Admin → Paramètres → E-mails (état, dernier échec, envoi de test) ; `send_pending_emails` les renvoie. |
 

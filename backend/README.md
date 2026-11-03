@@ -312,7 +312,6 @@ Commandes utiles :
 | `verify_backup --against <base>` | Compare une base restaurée à l'originale (lecture seule) |
 | `issue_missing_invoices [--apply]` | Factures des commandes déjà livrées (simulation par défaut) |
 | `send_pending_emails` | Renvoi des e-mails en attente (cron, 10 min) |
-| `reset_2fa --email X` | Réinitialise la 2FA d'un compte et ferme ses sessions |
 | `revoke_sessions --email X [--deactivate]` | Ferme toutes les sessions d'un compte (compte compromis) |
 
 ## Limites connues (à traiter plus tard)
@@ -327,4 +326,4 @@ Commandes utiles :
 
 - Limitation de débit stockée en mémoire locale : en production avec plusieurs processus, il faudra un cache partagé (ex. Redis).
 - L'IP enregistrée est `REMOTE_ADDR` : derrière un proxy, il faudra configurer la lecture de `X-Forwarded-For`.
-- 2FA (TOTP) recommandée pour le rôle Propriétaire : non incluse en phase 0.
+- Double authentification : retirée le 3 nov. 2026 (décision du propriétaire, voir docs/ARCHITECTURE.md).

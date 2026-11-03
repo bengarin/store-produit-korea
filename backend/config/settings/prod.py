@@ -28,11 +28,8 @@ SECURE_HSTS_PRELOAD = env.bool("DJANGO_HSTS_PRELOAD", default=False)
 if not SECURE_HSTS_PRELOAD:
     SILENCED_SYSTEM_CHECKS = ["security.W021"]
 
-# Double authentification obligatoire pour les rôles qui peuvent tout modifier.
-TWO_FACTOR_REQUIRED_ROLES = env.list("TWO_FACTOR_REQUIRED_ROLES", default=["owner", "admin"])
-
 # Cache PARTAGÉ entre les processus gunicorn (table MySQL) : sans lui, chaque processus a ses propres
-# compteurs et les limites anti-abus (connexion, commandes, codes 2FA…) sont multipliées par le nombre
+# compteurs et les limites anti-abus (connexion, commandes…) sont multipliées par le nombre
 # de processus. Créer la table une fois : python manage.py createcachetable
 CACHES = {
     "default": {

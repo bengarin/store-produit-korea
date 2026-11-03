@@ -69,7 +69,7 @@ Plus sûr (aucune donnée de test ne peut passer en production) et plus simple (
 - **Secrets** : `.env` jamais versionné ; la production refuse de démarrer sans clé secrète (40 caractères minimum) et sans domaine. Mot de passe MySQL lu depuis un fichier `chmod 600`.
 - **HTTPS** : redirection obligatoire, cookies `Secure`, HSTS, CSRF, CSP stricte. CORS sans objet : même domaine.
 - **Médias** : réencodés en WebP, scripts et SVG refusés, servis en « sandbox ». Les fichiers cachés (`.env`, `.git`) sont bloqués par nginx (règle ajoutée).
-- **Permissions** : 5 rôles, double authentification obligatoire pour Propriétaire et Admin.
+- **Permissions** : 5 rôles ; connexion e-mail + mot de passe (Argon2), blocage après échecs répétés (django-axes), sessions révocables. Double authentification **retirée** le 3 nov. 2026 à la demande du propriétaire.
 
 ## 4. Informations légales à fournir (rien n'est inventé)
 

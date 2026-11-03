@@ -15,8 +15,6 @@ from django.db.migrations.executor import MigrationExecutor
 from django.db.models import Q
 
 from apps.accounts.models import User
-from apps.accounts.roles import Role
-from apps.accounts.twofactor import enabled as two_factor_enabled
 from apps.catalog.models import Product, Variant
 from apps.notifications.services import configured as email_configured
 from apps.orders.models import Order
@@ -50,11 +48,6 @@ class Command(BaseCommand):
             getattr(settings, "SESSION_COOKIE_SECURE", False),
             "Cookies Secure",
             "Cookies non Secure (réglages de production non utilisés ?)",
-        )
-        self.item(
-            {"owner", "admin"} <= set(settings.TWO_FACTOR_REQUIRED_ROLES),
-            "2FA obligatoire Propriétaire/Admin",
-            "2FA non obligatoire pour Propriétaire/Admin",
         )
         self.item(
             settings.TRUSTED_PROXY_COUNT > 0,
@@ -160,15 +153,6 @@ class Command(BaseCommand):
         )
 
         self.section("Comptes de l'équipe")
-        for user in User.objects.filter(
-            is_active=True, groups__name__in=[Role.OWNER.value, Role.ADMIN.value]
-        ).distinct():
-            self.item(
-                two_factor_enabled(user),
-                f"2FA activée : {user.email}",
-                f"2FA non activée : {user.email} (obligatoire à la 1re connexion)",
-                blocking=False,
-            )
         demo_users = list(
             User.objects.filter(is_active=True, email__iendswith="@exemple.ma").values_list("email", flat=True)
         )

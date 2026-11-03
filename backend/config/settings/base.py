@@ -33,9 +33,6 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "rest_framework",
     "axes",
-    "django_otp",
-    "django_otp.plugins.otp_totp",
-    "django_otp.plugins.otp_static",
     "apps.core",
     "apps.accounts",
     "apps.audit",
@@ -62,7 +59,6 @@ MIDDLEWARE = [
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
-    "django_otp.middleware.OTPMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
     # Doit rester en dernier : bloque les comptes verrouillés.
     "axes.middleware.AxesMiddleware",
@@ -147,11 +143,6 @@ AXES_IPWARE_META_PRECEDENCE_ORDER = ("REMOTE_ADDR",)
 # Nombre de proxys de confiance devant Django (0 = accès direct ; 1 = nginx ou l'hébergeur ; voir docs/PRODUCTION.md).
 TRUSTED_PROXY_COUNT = env.int("TRUSTED_PROXY_COUNT", default=0)
 
-# --- Double authentification (django-otp, TOTP RFC 6238) -------------------
-OTP_TOTP_ISSUER = "Ma Petite Corée"
-# Rôles qui DOIVENT activer la 2FA (ex. owner,admin). Vide en développement ; prod.py impose owner,admin par défaut.
-TWO_FACTOR_REQUIRED_ROLES = env.list("TWO_FACTOR_REQUIRED_ROLES", default=[])
-
 # --- En-têtes de sécurité ------------------------------------------------
 SECURE_CONTENT_TYPE_NOSNIFF = True
 SECURE_REFERRER_POLICY = "same-origin"
@@ -179,7 +170,6 @@ REST_FRAMEWORK = {
         "orders": env.str("THROTTLE_ORDERS", default="10/hour"),
         "promo": env.str("THROTTLE_PROMO", default="30/hour"),
         "newsletter": env.str("THROTTLE_NEWSLETTER", default="10/hour"),
-        "otp": env.str("THROTTLE_OTP", default="10/min"),
     },
     "UNAUTHENTICATED_USER": "django.contrib.auth.models.AnonymousUser",
     # 0 = les limites de débit utilisent REMOTE_ADDR (IP réelle fixée par TrustedProxyMiddleware).

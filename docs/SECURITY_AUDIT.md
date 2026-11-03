@@ -55,3 +55,7 @@ vérifié dans le navigateur.
 Aucune faille connue ouverte dans le code testé. La sécurité **en production** dépend encore de points non
 vérifiables ici : configuration réelle du serveur, copie des sauvegardes hors serveur, certificat HTTPS,
 mises à jour système. → [NON VÉRIFIÉ] tant que ces points ne sont pas faits sur le vrai serveur.
+
+> **Mise à jour du 3 nov. 2026** : la double authentification (point 4) a été **retirée** à la demande du propriétaire.
+> Le risque « un mot de passe volé = accès complet » est donc de nouveau ouvert. Restent actifs : mots de passe Argon2
+> (12 caractères minimum), blocage après échecs (django-axes), limites de débit, CSRF, sessions révocables.

@@ -8,7 +8,7 @@ Ferme toutes les sessions d'un compte (ordinateur perdu, mot de passe compromis)
 
 from django.core.management.base import BaseCommand, CommandError
 
-from apps.accounts import twofactor
+from apps.accounts import sessions
 from apps.accounts.models import User
 from apps.audit.services import log_action
 
@@ -27,7 +27,7 @@ class Command(BaseCommand):
         if deactivate:
             user.is_active = False
             user.save(update_fields=["is_active", "updated_at"])
-        count = twofactor.revoke_sessions(user)
+        count = sessions.revoke_sessions(user)
         log_action("auth.sessions_revoked_by_server", target=user, changes={"count": count, "deactivated": deactivate})
         self.stdout.write(
             self.style.SUCCESS(

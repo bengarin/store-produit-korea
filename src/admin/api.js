@@ -67,7 +67,7 @@ export async function adminRequest(path, { method = 'GET', body, params, signal,
     if (!res.ok) {
       const error = data?.error || {};
       const code = error.code || `http_${res.status}`;
-      if (res.status === 401 || code === 'not_authenticated' || code === 'otp_required' || code === 'otp_setup_required') onUnauthenticated?.(code);
+      if (res.status === 401 || code === 'not_authenticated') onUnauthenticated?.(code);
       throw new AdminApiError(error.message || `Erreur ${res.status}`, {
         status: res.status, code, fields: error.fields || null, items: error.items || null,
       });

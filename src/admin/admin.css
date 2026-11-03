@@ -722,17 +722,7 @@ textarea.adm-input { resize: vertical; min-height: 80px; }
 .adm-theme-history li > div:first-child .adm-badge { justify-self: start; }
 .adm-notice--success { background: #e9f3ec; border-color: #c5dfcc; color: #1d5b3b; }
 
-/* ===== Phase 7 — Double authentification =============================== */
-.adm-login__card--wide { max-width: 480px; }
-.adm-login__card h1 svg { vertical-align: -3px; color: var(--adm-green); }
-.adm-otp-input { font-size: 22px; letter-spacing: .2em; text-align: center; font-variant-numeric: tabular-nums; }
-.adm-otp-setup { display: grid; gap: 12px; }
-.adm-otp-qr { justify-self: center; width: 220px; height: 220px; border: 1px solid var(--adm-line); border-radius: 10px; background: #fff; }
-.adm-otp-secret { font-size: 13px; word-break: break-all; padding: 2px 6px; border-radius: 6px; background: #f3eee5; }
-.adm-otp-steps { margin: 0; padding-left: 18px; }
-.adm-otp-codes { display: grid; gap: 12px; }
-.adm-otp-codes__list { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px 16px; margin: 0; padding-left: 22px; font-size: 16px; }
-.adm-otp-codes__list code { font-variant-numeric: tabular-nums; letter-spacing: .06em; }
+/* ===== Sécurité du compte ============================================= */
 .adm-actions-row { display: flex; flex-wrap: wrap; gap: 8px; }
 
 /* Version arabe des produits et catégories */

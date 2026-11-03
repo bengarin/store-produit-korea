@@ -49,7 +49,7 @@ Non testable ici : Safari/iOS réel, envoi Meta réel (domaines bloqués dans le
 
 Contrôlé : aucun `.env` versionné ; aucun secret dans l'historique Git (2 mots de passe trouvés = valeurs de test
 factices) ; la prod refuse de démarrer sans `DJANGO_SECRET_KEY` (≥ 40 car.) et `DJANGO_ALLOWED_HOSTS` ; HTTPS forcé,
-cookies `Secure`, HSTS, 2FA obligatoire owner/admin ; CSP stricte ; admin = 403 sans session ; injection SQL dans les
+cookies `Secure`, HSTS, ~~2FA obligatoire owner/admin~~ (retirée le 3 nov. 2026 à la demande du propriétaire) ; CSP stricte ; admin = 403 sans session ; injection SQL dans les
 filtres sans effet (ORM, tri en liste blanche) ; HTML riche nettoyé côté serveur (nh3) et navigateur ; commande sans
 clé d'idempotence refusée. Détails : `docs/SECURITY_AUDIT.md`.
 

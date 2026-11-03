@@ -1,17 +1,13 @@
-"""Phase 7 — sécurité : IP réelle, routes fermées, configuration de production, double authentification."""
+"""Phase 7 — sécurité : IP réelle, routes fermées, configuration de production, connexion et sessions."""
 
 import os
 import subprocess
 import sys
-import time
-from urllib.parse import unquote
 
 import pytest
 from django.core.management import call_command
 from django.test import RequestFactory, override_settings
 from django.urls import URLPattern, URLResolver, get_resolver
-from django_otp.oath import TOTP
-from django_otp.plugins.otp_totp.models import TOTPDevice
 from rest_framework.request import Request
 from rest_framework.test import APIClient
 from rest_framework.throttling import AnonRateThrottle
@@ -129,13 +125,13 @@ def test_production_check_deploy_sans_avertissement():
     code = (
         "import django; django.setup(); from django.conf import settings as s; "
         "print(s.DEBUG, s.SESSION_COOKIE_SECURE, s.CSRF_COOKIE_SECURE, s.SESSION_COOKIE_HTTPONLY, "
-        "s.SECURE_SSL_REDIRECT, s.SECURE_HSTS_SECONDS > 0, s.TWO_FACTOR_REQUIRED_ROLES, "
+        "s.SECURE_SSL_REDIRECT, s.SECURE_HSTS_SECONDS > 0, "
         "s.CACHES['default']['BACKEND'].rsplit('.', 1)[-1])"
     )
     r = run_prod(code, env)
     assert r.returncode == 0, r.stderr
     assert (
-        r.stdout.strip() == "False True True True True True ['owner', 'admin'] DatabaseCache"
+        r.stdout.strip() == "False True True True True True DatabaseCache"
     )  # DEBUG forcé à False même si demandé ; cache partagé entre processus (limites anti-abus fiables)
     r = subprocess.run(
         [sys.executable, "manage.py", "check", "--deploy", "--fail-level", "WARNING"],
@@ -146,17 +142,10 @@ def test_production_check_deploy_sans_avertissement():
     assert r.returncode == 0, r.stdout + r.stderr
 
 
-# --- Double authentification -----------------------------------------------------------------
+# --- Connexion (e-mail + mot de passe, sans double authentification) -------------------------------
 
 
-def code_for(user, offset=0):
-    device = TOTPDevice.objects.filter(user=user).order_by("-id").first()
-    t = TOTP(device.bin_key, device.step, device.t0, device.digits, device.drift)
-    t.time = time.time() + offset * device.step
-    return f"{t.token():0{device.digits}d}"
-
-
-def connect(make_user, role=Role.ADMIN, email="a2f@exemple.ma"):
+def connect(make_user, role=Role.ADMIN, email="equipe@exemple.ma"):
     user = make_user(email=email, role=role)
     client = APIClient(enforce_csrf_checks=True)
     response = login(client, email)
@@ -165,105 +154,45 @@ def connect(make_user, role=Role.ADMIN, email="a2f@exemple.ma"):
     return user, client, response.json()
 
 
-def enable_2fa(client, user):
-    assert client.post("/api/v1/admin/auth/2fa/setup").status_code == 200
-    r = client.post("/api/v1/admin/auth/2fa/confirm", {"code": code_for(user)}, format="json")
-    assert r.status_code == 200, r.content
-    return r.json()["backupCodes"]
+@pytest.mark.django_db
+@pytest.mark.parametrize("role", list(Role))
+def test_connexion_sans_code_pour_chaque_role(make_user, role):
+    user, client, data = connect(make_user, role=role, email=f"{role.value}@exemple.ma")
+    assert set(data) == {"user", "csrfToken"} and data["user"]["role"] == role.value  # aucune étape OTP
+    me = client.get("/api/v1/admin/auth/me")
+    assert me.status_code == 200 and set(me.json()) == {"user"}
+    assert client.get("/api/v1/admin/products").status_code == 200  # page protégée accessible directement
+    assert AuditLog.objects.filter(action="auth.login", actor=user).exists()
 
 
 @pytest.mark.django_db
-def test_parcours_complet_2fa(make_user):
-    user, client, data = connect(make_user)
-    assert data["twoFactor"] == {"enabled": False, "required": False, "status": "verified", "backupCodesLeft": 0}
-    setup = client.post("/api/v1/admin/auth/2fa/setup").json()
-    assert setup["otpauthUri"].startswith("otpauth://totp/") and "issuer=Ma%20Petite%20Cor" in setup["otpauthUri"]
-    assert setup["qrDataUri"].startswith("data:image/svg+xml") and "xmlns" in unquote(setup["qrDataUri"])
-    assert len(setup["secret"]) >= 16
-    assert client.post("/api/v1/admin/auth/2fa/confirm", {"code": "000000"}, format="json").status_code == 400
-    time.sleep(1.1)  # délai imposé par django-otp après une erreur
-    codes = client.post("/api/v1/admin/auth/2fa/confirm", {"code": code_for(user)}, format="json").json()["backupCodes"]
-    assert len(codes) == 10 and len(set(codes)) == 10
+def test_mauvais_mot_de_passe_et_anonyme_toujours_refuses(make_user):
+    make_user(email="equipe@exemple.ma", role=Role.ADMIN)
+    assert login(APIClient(), "equipe@exemple.ma", password="mauvais-mot-de-passe").status_code == 401
+    assert APIClient().get("/api/v1/admin/products").status_code == 403
 
-    # Nouvelle connexion : mot de passe correct mais accès bloqué tant que le code n'est pas saisi
-    other = APIClient(enforce_csrf_checks=True)
-    r = login(other, user.email)
-    other.credentials(HTTP_X_CSRFTOKEN=r.json()["csrfToken"])
-    assert r.json()["twoFactor"]["status"] == "required"
-    blocked = other.get("/api/v1/admin/orders")
-    assert blocked.status_code == 403 and blocked.json()["error"]["code"] == "otp_required"
-    assert other.get("/api/v1/admin/auth/me").status_code == 200
-    # Impossible de remplacer la 2FA avec le seul mot de passe
-    assert other.post("/api/v1/admin/auth/2fa/setup").status_code == 409
-    assert other.post("/api/v1/admin/auth/2fa/verify", {"code": "123456"}, format="json").status_code == 400
-    time.sleep(1.1)  # django-otp impose un délai après un échec
-    ok = other.post("/api/v1/admin/auth/2fa/verify", {"code": code_for(user, offset=1)}, format="json")
-    assert ok.status_code == 200 and ok.json()["twoFactor"]["status"] == "verified"
-    assert other.get("/api/v1/admin/orders").status_code == 200
-    assert AuditLog.objects.filter(action__in=["auth.otp_enabled", "auth.otp_failed", "auth.otp_verified"]).count() >= 3
 
-    # Code de secours : valable une seule fois
-    third = APIClient(enforce_csrf_checks=True)
-    r = login(third, user.email)
-    third.credentials(HTTP_X_CSRFTOKEN=r.json()["csrfToken"])
-    assert third.post("/api/v1/admin/auth/2fa/verify", {"code": codes[0]}, format="json").status_code == 200
-    fourth = APIClient(enforce_csrf_checks=True)
-    r = login(fourth, user.email)
-    fourth.credentials(HTTP_X_CSRFTOKEN=r.json()["csrfToken"])
-    assert fourth.post("/api/v1/admin/auth/2fa/verify", {"code": codes[0]}, format="json").status_code == 400
-    assert third.get("/api/v1/admin/auth/me").json()["twoFactor"]["backupCodesLeft"] == 9
+def test_plus_aucune_route_de_double_authentification():
+    def walk(patterns, prefix=""):
+        for p in patterns:
+            if isinstance(p, URLResolver):
+                yield from walk(p.url_patterns, prefix + str(p.pattern))
+            elif isinstance(p, URLPattern):
+                yield prefix + str(p.pattern)
+
+    routes = list(walk(get_resolver().url_patterns))
+    assert routes and not [r for r in routes if "2fa" in r.lower() or "otp" in r.lower()]
 
 
 @pytest.mark.django_db
-def test_un_code_totp_ne_sert_qu_une_fois(make_user):
-    user, client, _ = connect(make_user)
-    enable_2fa(client, user)
-    used = code_for(user, offset=1)
-    a = APIClient(enforce_csrf_checks=True)
-    a.credentials(HTTP_X_CSRFTOKEN=login(a, user.email).json()["csrfToken"])
-    assert a.post("/api/v1/admin/auth/2fa/verify", {"code": used}, format="json").status_code == 200
-    b = APIClient(enforce_csrf_checks=True)
-    b.credentials(HTTP_X_CSRFTOKEN=login(b, user.email).json()["csrfToken"])
-    assert b.post("/api/v1/admin/auth/2fa/verify", {"code": used}, format="json").status_code == 400  # rejeu refusé
+@pytest.mark.parametrize("path", ["verify", "setup", "confirm", "backup-codes", "disable"])
+def test_anciennes_routes_2fa_introuvables(make_user, path):
+    _, client, _ = connect(make_user)
+    assert client.post(f"/api/v1/admin/auth/2fa/{path}", {"code": "123456"}, format="json").status_code == 404
 
 
 @pytest.mark.django_db
-@pytest.mark.parametrize(
-    "role,required",
-    [
-        (Role.OWNER, True),
-        (Role.ADMIN, True),
-        (Role.ORDER_MANAGER, False),
-        (Role.CONTENT_EDITOR, False),
-        (Role.ANALYST, False),
-    ],
-)
-def test_2fa_obligatoire_selon_le_role(make_user, role, required):
-    with override_settings(TWO_FACTOR_REQUIRED_ROLES=["owner", "admin"]):
-        user, client, data = connect(make_user, role=role, email=f"{role.value}-2fa@exemple.ma")
-        assert data["twoFactor"]["status"] == ("setup_required" if required else "verified")
-        target = "/api/v1/admin/products"
-        r = client.get(target)
-        if required:
-            assert r.status_code == 403 and r.json()["error"]["code"] == "otp_setup_required"
-            enable_2fa(client, user)
-            assert client.get(target).status_code == 200
-            # Obligatoire : impossible de la désactiver
-            off = client.post(
-                "/api/v1/admin/auth/2fa/disable", {"password": PASSWORD, "code": code_for(user, 1)}, format="json"
-            )
-            assert off.status_code == 409
-        else:
-            assert r.status_code == 200
-            enable_2fa(client, user)
-            off = client.post(
-                "/api/v1/admin/auth/2fa/disable", {"password": PASSWORD, "code": code_for(user, 1)}, format="json"
-            )
-            assert off.status_code == 200 and off.json()["twoFactor"]["enabled"] is False
-
-
-@pytest.mark.django_db
-def test_revocation_des_sessions_et_recuperation_de_compte(make_user):
+def test_revocation_des_sessions(make_user):
     user, first, _ = connect(make_user)
     second = APIClient(enforce_csrf_checks=True)
     second.credentials(HTTP_X_CSRFTOKEN=login(second, user.email).json()["csrfToken"])
@@ -272,17 +201,12 @@ def test_revocation_des_sessions_et_recuperation_de_compte(make_user):
     assert second.get("/api/v1/admin/auth/me").status_code == 403  # l'autre appareil est déconnecté
     assert first.get("/api/v1/admin/auth/me").status_code == 200  # la session en cours reste ouverte
 
-    enable_2fa(first, user)
-    call_command("reset_2fa", email=user.email)
-    assert TOTPDevice.objects.filter(user=user).count() == 0
-    assert first.get("/api/v1/admin/auth/me").status_code == 403  # toutes les sessions fermées
     call_command("revoke_sessions", email=user.email, deactivate=True)
+    assert first.get("/api/v1/admin/auth/me").status_code == 403  # toutes les sessions fermées
     user.refresh_from_db()
     assert user.is_active is False
     assert login(APIClient(), user.email).status_code == 401
-    assert (
-        AuditLog.objects.filter(action__in=["auth.otp_reset_by_server", "auth.sessions_revoked_by_server"]).count() == 2
-    )
+    assert AuditLog.objects.filter(action="auth.sessions_revoked_by_server").count() == 1
 
 
 @pytest.mark.django_db

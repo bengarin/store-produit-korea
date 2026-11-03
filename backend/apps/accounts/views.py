@@ -6,6 +6,7 @@ Parcours du futur front admin :
   2. POST /api/v1/admin/auth/login    (en-tête X-CSRFToken) → ouvre la session
   3. GET  /api/v1/admin/auth/me       → utilisateur + rôle
   4. POST /api/v1/admin/auth/logout
+  5. POST /api/v1/admin/auth/sessions/revoke → ferme les AUTRES sessions du compte
 """
 
 from django.contrib.auth import authenticate, login, logout, update_session_auth_hash
@@ -22,7 +23,7 @@ from rest_framework.views import APIView
 from apps.audit.services import log_action
 from apps.core.exceptions import error_body
 
-from . import twofactor
+from . import sessions
 from .serializers import LoginSerializer, PasswordChangeSerializer, user_payload
 
 INVALID_CREDENTIALS = "E-mail ou mot de passe incorrect."
@@ -74,14 +75,7 @@ class LoginView(APIView):
 
         login(django_request, user)  # nouvelle clé de session + nouveau jeton CSRF
         log_action("auth.login", actor=user, target=user, request=request)
-        # Mot de passe correct : si la 2FA est active, la session reste limitée jusqu'à la saisie du code.
-        return Response(
-            {
-                "user": user_payload(user),
-                "csrfToken": get_token(django_request),
-                "twoFactor": twofactor.payload(django_request),
-            }
-        )
+        return Response({"user": user_payload(user), "csrfToken": get_token(django_request)})
 
 
 class LogoutView(APIView):
@@ -95,10 +89,8 @@ class LogoutView(APIView):
 
 
 class MeView(APIView):
-    allow_unverified = True  # le front doit savoir s'il faut demander le code
-
     def get(self, request):
-        return Response({"user": user_payload(request.user), "twoFactor": twofactor.payload(request._request)})
+        return Response({"user": user_payload(request.user)})
 
 
 class PasswordChangeView(APIView):
@@ -114,3 +106,14 @@ class PasswordChangeView(APIView):
         update_session_auth_hash(request._request, user)  # garde cette session, invalide les autres
         log_action("auth.password_change", actor=user, target=user, request=request)
         return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+class RevokeSessionsView(APIView):
+    """Ferme toutes les AUTRES sessions du compte connecté (la session en cours reste ouverte)."""
+
+    def post(self, request):
+        count = sessions.revoke_sessions(request.user, keep_session_key=request.session.session_key)
+        log_action(
+            "auth.sessions_revoked", actor=request.user, target=request.user, request=request, changes={"count": count}
+        )
+        return Response({"revoked": count})
