@@ -1,9 +1,9 @@
-from django.db.models import F, Q
+from django.db.models import F, Prefetch, Q
 from rest_framework import generics, serializers, status
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from apps.catalog.models import Variant
+from apps.catalog.models import ProductImage, Variant
 from apps.catalog.permissions import INVENTORY_PERMISSION
 from apps.core.filters import date_range
 
@@ -57,7 +57,11 @@ class InventoryItemSerializer(serializers.ModelSerializer):
         return stock_state(v)
 
     def get_productImage(self, v):
-        first = v.product.images.filter(in_gallery=True).select_related("media").order_by("position", "id").first()
+        # Photos de galerie préchargées par la vue (une requête pour toute la page, au lieu d'une par produit).
+        gallery = getattr(v.product, "gallery_images", None)
+        if gallery is None:
+            gallery = v.product.images.filter(in_gallery=True).select_related("media").order_by("position", "id")
+        first = next(iter(gallery), None)
         return (first.media.url_640 or first.media.url) if first else None
 
 
@@ -70,6 +74,15 @@ class InventoryListView(generics.ListAPIView):
     def get_queryset(self):
         qs = (
             Variant.objects.select_related("product")
+            .prefetch_related(
+                Prefetch(
+                    "product__images",
+                    queryset=ProductImage.objects.filter(in_gallery=True)
+                    .select_related("media")
+                    .order_by("position", "id"),
+                    to_attr="gallery_images",
+                )
+            )
             .exclude(product__status="archived")
             .order_by("product__position", "position", "id")
         )

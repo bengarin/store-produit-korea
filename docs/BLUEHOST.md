@@ -20,7 +20,7 @@
 | Offre | Verdict | Raisons |
 |-------|---------|---------|
 | **Mutualisé** (Basic/Choice Plus…) | ❌ Non recommandé | Pensé pour PHP/WordPress ; pas de processus Python permanent garanti ; pas de root ; version de Python non maîtrisée (communication Bluehost : 3.9 à 3.11 selon serveurs) [NON VÉRIFIÉ sur votre compte]. Même si un « Python App » via Passenger existait, Pillow 13 exige 3.11+. |
-| **VPS (auto-géré)** | ⚠️ Faisable | AlmaLinux 9, accès root SSH ; on installe soi-même Python 3.11/3.12, MySQL 8.4 (dépôt officiel MySQL), nginx, certbot. Bluehost indique ne **pas** installer Django lui-même : l'exploitation (mises à jour, sécurité, sauvegardes) est à votre charge. |
+| **VPS (auto-géré)** | ⚠️ Faisable | AlmaLinux (8, 9 ou 10 au choix selon la page Bluehost consultée le 2026-11-03 ; 9 testé dans ce guide), accès root SSH ; MySQL non fourni en version précise par Bluehost [NON VÉRIFIÉ] ; on installe soi-même Python 3.11/3.12, MySQL 8.4 (dépôt officiel MySQL), nginx, certbot. Bluehost indique ne **pas** installer Django lui-même : l'exploitation (mises à jour, sécurité, sauvegardes) est à votre charge. |
 | **Dédié** | ⚠️ Faisable mais surdimensionné | Même chose que le VPS, plus cher. |
 
 **Recommandation** : VPS uniquement, et seulement si quelqu'un peut administrer un serveur Linux (mises à jour
