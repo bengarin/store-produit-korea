@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import useMediaQuery from '../hooks/useMediaQuery.js';
 import { useLocation, useNavigate, useParams, Link } from 'react-router-dom';
 import ProductView from '../components/ProductView.jsx';
+import RelatedProducts from '../components/RelatedProducts.jsx';
 import Header from '../components/Header.jsx';
 import SiteFooter from '../components/SiteFooter.jsx';
 import { useCatalog } from '../context/CatalogContext.jsx';
@@ -83,6 +84,7 @@ export default function ProductPage() {
         showDemoNotices={STORE_CONFIG.showDemoNotices}
         desktop={desktop}
       />
+      <RelatedProducts product={product} />
       <SiteFooter />
     </>
   );

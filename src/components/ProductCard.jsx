@@ -8,7 +8,8 @@ import { useCatalog } from '../context/CatalogContext.jsx';
 import { compareAtPrice, hasChoice, productStatus } from '../utils/variants.js';
 import { useI18n } from '../i18n/I18nContext.jsx';
 
-function ProductCard({ product, index = 0, isFavorite, onToggleFavorite, onAdd, animate = true, variant = 'default' }) {
+// `linked` : toute la carte mène à la fiche (le nom du produit couvre la carte ; favoris et panier restent au-dessus).
+function ProductCard({ product, index = 0, isFavorite, onToggleFavorite, onAdd, animate = true, variant = 'default', linked = false }) {
   const { categoryLabel } = useCatalog();
   const { t, tc, autoDir } = useI18n();
   const scene = variant === 'scene';
@@ -35,7 +36,7 @@ function ProductCard({ product, index = 0, isFavorite, onToggleFavorite, onAdd, 
   return (
     <article
       ref={revealRef}
-      className={`product-card ${scene ? 'product-card--scene' : ''} ${animate ? `reveal ${visible ? 'is-visible' : ''}` : 'is-visible'}`}
+      className={`product-card ${scene ? 'product-card--scene' : ''}${linked ? ' product-card--linked' : ''} ${animate ? `reveal ${visible ? 'is-visible' : ''}` : 'is-visible'}`}
       style={animate ? { '--reveal-delay': `${Math.min(index, 5) * 80}ms` } : undefined}
     >
       <button
