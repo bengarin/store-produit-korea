@@ -79,7 +79,8 @@ class StoreConfigView(PublicView):
                 "cities": list(
                     City.objects.filter(is_active=True, zone__is_active=True).values_list("name", flat=True)
                 ),
-                "allowOtherCity": default_zone is not None,
+                "allowOtherCity": default_zone is not None
+                or settings.delivery_mode != StoreSettings.DeliveryMode.ZONES,
                 "maxQtyPerLine": settings.max_qty_per_line,
                 # Identité et contact du responsable du traitement (page Politique de confidentialité).
                 # Vides tant que le propriétaire ne les a pas saisis : rien n'est inventé.

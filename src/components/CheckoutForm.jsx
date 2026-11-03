@@ -1,11 +1,11 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { Truck, HandCoins, Lock, Loader2 } from 'lucide-react';
 import { useCatalog } from '../context/CatalogContext.jsx';
 import { ORDERS_ARE_SIMULATED } from '../services/orderService.js';
 import { formatPrice } from '../utils/currency.js';
 import { normalizeMoroccanPhone } from '../utils/phone.js';
 import { useI18n } from '../i18n/I18nContext.jsx';
-import { CITY_AR } from '../i18n/content.js';
+import { FREE_CITY, OTHER_CITY, cityOptions, searchKey } from '../data/moroccoCities.js';
 
 const EMPTY = { fullName: '', phone: '', city: '', otherCity: '', address: '' };
 
@@ -16,7 +16,7 @@ export function validate(values) {
   if (!values.phone.trim()) errors.phone = 'form.errPhoneEmpty';
   else if (!normalizeMoroccanPhone(values.phone)) errors.phone = 'form.errPhone';
   if (!values.city) errors.city = 'form.errCity';
-  else if (values.city === 'autre' && values.otherCity.trim().length < 2) errors.otherCity = 'form.errOtherCity';
+  else if (values.city === OTHER_CITY && !FREE_CITY.test(values.otherCity.trim())) errors.otherCity = 'form.errOtherCity';
   if (values.address.trim().length < 8) errors.address = 'form.errAddress';
   return errors;
 }
@@ -38,8 +38,8 @@ function Field({ id, label, error, children }) {
 export default function CheckoutForm({ deliveryFee, submitting, onSubmit, alert = null, children }) {
   const { config } = useCatalog();
   const { t, lang } = useI18n();
-  const cityLabel = (c) => (lang === 'ar' ? CITY_AR[c] || c : c);
-  const allowOtherCity = config.allowOtherCity !== false;
+  const [citySearch, setCitySearch] = useState('');
+  const cities = useMemo(() => cityOptions(config.cities || [], lang), [config.cities, lang]);
   const [values, setValues] = useState(EMPTY);
   const [honeypot, setHoneypot] = useState('');
   const [errors, setErrors] = useState({});
@@ -74,7 +74,7 @@ export default function CheckoutForm({ deliveryFee, submitting, onSubmit, alert 
       {
         fullName: values.fullName.trim(),
         phone: normalizeMoroccanPhone(values.phone),
-        city: values.city === 'autre' ? values.otherCity.trim() : values.city,
+        city: values.city === OTHER_CITY ? values.otherCity.trim().replace(/\s+/g, ' ') : values.city,
         address: values.address.trim(),
       },
       { website: honeypot },
@@ -94,13 +94,17 @@ export default function CheckoutForm({ deliveryFee, submitting, onSubmit, alert 
             onChange={update('phone')} onBlur={blur('phone')} {...a11y('phone')} />
         </Field>
         <Field id="city" label={t('form.city')} error={err('city')}>
+          <input type="search" className="checkout-form__city-search" placeholder={t('form.citySearchPh')}
+            aria-label={t('form.citySearchPh')} aria-controls="city" value={citySearch} onChange={(e) => setCitySearch(e.target.value)} />
           <select id="city" value={values.city} onChange={update('city')} onBlur={blur('city')} {...a11y('city')}>
             <option value="" disabled>{t('form.cityPh')}</option>
-            {config.cities.map((c) => <option key={c} value={c}>{cityLabel(c)}</option>)}
-            {allowOtherCity && <option value="autre">{t('form.otherCityOption')}</option>}
+            {cities
+              .filter((c) => c.value === values.city || !citySearch.trim() || c.key.includes(searchKey(citySearch)))
+              .map((c) => <option key={c.value} value={c.value}>{c.label}</option>)}
+            <option value={OTHER_CITY}>{t('form.otherCityOption')}</option>
           </select>
         </Field>
-        {values.city === 'autre' && (
+        {values.city === OTHER_CITY && (
           <Field id="otherCity" label={t('form.otherCity')} error={err('otherCity')}>
             <input id="otherCity" placeholder={t('form.otherCityPh')} value={values.otherCity}
               onChange={update('otherCity')} onBlur={blur('otherCity')} {...a11y('otherCity')} />

@@ -594,6 +594,7 @@ select { appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmln
 .field__req { color: var(--error); }
 .has-error input, .has-error select, [aria-invalid='true'] { border-color: var(--error); }
 .field__error { color: var(--error); font-size: 12.5px; }
+.checkout-form__city-search { min-height: 40px; font-size: 15px; background: var(--surface-2); }
 .checkbox { display: flex; gap: var(--s-3); align-items: flex-start; padding: var(--s-3); border-radius: var(--r-sm); background: var(--surface-2); font-size: 13.5px; cursor: pointer; }
 .checkbox input { width: 18px; height: 18px; min-height: 0; margin-top: 1px; flex: none; accent-color: var(--green); }
 

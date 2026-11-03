@@ -5,6 +5,8 @@
  * Les marques et noms de produits (Baroness, SOME BY MI, ORJENA, BIOVÈNE, Quret…) restent en caractères latins.
  * Les jetons {nombre} et {frais_livraison} sont conservés.
  */
+import { CITY_AR_NAMES } from '../data/moroccoCities.js';
+
 const AR = {
   // Barre d'annonce, menu, pied de page
   'Livraison partout au Maroc · Paiement à la livraison': 'التوصيل إلى جميع أنحاء المغرب · الدفع عند الاستلام',
@@ -102,12 +104,8 @@ const AR = {
 };
 
 /** Villes du formulaire de commande : libellé arabe (la valeur envoyée au serveur reste inchangée). */
-export const CITY_AR = {
-  Casablanca: 'الدار البيضاء', Rabat: 'الرباط', Marrakech: 'مراكش', Fès: 'فاس', Tanger: 'طنجة', Agadir: 'أكادير',
-  Meknès: 'مكناس', Oujda: 'وجدة', Kénitra: 'القنيطرة', Tétouan: 'تطوان', Salé: 'سلا', Témara: 'تمارة',
-  Mohammedia: 'المحمدية', 'El Jadida': 'الجديدة', Safi: 'آسفي', 'Béni Mellal': 'بني ملال', Nador: 'الناظور',
-  Khouribga: 'خريبكة', Settat: 'سطات', Laâyoune: 'العيون',
-};
+// Noms arabes des villes : une seule liste, src/data/moroccoCities.js.
+export const CITY_AR = CITY_AR_NAMES;
 
 const TABLES = { ar: { ...AR, ...CITY_AR } };
 

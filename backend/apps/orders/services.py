@@ -265,7 +265,7 @@ def _create(data, idempotency_key, fingerprint, request) -> Order:
         ship_city=destination.city,
         ship_city_label=destination.label,
         ship_address=customer_data["address"],
-        shipping_zone_name=destination.zone.name,
+        shipping_zone_name=destination.zone.name if destination.zone else "",
         item_count=quote.item_count,
         subtotal=quote.subtotal,
         discount_total=quote.discount,
