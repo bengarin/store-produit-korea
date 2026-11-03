@@ -906,3 +906,18 @@ select { appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmln
   .pdp-mkt { gap: 48px; margin-top: 48px; padding-top: 40px; border-top: 1px solid var(--border); max-width: 640px; }
   .pdp-mkt__title { font-size: calc(clamp(28px, 2.4vw, 36px) * var(--heading-scale, 1)); }
 }
+
+/* Fiche produit mobile : engagements en fin de page (icône illustrée + texte, cartes 2 × 2). */
+.pdp-promise { margin-top: 30px; padding: 22px 16px 18px; border: 1px solid var(--border); border-radius: 22px; background: linear-gradient(180deg, var(--surface) 0%, #f4ece0 100%); }
+.pdp-promise__title { margin-bottom: 16px; text-align: center; font-family: var(--font-serif); font-size: calc(clamp(24px, 6.6vw, 28px) * var(--heading-scale, 1)); font-weight: 600; line-height: 1.15; color: var(--green-deep); }
+.pdp-promise__list { list-style: none; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+.pdp-promise__item { display: grid; justify-items: center; align-content: start; gap: 6px; padding: 16px 10px 14px; border: 1px solid #ebe1d2; border-radius: 18px; background: rgba(255, 253, 249, 0.92); text-align: center; }
+.pdp-promise__icon { display: grid; place-items: center; width: 56px; height: 56px; margin-bottom: 4px; border-radius: 50%; background: var(--sage-soft); color: var(--green-deep); box-shadow: 0 0 0 5px rgba(143, 168, 139, 0.14); }
+.pdp-promise__item strong { font-size: 14px; font-weight: 600; line-height: 1.3; color: var(--green-deep); }
+.pdp-promise__item small { font-size: 12.5px; line-height: 1.4; color: var(--muted); }
+@media (max-width: 359px) {
+  .pdp-promise { padding-inline: 10px; }
+  .pdp-promise__list { gap: 8px; }
+  .pdp-promise__item { padding-inline: 6px; }
+  .pdp-promise__icon { width: 48px; height: 48px; }
+}

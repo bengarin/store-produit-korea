@@ -12,6 +12,27 @@ import { formatPrice } from '../utils/currency.js';
 import { compareAtPrice, defaultVariant, hasChoice, unitPrice, variantStatus } from '../utils/variants.js';
 import { useI18n } from '../i18n/I18nContext.jsx';
 
+/** Engagements en fin de fiche (mobile) : une icône illustrée par engagement, présentation en cartes. */
+function MobileTrust({ t }) {
+  const items = reassuranceItems(t);
+  // Ordre demandé : paiement à la livraison, livraison, produits authentiques, service client.
+  const ordered = [items[0], items[2], items[1], items[3]];
+  return (
+    <section className="pdp-promise" aria-labelledby="pdp-promise-title">
+      <h2 className="pdp-promise__title" id="pdp-promise-title">{t('benefits.label')}</h2>
+      <ul className="pdp-promise__list">
+        {ordered.map(({ icon: Icon, title, text }) => (
+          <li key={title} className="pdp-promise__item">
+            <span className="pdp-promise__icon" aria-hidden="true"><Icon size={26} strokeWidth={1.5} /></span>
+            <strong>{title}</strong>
+            <small>{text}</small>
+          </li>
+        ))}
+      </ul>
+    </section>
+  );
+}
+
 /** Variante affichée à l'ouverture : celle par défaut si elle est disponible, sinon la 1re disponible. */
 function initialVariant(product) {
   const fallback = defaultVariant(product);
@@ -123,26 +144,41 @@ export default function ProductView({
             </div>
 
 
-            {!desktop && <ProductDetails product={product} desktop={false} />}
+            {desktop ? (
+              <>
+                <ul className="pdp__trust">
+                  {reassuranceItems(t).map(({ icon: Icon, title, text }) => (
+                    <li key={title}>
+                      <span className="pdp__trust-icon"><Icon size={19} strokeWidth={1.5} aria-hidden="true" /></span>
+                      <span><strong>{title}</strong><small>{text}</small></span>
+                    </li>
+                  ))}
+                </ul>
 
-            <ul className="pdp__trust">
-              {reassuranceItems(t).map(({ icon: Icon, title, text }) => (
-                <li key={title}>
-                  <span className="pdp__trust-icon"><Icon size={19} strokeWidth={1.5} aria-hidden="true" /></span>
-                  <span><strong>{title}</strong><small>{text}</small></span>
-                </li>
-              ))}
-            </ul>
+                {showDemoNotices && (
+                  <p className="pdp__note">
+                    <Info size={13} aria-hidden="true" />
+                    {t('pdp.demoNote')}
+                  </p>
+                )}
 
-            {showDemoNotices && (
-              <p className="pdp__note">
-                <Info size={13} aria-hidden="true" />
-                {t('pdp.demoNote')}
-              </p>
+                {/* Landing page : visuels marketing dans la colonne de droite (jamais dans la galerie). */}
+                <ProductMarketing product={product} />
+              </>
+            ) : (
+              <>
+                {/* Mobile : visuels marketing → description / composition (accordéons) → engagements, tout en bas. */}
+                <ProductMarketing product={product} />
+                <ProductDetails product={product} desktop={false} />
+                {showDemoNotices && (
+                  <p className="pdp__note">
+                    <Info size={13} aria-hidden="true" />
+                    {t('pdp.demoNote')}
+                  </p>
+                )}
+                <MobileTrust t={t} />
+              </>
             )}
-
-            {/* Landing page : visuels marketing dans la colonne de droite (jamais dans la galerie). */}
-            <ProductMarketing product={product} />
           </div>
         </div>
 
