@@ -29,6 +29,17 @@
   "original": null,
   "original_bytes": null
  },
+ "images/baroness-aloe-vera-gel/visuels/baroness-aloe-vera-gel-bienfaits-01.webp": {
+  "bytes": 98548,
+  "bytes_640": 29608,
+  "file_640": "images/baroness-aloe-vera-gel/visuels/baroness-aloe-vera-gel-bienfaits-01-640.webp",
+  "height": 1600,
+  "key_sha256": "65c40b24c00406eadda436ca644379d20d33ae0f4e9ee3e01f2db7e2e9d0cf60",
+  "mode": "conversion",
+  "original": "baroness-aloe-vera-gel/visuels/hf_20261102_115315_8fc77bad-7fdb-45d1-a09d-90b2e8f4f095.png",
+  "original_bytes": 5536262,
+  "width": 1600
+ },
  "images/baroness-aloe-vera-gel/visuels/baroness-aloe-vera-gel-bienfaits-ar-01.webp": {
   "bytes": 102534,
   "bytes_640": 30836,
@@ -161,6 +172,17 @@
   "original_bytes": 5376865,
   "width": 1600
  },
+ "images/biovene-eye-patches/visuels/biovene-eye-patches-presentation-ar-01.webp": {
+  "bytes": 109262,
+  "bytes_640": 26662,
+  "file_640": "images/biovene-eye-patches/visuels/biovene-eye-patches-presentation-ar-01-640.webp",
+  "height": 1600,
+  "key_sha256": "e5b5ba451e0a86704824ed3fbe12fe29c7d27ed47198e705e09d0087642310b7",
+  "mode": "conversion",
+  "original": "biovene-eye-patches/visuels_ar/hf_20261102_151629_88354d59-828d-4e58-a628-dabd7643eb3b.png",
+  "original_bytes": 4915133,
+  "width": 1600
+ },
  "images/biovene-eye-patches/visuels/biovene-eye-patches-utilisation-01.webp": {
   "bytes": 139418,
   "bytes_640": 40336,
@@ -170,6 +192,17 @@
   "mode": "conversion",
   "original": "biovene-eye-patches/visuels/hf_20261030_102043_d059fbe3-5816-4b8b-8eb1-4aaac1e7a332.png",
   "original_bytes": 5346956,
+  "width": 1600
+ },
+ "images/biovene-eye-patches/visuels/biovene-eye-patches-utilisation-ar-01.webp": {
+  "bytes": 127872,
+  "bytes_640": 38636,
+  "file_640": "images/biovene-eye-patches/visuels/biovene-eye-patches-utilisation-ar-01-640.webp",
+  "height": 1600,
+  "key_sha256": "9e7d9d30174e74ffcfb0c3bce2f446f6c09347ef18b9e8a1f95355ba0e13a76b",
+  "mode": "conversion",
+  "original": "biovene-eye-patches/visuels_ar/hf_20261102_153227_1d6855db-80f4-439b-9f85-418bc604af6d.png",
+  "original_bytes": 5010760,
   "width": 1600
  },
  "images/orjena-power-collagen-emulsion/orjena-power-collagen-emulsion-01-packshot.webp": {
@@ -369,6 +402,17 @@
   "mode": "conversion",
   "original": "some-by-mi-yuja-niacin-cream/visuels_ar/hf_20261102_145116_35f649ec-0ca1-4c0b-b554-e169a5404694.png",
   "original_bytes": 6140305,
+  "width": 1600
+ },
+ "images/some-by-mi-yuja-niacin-cream/visuels/some-by-mi-yuja-niacin-cream-utilisation-01.webp": {
+  "bytes": 124342,
+  "bytes_640": 35472,
+  "file_640": "images/some-by-mi-yuja-niacin-cream/visuels/some-by-mi-yuja-niacin-cream-utilisation-01-640.webp",
+  "height": 1600,
+  "key_sha256": "4ed0f5d5b83456baaf84eca85184147baf64f9a7ac9125be009cd2ffb5c8a77e",
+  "mode": "conversion",
+  "original": "some-by-mi-yuja-niacin-cream/visuels/hf_20261030_101831_212a6c9a-0e7f-4ba0-be46-86863a174cf4.png",
+  "original_bytes": 6192807,
   "width": 1600
  },
  "images/some-by-mi-yuja-niacin-cream/visuels/some-by-mi-yuja-niacin-cream-utilisation-ar-01.webp": {

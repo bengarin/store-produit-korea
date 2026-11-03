@@ -123,6 +123,13 @@
           "language": "ar",
           "alt": "جل Baroness بالألوفيرا: خالٍ من البارابين والألوان الاصطناعية والزيوت المعدنية والبنزوفينون",
           "active": false
+        },
+        {
+          "file": "images/baroness-aloe-vera-gel/visuels/baroness-aloe-vera-gel-bienfaits-01.webp",
+          "original": "baroness-aloe-vera-gel/visuels/hf_20261102_115315_8fc77bad-7fdb-45d1-a09d-90b2e8f4f095.png",
+          "category": "benefits",
+          "language": "fr",
+          "alt": "Gel Baroness : 99,85 % d'aloe vera, sans paraben, colorant artificiel, huile minérale ni benzophénone"
         }
       ],
       "missing": [
@@ -262,6 +269,13 @@
           "category": "banner",
           "language": "ar",
           "alt": "كريم SOME BY MI يوجا نياسين المضاد للشوائب محاط بثمار اليوجا"
+        },
+        {
+          "file": "images/some-by-mi-yuja-niacin-cream/visuels/some-by-mi-yuja-niacin-cream-utilisation-01.webp",
+          "original": "some-by-mi-yuja-niacin-cream/visuels/hf_20261030_101831_212a6c9a-0e7f-4ba0-be46-86863a174cf4.png",
+          "category": "usage",
+          "language": "fr",
+          "alt": "Mode d'utilisation en 3 étapes : nettoyer et tonifier, prélever une petite quantité, appliquer en couche fine"
         }
       ],
       "missing": [
@@ -410,6 +424,20 @@
           "category": "benefits",
           "language": "ar",
           "alt": "لصقات Biovène: ثلاثي الببتيد، خيار، لاصقات هيدروجيل، طقوس سريعة"
+        },
+        {
+          "file": "images/biovene-eye-patches/visuels/biovene-eye-patches-presentation-ar-01.webp",
+          "original": "biovene-eye-patches/visuels_ar/hf_20261102_151629_88354d59-828d-4e58-a628-dabd7643eb3b.png",
+          "category": "banner",
+          "language": "ar",
+          "alt": "لصقات Biovène لمحيط العين: ثلاثي الببتيد + خيار"
+        },
+        {
+          "file": "images/biovene-eye-patches/visuels/biovene-eye-patches-utilisation-ar-01.webp",
+          "original": "biovene-eye-patches/visuels_ar/hf_20261102_153227_1d6855db-80f4-439b-9f85-418bc604af6d.png",
+          "category": "usage",
+          "language": "ar",
+          "alt": "طريقة الاستعمال في 3 خطوات: بشرة نظيفة وجافة، وضع اللصقات، إزالتها وترك الباقي يمتص"
         }
       ],
       "missing": [

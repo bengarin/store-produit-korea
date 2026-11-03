@@ -77,11 +77,19 @@ sur le français — jamais de mélange de langues sur une fiche).
 |---|---|---|---|
 | ORJENA | Bienfaits ×2, Mode d'utilisation | Présentation : « كبسولات » = « capsules » (le produit est une émulsion) | 3 visuels arabes |
 | Baroness | Présentation (contient un faux bouton « اطلب الآن ») | Bienfaits : « (4 مجاني) » = « 4 gratuits » (traduction littérale de « 4 Free ») | 1 visuel arabe |
-| Biovène | Bienfaits | — | 1 visuel arabe |
+| Biovène | Présentation, Bienfaits, Mode d'utilisation | — | 3 visuels arabes |
 | Quret Vital Cream | Présentation, Bienfaits, Mode d'utilisation | — | 3 visuels arabes |
 | Quret Eye Cream | Présentation, Bienfaits, Mode d'utilisation | — | 3 visuels arabes |
 | SOME BY MI | Présentation, Ingrédients clés, Mode d'utilisation | — (« testé non comédogène » : [À VÉRIFIER] comme en français) | 3 visuels arabes |
 
-Non importés : 12 « avant / après » (images générées, non authentiques ; 4 portent des libellés français) →
+Non importés : 14 « avant / après » (images générées, non authentiques ; 5 portent des libellés français) →
 `originaux/_non_importes/visuels_ar/`. Un visuel masqué s'active dans Administration → Visuels marketing après
 correction du texte.
+
+## Envoi en 4 parties (3 nov. 2026)
+
+50 images reçues : 30 déjà en place, 14 déjà écartées (avant/après générés, doublon anglais), 6 nouvelles.
+Ajoutées : SOME BY MI « Mode d'utilisation » (FR), Baroness « Bienfaits » (FR), Biovène « Présentation » et
+« Mode d'utilisation » (AR). Écartées : 2 avant/après Biovène (FR et AR). Version française après ajout : Baroness 3
+visuels, SOME BY MI 3, Biovène 4, Vital Cream 4, Eye Cream 3, ORJENA 4.
+
