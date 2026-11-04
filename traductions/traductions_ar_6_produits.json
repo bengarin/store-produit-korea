@@ -1,0 +1,543 @@
+{
+  "format": "mpc-traductions-ar",
+  "version": 1,
+  "date": "2026-11-04",
+  "statut_global": "proposition — à relire par une personne arabophone avant import",
+  "source": "Texte français actuel des 6 produits (backend/catalog_import/catalogue.json = base locale). Aucune information ajoutée.",
+  "regles": [
+    "Les champs *_ar correspondent exactement aux champs arabes existants du modèle Product (aucun nouveau champ en base).",
+    "Listes (ingredients_ar, benefits_ar, usage_steps_ar, highlights_ar) : même nombre d'éléments et même ordre que le français.",
+    "highlights_ar[i] → ProductHighlight.label_ar du picto à la position i (60 caractères max).",
+    "key_ingredients : informatif, NON importé (aucun champ en base). name_latin = nom tel qu'imprimé sur l'emballage ; aucune liste INCI complète n'est disponible.",
+    "explanation_ar = définition générale de l'ingrédient (ce qu'il est), jamais une promesse. role_ar vide : aucun rôle vérifiable sur l'emballage.",
+    "Chaîne vide = ne rien écrire (le français reste affiché). Un script doit vérifier que source_fr correspond encore à la base avant d'écrire."
+  ],
+  "champs_base": {
+    "display_name_ar": "Product.display_name_ar (255)",
+    "short_description_ar": "Product.short_description_ar (160)",
+    "summary_ar": "Product.summary_ar — présentation (haut de la fiche)",
+    "description_html_ar": "Product.description_html_ar — description détaillée, HTML (titre h3 inclus)",
+    "ingredients_ar": "Product.ingredients_ar (liste)",
+    "benefits_ar": "Product.benefits_ar (liste)",
+    "usage_steps_ar": "Product.usage_steps_ar (liste)",
+    "skin_types_ar": "Product.skin_types_ar (255)",
+    "highlights_ar": "ProductHighlight.label_ar, par position (60)"
+  },
+  "categories_ar": {
+    "content_status": "proposition",
+    "champ_base": "Category.name_ar (100), commun à tous les produits de la catégorie",
+    "hydratation": {
+      "fr": "Hydratation",
+      "ar": "الترطيب"
+    },
+    "anti-age": {
+      "fr": "Anti-âge",
+      "ar": "مكافحة علامات التقدّم في السن"
+    },
+    "eclat": {
+      "fr": "Éclat",
+      "ar": "الإشراق"
+    }
+  },
+  "produits": [
+    {
+      "slug": "baroness-aloe-vera-gel",
+      "content_status": "proposition",
+      "source_fr": {
+        "display_name": "Baroness Aloe Vera Soothing Gel",
+        "short_description": "Gel apaisant à l'aloe vera (99,85 % selon l'emballage).",
+        "summary": "Gel coréen à l'aloe vera de la marque Baroness. L'emballage indique une pureté d'aloe vera de 99,85 % et une formule « 4 Free ».",
+        "description_html": "<p>Le <strong>Aloe Vera Soothing Gel</strong> de Baroness est un gel à l'aloe vera fabriqué en Corée.</p><h3>Mentions de l'emballage</h3><ul><li>Aloe vera : pureté de 99,85 %.</li><li>« 4 Free » : sans paraben, sans colorant artificiel, sans huile minérale, sans benzophénone.</li><li>Aloe vera certifié USDA et IASC.</li></ul>",
+        "ingredients": [
+          "Aloe vera — pureté de 99,85 % selon l'emballage"
+        ],
+        "benefits": [
+          "Texture gel",
+          "Sans paraben, colorant artificiel, huile minérale ni benzophénone (mention « 4 Free »)",
+          "Aloe vera certifié USDA et IASC (selon l'emballage)"
+        ],
+        "usage_steps": [
+          "Appliquer sur une peau propre.",
+          "Prélever une petite quantité de gel.",
+          "Faire pénétrer en tapotant doucement.",
+          "Faire un test sur une petite zone avant la première utilisation."
+        ],
+        "skin_types": "",
+        "highlights": [
+          "Aloe vera 99,85 %",
+          "Texture gel",
+          "Formule « 4 Free »",
+          "Aloe certifié USDA & IASC"
+        ]
+      },
+      "display_name_ar": "جل Baroness المهدّئ بالألوفيرا",
+      "short_description_ar": "جل مهدّئ بالألوفيرا (بنقاوة 99,85 % حسب العبوة).",
+      "summary_ar": "جل كوري بالألوفيرا من علامة Baroness. تشير العبوة إلى نقاوة ألوفيرا تبلغ 99,85 % وإلى تركيبة « 4 Free ».",
+      "description_html_ar": "<p>يُعدّ <strong>Aloe Vera Soothing Gel</strong> من Baroness جلًّا بالألوفيرا مصنوعًا في كوريا.</p><h3>بيانات العبوة</h3><ul><li>الألوفيرا: نقاوة بنسبة 99,85 %.</li><li>« 4 Free »: خالٍ من البارابين والألوان الاصطناعية والزيوت المعدنية والبنزوفينون.</li><li>ألوفيرا حاصلة على شهادتي USDA وIASC.</li></ul>",
+      "ingredients_ar": [
+        "الألوفيرا (Aloe vera) — نقاوة بنسبة 99,85 % حسب العبوة"
+      ],
+      "benefits_ar": [
+        "قوام جل",
+        "خالٍ من البارابين والألوان الاصطناعية والزيوت المعدنية والبنزوفينون (بيان « 4 Free »)",
+        "ألوفيرا حاصلة على شهادتي USDA وIASC (حسب العبوة)"
+      ],
+      "usage_steps_ar": [
+        "ضعوا الجل على بشرة نظيفة.",
+        "خذوا كمية صغيرة من الجل.",
+        "ربّتوا بلطف حتى يتغلغل في البشرة.",
+        "جرّبوا المنتج على منطقة صغيرة قبل الاستعمال الأول."
+      ],
+      "skin_types_ar": "",
+      "highlights_ar": [
+        "ألوفيرا 99,85 %",
+        "قوام جل",
+        "تركيبة « 4 Free »",
+        "ألوفيرا بشهادتي USDA وIASC"
+      ],
+      "key_ingredients": [
+        {
+          "name_latin": "Aloe vera",
+          "name_ar": "الألوفيرا (الصبّار)",
+          "mention_ar": "نقاوة 99,85 % حسب العبوة",
+          "explanation_ar": "نبات الألوفيرا، المعروف أيضًا باسم الصبّار.",
+          "role_ar": "",
+          "explanation_basis": "définition générale de l'ingrédient (ce qu'il est), pas une allégation sur le produit"
+        }
+      ],
+      "informations_manquantes": [
+        "Contenance (ml) : non visible sur les photos",
+        "Liste INCI complète",
+        "Types de peau",
+        "Mode d'emploi officiel de la marque",
+        "Code-barres / SKU"
+      ],
+      "a_verifier": [
+        "Étape « Faire un test sur une petite zone… » : ajoutée par nous, absente de l'emballage — à garder ou retirer (FR et AR)."
+      ]
+    },
+    {
+      "slug": "some-by-mi-yuja-niacin-cream",
+      "content_status": "proposition",
+      "source_fr": {
+        "display_name": "SOME BY MI Yuja Niacin Anti Blemish Cream",
+        "short_description": "Crème au yuja (70 %) et à la niacinamide (5 %), pot de 60 g.",
+        "summary": "Crème de la gamme Yuja Niacin de SOME BY MI. L'emballage indique 70 % d'extrait de yuja (agrume coréen) et 5 % de niacinamide.",
+        "description_html": "<p>La <strong>Yuja Niacin Anti Blemish Cream</strong> de SOME BY MI est une crème présentée par la marque comme anti-imperfections (« Anti Blemish »).</p><h3>Mentions de l'emballage</h3><ul><li>Extrait de yuja : 70 %.</li><li>Niacinamide : 5 %.</li><li>Poids net : 60 g.</li></ul>",
+        "ingredients": [
+          "Extrait de yuja — 70 % selon l'emballage",
+          "Niacinamide — 5 % selon l'emballage"
+        ],
+        "benefits": [
+          "Associe extrait de yuja et niacinamide",
+          "Présentée par la marque comme crème anti-imperfections (« Anti Blemish »)",
+          "Texture crème"
+        ],
+        "usage_steps": [
+          "Après le nettoyage, prélever une petite quantité.",
+          "Appliquer sur le visage en évitant le contour des yeux.",
+          "Faire pénétrer par légers tapotements."
+        ],
+        "skin_types": "",
+        "highlights": [
+          "Extrait de yuja 70 %",
+          "Niacinamide 5 %",
+          "Texture crème",
+          "Pot de 60 g"
+        ]
+      },
+      "display_name_ar": "كريم SOME BY MI Yuja Niacin Anti Blemish",
+      "short_description_ar": "كريم باليوجا (70 %) والنياسيناميد (5 %)، علبة 60 غ.",
+      "summary_ar": "كريم من مجموعة Yuja Niacin من علامة SOME BY MI. تشير العبوة إلى 70 % من مستخلص اليوجا (نوع من الحمضيات الكورية) و5 % من النياسيناميد.",
+      "description_html_ar": "<p>يُعدّ <strong>Yuja Niacin Anti Blemish Cream</strong> من SOME BY MI كريمًا تقدّمه العلامة على أنه مضاد للشوائب (« Anti Blemish »).</p><h3>بيانات العبوة</h3><ul><li>مستخلص اليوجا: 70 %.</li><li>النياسيناميد: 5 %.</li><li>الوزن الصافي: 60 غ.</li></ul>",
+      "ingredients_ar": [
+        "مستخلص اليوجا (Yuja) — 70 % حسب العبوة",
+        "النياسيناميد (Niacinamide) — 5 % حسب العبوة"
+      ],
+      "benefits_ar": [
+        "يجمع بين مستخلص اليوجا والنياسيناميد",
+        "تقدّمه العلامة ككريم مضاد للشوائب (« Anti Blemish »)",
+        "قوام كريمي"
+      ],
+      "usage_steps_ar": [
+        "بعد تنظيف البشرة، خذوا كمية صغيرة.",
+        "ضعوا الكريم على الوجه مع تجنّب محيط العينين.",
+        "ربّتوا بخفة حتى يتغلغل في البشرة."
+      ],
+      "skin_types_ar": "",
+      "highlights_ar": [
+        "مستخلص اليوجا 70 %",
+        "نياسيناميد 5 %",
+        "قوام كريمي",
+        "علبة 60 غ"
+      ],
+      "key_ingredients": [
+        {
+          "name_latin": "Yuja",
+          "name_ar": "اليوجا",
+          "mention_ar": "مستخلص 70 % حسب العبوة",
+          "explanation_ar": "اليوجا نوع من الحمضيات يُزرع في كوريا.",
+          "role_ar": "",
+          "explanation_basis": "définition générale de l'ingrédient (ce qu'il est), pas une allégation sur le produit"
+        },
+        {
+          "name_latin": "Niacinamide",
+          "name_ar": "النياسيناميد",
+          "mention_ar": "5 % حسب العبوة",
+          "explanation_ar": "النياسيناميد شكل من أشكال فيتامين B3.",
+          "role_ar": "",
+          "explanation_basis": "définition générale de l'ingrédient (ce qu'il est), pas une allégation sur le produit"
+        }
+      ],
+      "informations_manquantes": [
+        "Liste INCI complète",
+        "Types de peau",
+        "Code-barres / SKU"
+      ],
+      "a_verifier": [
+        "« Testé non comédogène » (visuels) : non repris ici, non lisible sur l'emballage."
+      ]
+    },
+    {
+      "slug": "biovene-eye-patches",
+      "content_status": "proposition",
+      "source_fr": {
+        "display_name": "Biovène Age-Defy Eye Patches",
+        "short_description": "Patchs contour des yeux au tripeptide et au concombre, 60 patchs.",
+        "summary": "Patchs pour le dessous des yeux de la marque Biovène (Barcelona), associant tripeptide et concombre. Boîte de 60 patchs, soit 30 paires, avec spatule, selon l'emballage.",
+        "description_html": "<p>Les <strong>Tripeptide Cucumber Age-Defy Under Eye Patches</strong> de Biovène sont des patchs à poser sous les yeux.</p><h3>Mentions de l'emballage</h3><ul><li>Tripeptide et concombre (« Tripeptide · Cucumber »).</li><li>60 patchs / 30 paires + spatule.</li><li>Biovène Barcelona.</li></ul>",
+        "ingredients": [
+          "Tripeptide (indiqué sur l'emballage)",
+          "Concombre (indiqué sur l'emballage)"
+        ],
+        "benefits": [
+          "Patchs à poser sous les yeux",
+          "60 patchs (30 paires) avec spatule",
+          "Associe tripeptide et concombre"
+        ],
+        "usage_steps": [
+          "Sur une peau propre et sèche, poser un patch sous chaque œil.",
+          "Respecter le temps de pose indiqué sur la boîte.",
+          "Retirer les patchs et faire pénétrer le reste de produit en tapotant."
+        ],
+        "skin_types": "",
+        "highlights": [
+          "Contour des yeux",
+          "Tripeptide",
+          "Concombre",
+          "60 patchs + spatule"
+        ]
+      },
+      "display_name_ar": "لصقات Biovène Age-Defy لمحيط العينين",
+      "short_description_ar": "لصقات لمحيط العينين بالتريببتيد والخيار، 60 لصقة.",
+      "summary_ar": "لصقات لأسفل العينين من علامة Biovène (Barcelona)، تجمع بين التريببتيد والخيار. علبة من 60 لصقة، أي 30 زوجًا، مع ملعقة تطبيق، حسب العبوة.",
+      "description_html_ar": "<p>تُعدّ <strong>Tripeptide Cucumber Age-Defy Under Eye Patches</strong> من Biovène لصقات توضع تحت العينين.</p><h3>بيانات العبوة</h3><ul><li>التريببتيد والخيار (« Tripeptide · Cucumber »).</li><li>60 لصقة / 30 زوجًا + ملعقة تطبيق.</li><li>العلامة: Biovène Barcelona.</li></ul>",
+      "ingredients_ar": [
+        "التريببتيد (Tripeptide) — مذكور على العبوة",
+        "الخيار (Cucumber) — مذكور على العبوة"
+      ],
+      "benefits_ar": [
+        "لصقات توضع تحت العينين",
+        "60 لصقة (30 زوجًا) مع ملعقة تطبيق",
+        "تجمع بين التريببتيد والخيار"
+      ],
+      "usage_steps_ar": [
+        "على بشرة نظيفة وجافة، ضعوا لصقة تحت كل عين.",
+        "احترموا مدة الوضع المذكورة على العلبة.",
+        "انزعوا اللصقات وربّتوا على ما تبقّى من المنتج حتى يتغلغل."
+      ],
+      "skin_types_ar": "",
+      "highlights_ar": [
+        "محيط العينين",
+        "تريببتيد",
+        "خيار",
+        "60 لصقة + ملعقة"
+      ],
+      "key_ingredients": [
+        {
+          "name_latin": "Tripeptide",
+          "name_ar": "التريببتيد",
+          "mention_ar": "مذكور على العبوة (« Tripeptide »)",
+          "explanation_ar": "التريببتيد سلسلة قصيرة مكوّنة من ثلاثة أحماض أمينية.",
+          "role_ar": "",
+          "explanation_basis": "définition générale de l'ingrédient (ce qu'il est), pas une allégation sur le produit"
+        },
+        {
+          "name_latin": "Cucumber",
+          "name_ar": "الخيار",
+          "mention_ar": "مذكور على العبوة (« Cucumber »)",
+          "explanation_ar": "الخيار نبات معروف من فصيلة القرعيات.",
+          "role_ar": "",
+          "explanation_basis": "définition générale de l'ingrédient (ce qu'il est), pas une allégation sur le produit"
+        }
+      ],
+      "informations_manquantes": [
+        "Liste INCI complète",
+        "Types de peau",
+        "Temps de pose officiel",
+        "Code-barres : 8436575098029 figure dans le nom des fichiers fournisseur, non vérifié sur l'emballage"
+      ],
+      "a_verifier": [
+        "Temps de pose : non repris (« 10-20 minutes » vu seulement sur un visuel)."
+      ]
+    },
+    {
+      "slug": "vitamin-collagen-vital-cream",
+      "content_status": "proposition",
+      "source_fr": {
+        "display_name": "Quret Vitamin Collagen Vital Cream",
+        "short_description": "Crème vitamines et collagène 50 g + crème contour des yeux 10 ml offerte.",
+        "summary": "Crème de la gamme Vitamin de Quret, associant vitamines et collagène. Le coffret contient un pot de 50 g et une crème contour des yeux de 10 ml offerte, selon l'emballage.",
+        "description_html": "<p>La <strong>Vitamin Collagen Vital Cream</strong> de Quret est une crème pour le visage.</p><h3>Mentions de l'emballage</h3><ul><li>« brightening &amp; elasticity » (éclat et élasticité).</li><li>Poids net : 50 g, avec une crème contour des yeux de 10 ml offerte.</li><li>« #VitaminEnergy #CollagenCare ».</li></ul>",
+        "ingredients": [
+          "Vitamines (indiquées dans le nom du produit)",
+          "Collagène (indiqué dans le nom du produit)"
+        ],
+        "benefits": [
+          "Mention de l'emballage : « brightening & elasticity » (éclat et élasticité)",
+          "Texture crème",
+          "Crème contour des yeux 10 ml offerte dans le coffret"
+        ],
+        "usage_steps": [
+          "Nettoyer le visage.",
+          "Prélever une petite quantité de crème.",
+          "Masser doucement jusqu'à absorption."
+        ],
+        "skin_types": "",
+        "highlights": [
+          "Vitamines",
+          "Collagène",
+          "Pot de 50 g",
+          "Contour des yeux 10 ml offert"
+        ]
+      },
+      "display_name_ar": "كريم Quret Vitamin Collagen Vital",
+      "short_description_ar": "كريم بالفيتامينات والكولاجين 50 غ + كريم لمحيط العينين 10 مل هدية.",
+      "summary_ar": "كريم من مجموعة Vitamin من علامة Quret، يجمع بين الفيتامينات والكولاجين. تحتوي العلبة على كريم بوزن 50 غ وكريم لمحيط العينين بحجم 10 مل هدية، حسب العبوة.",
+      "description_html_ar": "<p>يُعدّ <strong>Vitamin Collagen Vital Cream</strong> من Quret كريمًا للوجه.</p><h3>بيانات العبوة</h3><ul><li>عبارة « brightening &amp; elasticity » (الإشراق والمرونة).</li><li>الوزن الصافي: 50 غ، مع كريم لمحيط العينين بحجم 10 مل هدية.</li><li>عبارة « #VitaminEnergy #CollagenCare ».</li></ul>",
+      "ingredients_ar": [
+        "الفيتامينات (Vitamin) — مذكورة في اسم المنتج",
+        "الكولاجين (Collagen) — مذكور في اسم المنتج"
+      ],
+      "benefits_ar": [
+        "بيان العبوة: « brightening & elasticity » (الإشراق والمرونة)",
+        "قوام كريمي",
+        "كريم لمحيط العينين بحجم 10 مل هدية داخل العلبة"
+      ],
+      "usage_steps_ar": [
+        "نظّفوا الوجه.",
+        "خذوا كمية صغيرة من الكريم.",
+        "دلّكوا بلطف حتى يُمتصّ."
+      ],
+      "skin_types_ar": "",
+      "highlights_ar": [
+        "فيتامينات",
+        "كولاجين",
+        "علبة 50 غ",
+        "كريم للعينين 10 مل هدية"
+      ],
+      "key_ingredients": [
+        {
+          "name_latin": "Vitamin",
+          "name_ar": "الفيتامينات",
+          "mention_ar": "مذكورة في اسم المنتج (الأنواع غير محدّدة)",
+          "explanation_ar": "",
+          "role_ar": "",
+          "explanation_basis": "aucune explication : information insuffisante"
+        },
+        {
+          "name_latin": "Collagen",
+          "name_ar": "الكولاجين",
+          "mention_ar": "مذكور في اسم المنتج",
+          "explanation_ar": "الكولاجين بروتين.",
+          "role_ar": "",
+          "explanation_basis": "définition générale de l'ingrédient (ce qu'il est), pas une allégation sur le produit"
+        }
+      ],
+      "informations_manquantes": [
+        "Liste INCI complète",
+        "Types de peau",
+        "Liste précise des vitamines",
+        "Code-barres / SKU"
+      ],
+      "a_verifier": [
+        "Liste précise des vitamines inconnue : aucune explication donnée."
+      ]
+    },
+    {
+      "slug": "vitamin-collagen-vital-eye-cream",
+      "content_status": "proposition",
+      "source_fr": {
+        "display_name": "Quret Vitamin Collagen Vital Eye Cream",
+        "short_description": "Crème contour des yeux vitamines et collagène, 25 ml + 10 ml offerts.",
+        "summary": "Crème pour le contour des yeux de la gamme Vitamin de Quret. Tube de 25 ml muni d'un applicateur pour le contour des yeux, avec un tube de 10 ml offert, selon l'emballage.",
+        "description_html": "<p>La <strong>Vitamin Collagen Vital Eye Cream</strong> de Quret est une crème pour le contour des yeux.</p><h3>Mentions de l'emballage</h3><ul><li>« Easy applicator for eye around » : applicateur pour le contour des yeux.</li><li>« brightening &amp; elasticity » (éclat et élasticité).</li><li>25 ml + 10 ml offerts (« Special gift 10 ml eye cream »).</li><li>Fabriqué en Corée (« Made in Korea »).</li></ul>",
+        "ingredients": [
+          "Vitamines (indiquées dans le nom du produit)",
+          "Collagène (indiqué dans le nom du produit)"
+        ],
+        "benefits": [
+          "Applicateur pour le contour des yeux (mention de l'emballage)",
+          "Mention de l'emballage : « brightening & elasticity » (éclat et élasticité)",
+          "Tube de 10 ml offert"
+        ],
+        "usage_steps": [
+          "Appliquer sur une peau propre et sèche.",
+          "Déposer la crème sur le contour des yeux avec l'applicateur.",
+          "Tapoter doucement pour faire pénétrer."
+        ],
+        "skin_types": "",
+        "highlights": [
+          "Contour des yeux",
+          "Applicateur intégré",
+          "Vitamines & collagène",
+          "25 ml + 10 ml offerts"
+        ]
+      },
+      "display_name_ar": "كريم محيط العينين Quret Vitamin Collagen Vital",
+      "short_description_ar": "كريم لمحيط العينين بالفيتامينات والكولاجين، 25 مل + 10 مل هدية.",
+      "summary_ar": "كريم لمحيط العينين من مجموعة Vitamin من علامة Quret. أنبوب بحجم 25 مل مزوّد بأداة تطبيق لمحيط العينين، مع أنبوب 10 مل هدية، حسب العبوة.",
+      "description_html_ar": "<p>يُعدّ <strong>Vitamin Collagen Vital Eye Cream</strong> من Quret كريمًا لمحيط العينين.</p><h3>بيانات العبوة</h3><ul><li>عبارة « Easy applicator for eye around »: أداة تطبيق لمحيط العينين.</li><li>عبارة « brightening &amp; elasticity » (الإشراق والمرونة).</li><li>25 مل + 10 مل هدية (« Special gift 10 ml eye cream »).</li><li>صُنع في كوريا (« Made in Korea »).</li></ul>",
+      "ingredients_ar": [
+        "الفيتامينات (Vitamin) — مذكورة في اسم المنتج",
+        "الكولاجين (Collagen) — مذكور في اسم المنتج"
+      ],
+      "benefits_ar": [
+        "أداة تطبيق لمحيط العينين (بيان العبوة)",
+        "بيان العبوة: « brightening & elasticity » (الإشراق والمرونة)",
+        "أنبوب 10 مل هدية"
+      ],
+      "usage_steps_ar": [
+        "ضعوا الكريم على بشرة نظيفة وجافة.",
+        "وزّعوا الكريم على محيط العينين بأداة التطبيق.",
+        "ربّتوا بلطف حتى يتغلغل."
+      ],
+      "skin_types_ar": "",
+      "highlights_ar": [
+        "محيط العينين",
+        "أداة تطبيق مدمجة",
+        "فيتامينات وكولاجين",
+        "25 مل + 10 مل هدية"
+      ],
+      "key_ingredients": [
+        {
+          "name_latin": "Vitamin",
+          "name_ar": "الفيتامينات",
+          "mention_ar": "مذكورة في اسم المنتج (الأنواع غير محدّدة)",
+          "explanation_ar": "",
+          "role_ar": "",
+          "explanation_basis": "aucune explication : information insuffisante"
+        },
+        {
+          "name_latin": "Collagen",
+          "name_ar": "الكولاجين",
+          "mention_ar": "مذكور في اسم المنتج",
+          "explanation_ar": "الكولاجين بروتين.",
+          "role_ar": "",
+          "explanation_basis": "définition générale de l'ingrédient (ce qu'il est), pas une allégation sur le produit"
+        }
+      ],
+      "informations_manquantes": [
+        "Liste INCI complète",
+        "Types de peau",
+        "Photo seule du tube de 25 ml",
+        "Photo haute définition (la meilleure fait 500 × 500 px : zoom limité)",
+        "Code-barres : 8809632524753 figure dans le nom d'un fichier fournisseur, non vérifié sur l'emballage"
+      ],
+      "a_verifier": [
+        "Mention « 97 % » / niacinamide illisible sur le côté de la boîte : non reprise."
+      ]
+    },
+    {
+      "slug": "orjena-power-collagen-emulsion",
+      "content_status": "proposition",
+      "source_fr": {
+        "display_name": "ORJENA Power Collagen Emulsion",
+        "short_description": "Émulsion au collagène hydrolysé, tous types de peau, flacon de 100 ml.",
+        "summary": "Émulsion de la gamme Power Collagen d'ORJENA. L'emballage cite du collagène hydrolysé, du Gelidium cartilagineum et de l'adénosine.",
+        "description_html": "<p>La <strong>Power Collagen Emulsion</strong> d'ORJENA est une émulsion pour le visage.</p><h3>Mentions de l'emballage</h3><ul><li>Hydrolyzed collagen, Gelidium cartilagineum, Adenosine.</li><li>Boîte : « Skin elasticity · Skin nutrition · Refresh » (élasticité, nutrition, fraîcheur).</li><li>Flacon : « Anti-wrinkle · Skin nutrition · Refresh ».</li><li>« For all skin types » (tous types de peau).</li><li>100 ml.</li></ul>",
+        "ingredients": [
+          "Collagène hydrolysé (indiqué sur l'emballage)",
+          "Gelidium cartilagineum (indiqué sur l'emballage)",
+          "Adénosine (indiquée sur l'emballage)"
+        ],
+        "benefits": [
+          "Mentions de la boîte : élasticité de la peau, nutrition de la peau, fraîcheur",
+          "Texture émulsion",
+          "Pour tous types de peau (mention de l'emballage)"
+        ],
+        "usage_steps": [
+          "Nettoyer et tonifier le visage.",
+          "Verser une petite quantité dans la paume.",
+          "Appliquer sur le visage par pressions douces."
+        ],
+        "skin_types": "Tous types de peau (mention de l'emballage)",
+        "highlights": [
+          "Collagène hydrolysé",
+          "Gelidium cartilagineum",
+          "Tous types de peau",
+          "Flacon de 100 ml"
+        ]
+      },
+      "display_name_ar": "مستحلب ORJENA Power Collagen",
+      "short_description_ar": "مستحلب بالكولاجين المحلَّل مائيًا، لجميع أنواع البشرة، قارورة 100 مل.",
+      "summary_ar": "مستحلب من مجموعة Power Collagen من علامة ORJENA. تذكر العبوة الكولاجين المحلَّل مائيًا وطحلب Gelidium cartilagineum والأدينوزين.",
+      "description_html_ar": "<p>يُعدّ <strong>Power Collagen Emulsion</strong> من ORJENA مستحلبًا للوجه.</p><h3>بيانات العبوة</h3><ul><li>المكوّنات المذكورة: Hydrolyzed collagen، Gelidium cartilagineum، Adenosine.</li><li>العلبة: « Skin elasticity · Skin nutrition · Refresh » (مرونة البشرة، تغذية البشرة، الانتعاش).</li><li>القارورة: « Anti-wrinkle · Skin nutrition · Refresh ».</li><li>عبارة « For all skin types » (لجميع أنواع البشرة).</li><li>الحجم: 100 مل.</li></ul>",
+      "ingredients_ar": [
+        "الكولاجين المحلَّل مائيًا (Hydrolyzed collagen) — مذكور على العبوة",
+        "طحلب الجيليديوم (Gelidium cartilagineum) — مذكور على العبوة",
+        "الأدينوزين (Adenosine) — مذكور على العبوة"
+      ],
+      "benefits_ar": [
+        "بيانات العلبة: مرونة البشرة، تغذية البشرة، الانتعاش",
+        "قوام مستحلب",
+        "لجميع أنواع البشرة (بيان العبوة)"
+      ],
+      "usage_steps_ar": [
+        "نظّفوا الوجه ثم استعملوا التونر.",
+        "ضعوا كمية صغيرة في راحة اليد.",
+        "وزّعوا المستحلب على الوجه بضغطات خفيفة."
+      ],
+      "skin_types_ar": "جميع أنواع البشرة (بيان العبوة)",
+      "highlights_ar": [
+        "كولاجين محلَّل مائيًا",
+        "طحلب Gelidium cartilagineum",
+        "لجميع أنواع البشرة",
+        "قارورة 100 مل"
+      ],
+      "key_ingredients": [
+        {
+          "name_latin": "Hydrolyzed collagen",
+          "name_ar": "الكولاجين المحلَّل مائيًا",
+          "mention_ar": "مذكور على العبوة",
+          "explanation_ar": "كولاجين مُجزّأ إلى أجزاء أصغر بواسطة الماء (التحليل المائي).",
+          "role_ar": "",
+          "explanation_basis": "définition générale de l'ingrédient (ce qu'il est), pas une allégation sur le produit"
+        },
+        {
+          "name_latin": "Gelidium cartilagineum",
+          "name_ar": "طحلب الجيليديوم",
+          "mention_ar": "مذكور على العبوة",
+          "explanation_ar": "نوع من الطحالب البحرية الحمراء.",
+          "role_ar": "",
+          "explanation_basis": "définition générale de l'ingrédient (ce qu'il est), pas une allégation sur le produit"
+        },
+        {
+          "name_latin": "Adenosine",
+          "name_ar": "الأدينوزين",
+          "mention_ar": "مذكور على العبوة",
+          "explanation_ar": "مركّب يوجد طبيعيًا في خلايا الكائنات الحية.",
+          "role_ar": "",
+          "explanation_basis": "définition générale de l'ingrédient (ce qu'il est), pas une allégation sur le produit"
+        }
+      ],
+      "informations_manquantes": [
+        "Liste INCI complète",
+        "Code-barres / SKU"
+      ],
+      "a_verifier": [
+        "La description FR cite « Anti-wrinkle » (texte du flacon, entre guillemets) : reproduit tel quel, sans traduction — à décider (risque réglementaire)."
+      ]
+    }
+  ]
+}
