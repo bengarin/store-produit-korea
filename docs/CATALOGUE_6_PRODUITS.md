@@ -51,10 +51,13 @@ type de peau (ORJENA uniquement : seul emballage qui l'indique), 4 pictos, galer
 ## 4. Prix, stock, arabe
 
 - **Prix** : les prix actuels (129, 199, 149, 229, 179 DH) sont marqués `[DÉMO]` dans le code d'origine → **non repris**.
-  L'import met chaque produit en **brouillon** avec un prix de 0 DH : c'est l'état « en attente de tarification »
-  prévu par le système (le serveur refuse la mise en ligne tant que le prix vaut 0).
-  ⚠️ Conséquence : après l'import, **la boutique n'affiche plus aucun produit** tant que les prix ne sont pas saisis
-  et les produits remis « Actif » (Administration → Produits).
+  Un produit **nouveau** est créé en **brouillon** avec un prix de 0 DH (« en attente de tarification » : le serveur
+  refuse la mise en ligne tant que le prix vaut 0).
+  **Depuis le 04/11/2026**, un produit **existant** garde son prix, son prix barré, son stock, ses variantes et son
+  statut (« Actif » reste « Actif ») : relancer l'import ne retire plus rien de la boutique.
+- **Arabe** : importé en même temps que le catalogue depuis `traductions/traductions_ar_6_produits.json`, seulement
+  pour les produits dont `content_status` vaut `"valide"` et dont le français traduit correspond au catalogue.
+  Commande d'aperçu : `python manage.py import_catalog --dry-run` (rien n'est écrit).
 - **Stock** : jamais modifié. Le nouveau produit démarre « non renseigné » (non commandable).
 - **Arabe** : aucun champ arabe écrit ni effacé. Les propositions de `GUIDE_TRADUCTION_PRODUITS.md` restent à relire.
 

@@ -2,9 +2,9 @@
   "version": 1,
   "notes": [
     "Catalogue des 6 produits de Ma Petite Corée. Chaque information vient des photos réelles des emballages (archive produit.rar) ou du nom du produit.",
-    "Prix : non renseignés. L'import met la variante par défaut à 0 DH et le produit en BROUILLON (état « en attente de tarification » : le serveur refuse la mise en ligne tant que le prix vaut 0).",
+    "Prix : non renseignés ici. Un produit NOUVEAU est créé à 0 DH en BROUILLON (le serveur refuse la mise en ligne tant que le prix vaut 0) ; un produit EXISTANT garde son prix, son stock, ses variantes et son statut.",
     "Stock : jamais modifié par l'import (un nouveau produit démarre « non renseigné »).",
-    "Arabe : aucun champ arabe n'est écrit ni effacé (les propositions de docs/GUIDE_TRADUCTION_PRODUITS.md ne sont pas relues).",
+    "Arabe : lu dans traductions/traductions_ar_6_produits.json, importé seulement si content_status vaut « valide » et si le français traduit correspond à ce fichier ; sinon aucun champ arabe n'est écrit ni effacé.",
     "Avant / Après : aucun visuel importé (images générées, non authentiques).",
     "Visuels arabes (3 nov. 2026) : langue « ar », affichés sur la version arabe ; la version française garde ses visuels. « active »: false = importé masqué (traduction à corriger)."
   ],

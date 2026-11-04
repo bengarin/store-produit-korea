@@ -1,14 +1,15 @@
 """Import des 6 produits (backend/catalog_import) : aperçu sans écriture, idempotence, prix et stock protégés."""
 
 import importlib
+import json
 from decimal import Decimal
 from io import StringIO
 
 import pytest
 from django.conf import settings
-from django.core.management import call_command
+from django.core.management import CommandError, call_command
 
-from apps.catalog.models import Category, Product, ProductImage, ProductMarketingImage, Variant
+from apps.catalog.models import Category, Product, ProductHighlight, ProductImage, ProductMarketingImage, Variant
 from apps.media_library.models import MediaAsset
 
 SLUGS = {
@@ -81,7 +82,7 @@ def test_apercu_n_ecrit_rien(db):
     before = counts()
     text = run("--dry-run")
     assert counts() == before
-    assert "APERÇU" in text and text.count("À définir") == 6
+    assert "APERÇU" in text and text.count("à définir (0 DH)") == 6  # nouveaux produits : prix à définir
 
 
 @pytest.mark.django_db
@@ -126,10 +127,116 @@ def test_stock_arabe_et_photo_masquee(db):
     vital.refresh_from_db()
     v.refresh_from_db()
     assert v.stock_quantity == 7  # stock jamais modifié
-    assert v.price == 0 and vital.status == Product.Status.DRAFT
+    assert v.price == Decimal("229") and vital.status == Product.Status.ACTIVE  # prix et statut jamais modifiés
     assert vital.summary_ar == "نص عربي"  # arabe jamais effacé
     assert "relire la traduction arabe" in text
     extra.refresh_from_db()
     assert extra.in_gallery is False  # masquée de la galerie, jamais supprimée
     assert MediaAsset.objects.filter(pk=extra_media.pk).exists()
     assert "masquée de la galerie" in text
+
+
+# --- Import complet : traductions arabes (traductions/traductions_ar_6_produits.json) ---------------------
+TRANSLATIONS = settings.BASE_DIR.parent / "traductions" / "traductions_ar_6_produits.json"
+
+
+def translations(tmp_path, status="valide", edit=None):
+    data = json.loads(TRANSLATIONS.read_text(encoding="utf-8"))
+    for row in data["produits"]:
+        row["content_status"] = status
+    if edit:
+        edit(data)
+    path = tmp_path / "trad.json"
+    path.write_text(json.dumps(data, ensure_ascii=False), encoding="utf-8")
+    return str(path), {r["slug"]: r for r in data["produits"]}
+
+
+def snapshot():
+    return (
+        list(Product.objects.order_by("pk").values()),
+        list(ProductHighlight.objects.order_by("pk").values()),
+        list(Variant.objects.order_by("pk").values()),
+        list(Category.objects.order_by("pk").values()),
+    )
+
+
+@pytest.mark.django_db
+def test_traductions_validees_importees_avec_le_catalogue(tmp_path):
+    path, rows = translations(tmp_path)
+    run("--traductions", path)
+    p = Product.objects.get(slug="baroness-aloe-vera-gel")
+    row = rows[p.slug]
+    assert p.display_name_ar == row["display_name_ar"] and p.usage_steps_ar == row["usage_steps_ar"]
+    assert p.ingredients == row["ingredients"] and p.usage_steps == row["usage_steps"]  # français optimisé
+    assert p.summary == row["source_fr"]["summary"]  # le reste du français reste celui du catalogue
+    assert [h.label_ar for h in p.highlights.order_by("position")] == row["highlights_ar"]
+    assert p.highlights.count() == 4  # aucun doublon de picto
+    assert Category.objects.get(slug="eclat").name_ar == ""  # bloc catégories encore « proposition »
+    first = snapshot()
+    text = run("--traductions", path)  # 2e passage : rien à modifier
+    assert snapshot() == first and "Champ `" not in text
+
+
+@pytest.mark.django_db
+def test_dry_run_complet_n_ecrit_rien_et_montre_les_champs(tmp_path):
+    run()
+    before = snapshot()
+    path, _ = translations(tmp_path)
+    text = run("--traductions", path, "--dry-run")
+    assert snapshot() == before
+    assert "APERÇU" in text and "Champ `summary_ar`" in text and "Champ `ingredients`" in text
+    assert "validée : importée" in text
+
+
+@pytest.mark.django_db
+def test_traduction_non_validee_jamais_importee(tmp_path):
+    path, _ = translations(tmp_path, status="proposition")
+    text = run("--traductions", path)
+    assert "non importée" in text
+    assert not Product.objects.exclude(summary_ar="").exists()
+    p = Product.objects.get(slug="baroness-aloe-vera-gel")
+    assert p.ingredients == ["Aloe vera — pureté de 99,85 % selon l'emballage"]  # français du catalogue
+
+
+@pytest.mark.django_db
+def test_conflit_francais_traduction_refuse(tmp_path):
+    def edit(data):
+        data["produits"][0]["source_fr"]["summary"] = "Ancien texte traduit."
+
+    path, rows = translations(tmp_path, edit=edit)
+    text = run("--traductions", path)
+    slug = next(iter(rows))
+    assert "CONFLIT" in text and Product.objects.get(slug=slug).summary_ar == ""
+    assert Product.objects.exclude(slug=slug).exclude(summary_ar="").count() == 5  # les autres sont importés
+
+
+@pytest.mark.django_db
+def test_prix_stock_statut_jamais_modifies(tmp_path):
+    run()
+    Variant.objects.filter(is_default=True).update(
+        price=Decimal("150"), compare_at_price=Decimal("180"), stock_quantity=4
+    )
+    Product.objects.update(status="active")
+    path, _ = translations(tmp_path)
+    run("--traductions", path)
+    assert set(Variant.objects.values_list("price", "compare_at_price", "stock_quantity")) == {
+        (Decimal("150"), Decimal("180"), 4)
+    }
+    assert set(Product.objects.values_list("status", flat=True)) == {"active"}
+
+
+@pytest.mark.django_db
+@pytest.mark.parametrize(
+    "edit,message",
+    [
+        (lambda d: d["produits"].append(dict(d["produits"][0])), "en double"),
+        (lambda d: d["produits"][0].update(slug="inconnu"), "absent du catalogue"),
+        (lambda d: d["produits"][0].update(highlights_ar=["un seul"]), "highlights_ar"),
+        (lambda d: d["produits"][0].update(short_description_ar="ا" * 161), "trop long"),
+    ],
+)
+def test_fichier_de_traductions_invalide_rien_n_est_ecrit(tmp_path, edit, message):
+    path, _ = translations(tmp_path, edit=edit)
+    with pytest.raises(CommandError, match=message):
+        run("--traductions", path)
+    assert not Product.objects.filter(slug__in=SLUGS).exists()
