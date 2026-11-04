@@ -57,7 +57,11 @@ type de peau (ORJENA uniquement : seul emballage qui l'indique), 4 pictos, galer
   statut (« Actif » reste « Actif ») : relancer l'import ne retire plus rien de la boutique.
 - **Arabe** : importé en même temps que le catalogue depuis `traductions/traductions_ar_6_produits.json`, seulement
   pour les produits dont `content_status` vaut `"valide"` et dont le français traduit correspond au catalogue.
-  Commande d'aperçu : `python manage.py import_catalog --dry-run` (rien n'est écrit).
+  Commande d'aperçu : `python manage.py import_catalog --dry-run` (rien n'est écrit) ; ajouter `--simuler-valide`
+  pour voir ce qui serait importé une fois les traductions validées (aperçu seulement).
+- **Produit existant** : textes français (y compris modifiés dans l'Admin), pictos, photos, visuels, catégories,
+  prix, stock, variantes et statut ne sont jamais réécrits depuis `catalogue.json` ; seuls l'arabe validé, le
+  français optimisé validé (ingrédients, mode d'utilisation) et les photos / visuels absents sont ajoutés.
 - **Stock** : jamais modifié. Le nouveau produit démarre « non renseigné » (non commandable).
 - **Arabe** : aucun champ arabe écrit ni effacé. Les propositions de `GUIDE_TRADUCTION_PRODUITS.md` restent à relire.
 

@@ -114,26 +114,32 @@ def test_import_complet_et_idempotent(db):
 
 
 @pytest.mark.django_db
-def test_stock_arabe_et_photo_masquee(db):
+def test_produit_existant_jamais_modifie_depuis_le_catalogue(db):
+    """Prix, stock, statut, textes français (admin), pictos, photos : la base est conservée telle quelle."""
     run()
     vital = Product.objects.get(slug="vitamin-collagen-vital-cream")
     v = vital.variants.get(is_default=True)
     Variant.objects.filter(pk=v.pk).update(price=Decimal("229"), stock_quantity=7)
-    Product.objects.filter(pk=vital.pk).update(summary="ancien texte", summary_ar="نص عربي", status="active")
+    Product.objects.filter(pk=vital.pk).update(
+        summary="Texte modifié dans l'admin", summary_ar="نص عربي", status="active"
+    )
+    vital.highlights.filter(position=0).update(label="Picto modifié")
     extra_media = MediaAsset.objects.filter(product_images__product__slug="vitamin-collagen-vital-eye-cream").first()
-    extra = ProductImage.objects.create(product=vital, media=extra_media, position=9)
+    extra = ProductImage.objects.create(product=vital, media=extra_media, alt="Photo ajoutée dans l'admin", position=9)
+    first = vital.images.order_by("position").first()
+    ProductImage.objects.filter(pk=first.pk).update(alt="Texte alternatif modifié")
 
     text = run()
     vital.refresh_from_db()
     v.refresh_from_db()
-    assert v.stock_quantity == 7  # stock jamais modifié
-    assert v.price == Decimal("229") and vital.status == Product.Status.ACTIVE  # prix et statut jamais modifiés
-    assert vital.summary_ar == "نص عربي"  # arabe jamais effacé
-    assert "relire la traduction arabe" in text
+    assert v.stock_quantity == 7 and v.price == Decimal("229") and vital.status == Product.Status.ACTIVE
+    assert vital.summary == "Texte modifié dans l'admin" and vital.summary_ar == "نص عربي"
+    assert vital.highlights.get(position=0).label == "Picto modifié"
     extra.refresh_from_db()
-    assert extra.in_gallery is False  # masquée de la galerie, jamais supprimée
-    assert MediaAsset.objects.filter(pk=extra_media.pk).exists()
-    assert "masquée de la galerie" in text
+    assert extra.in_gallery is True  # jamais masquée
+    assert ProductImage.objects.get(pk=first.pk).alt == "Texte alternatif modifié"
+    assert "Français conservé" in text and "summary" in text and "pictos" in text
+    assert "conservée telle quelle" in text
 
 
 # --- Import complet : traductions arabes (traductions/traductions_ar_6_produits.json) ---------------------
@@ -174,7 +180,7 @@ def test_traductions_validees_importees_avec_le_catalogue(tmp_path):
     assert Category.objects.get(slug="eclat").name_ar == ""  # bloc catégories encore « proposition »
     first = snapshot()
     text = run("--traductions", path)  # 2e passage : rien à modifier
-    assert snapshot() == first and "Champ `" not in text
+    assert snapshot() == first and "| IMPORTÉ |" not in text
 
 
 @pytest.mark.django_db
@@ -184,8 +190,8 @@ def test_dry_run_complet_n_ecrit_rien_et_montre_les_champs(tmp_path):
     path, _ = translations(tmp_path)
     text = run("--traductions", path, "--dry-run")
     assert snapshot() == before
-    assert "APERÇU" in text and "Champ `summary_ar`" in text and "Champ `ingredients`" in text
-    assert "validée : importée" in text
+    assert "APERÇU" in text and "| summary_ar |" in text and "| ingredients (FR optimisé) |" in text
+    assert "| IMPORTÉ |" in text and "Traduction : validée" in text
 
 
 @pytest.mark.django_db
@@ -240,3 +246,28 @@ def test_fichier_de_traductions_invalide_rien_n_est_ecrit(tmp_path, edit, messag
     with pytest.raises(CommandError, match=message):
         run("--traductions", path)
     assert not Product.objects.filter(slug__in=SLUGS).exists()
+
+
+@pytest.mark.django_db
+def test_francais_modifie_dans_l_admin_bloque_seulement_sa_traduction(tmp_path):
+    run()
+    Product.objects.filter(slug="baroness-aloe-vera-gel").update(summary="Résumé réécrit dans l'admin.")
+    path, rows = translations(tmp_path)
+    text = run("--traductions", path)
+    p = Product.objects.get(slug="baroness-aloe-vera-gel")
+    assert p.summary == "Résumé réécrit dans l'admin."  # jamais remplacé
+    assert p.summary_ar == ""  # sa traduction ne correspond plus : non écrite
+    assert p.display_name_ar == rows[p.slug]["display_name_ar"]  # les autres champs sont importés
+    assert "CONFLIT" in text
+
+
+@pytest.mark.django_db
+def test_simulation_de_validation_uniquement_en_apercu(tmp_path):
+    run()
+    before = snapshot()
+    path, _ = translations(tmp_path, status="proposition")
+    with pytest.raises(CommandError, match="--dry-run"):
+        run("--traductions", path, "--simuler-valide")
+    text = run("--traductions", path, "--dry-run", "--simuler-valide")
+    assert "SIMULATION" in text and "| IMPORTÉ |" in text
+    assert snapshot() == before
