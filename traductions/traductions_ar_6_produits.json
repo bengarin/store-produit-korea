@@ -1,16 +1,18 @@
 {
   "format": "mpc-traductions-ar",
-  "version": 1,
+  "version": 2,
   "date": "2026-11-04",
   "statut_global": "proposition — à relire par une personne arabophone avant import",
   "source": "Texte français actuel des 6 produits (backend/catalog_import/catalogue.json = base locale). Aucune information ajoutée.",
   "regles": [
     "Les champs *_ar correspondent exactement aux champs arabes existants du modèle Product (aucun nouveau champ en base).",
+    "ingredients et usage_steps (sans _ar) = versions FRANÇAISES optimisées : elles remplacent source_fr.ingredients / source_fr.usage_steps. Mêmes listes, même nombre de lignes.",
     "Listes (ingredients_ar, benefits_ar, usage_steps_ar, highlights_ar) : même nombre d'éléments et même ordre que le français.",
     "highlights_ar[i] → ProductHighlight.label_ar du picto à la position i (60 caractères max).",
     "key_ingredients : informatif, NON importé (aucun champ en base). name_latin = nom tel qu'imprimé sur l'emballage ; aucune liste INCI complète n'est disponible.",
     "explanation_ar = définition générale de l'ingrédient (ce qu'il est), jamais une promesse. role_ar vide : aucun rôle vérifiable sur l'emballage.",
-    "Chaîne vide = ne rien écrire (le français reste affiché). Un script doit vérifier que source_fr correspond encore à la base avant d'écrire."
+    "Chaîne vide = ne rien écrire (le français reste affiché). Un script doit vérifier que source_fr correspond encore à la base avant d'écrire.",
+    "Import réel : seulement les produits dont content_status vaut « valide » (à changer après relecture)."
   ],
   "champs_base": {
     "display_name_ar": "Product.display_name_ar (255)",
@@ -21,7 +23,9 @@
     "benefits_ar": "Product.benefits_ar (liste)",
     "usage_steps_ar": "Product.usage_steps_ar (liste)",
     "skin_types_ar": "Product.skin_types_ar (255)",
-    "highlights_ar": "ProductHighlight.label_ar, par position (60)"
+    "highlights_ar": "ProductHighlight.label_ar, par position (60)",
+    "ingredients": "Product.ingredients (liste, français optimisé)",
+    "usage_steps": "Product.usage_steps (liste, français optimisé)"
   },
   "categories_ar": {
     "content_status": "proposition",
@@ -70,12 +74,21 @@
           "Aloe certifié USDA & IASC"
         ]
       },
+      "ingredients": [
+        "Aloe vera — pureté de 99,85 % (selon l'emballage)"
+      ],
+      "usage_steps": [
+        "Avant la première utilisation, faire un test sur une petite zone de peau.",
+        "Prélever une petite quantité de gel.",
+        "Appliquer sur une peau propre.",
+        "Faire pénétrer en tapotant doucement."
+      ],
       "display_name_ar": "جل Baroness المهدّئ بالألوفيرا",
       "short_description_ar": "جل مهدّئ بالألوفيرا (بنقاوة 99,85 % حسب العبوة).",
       "summary_ar": "جل كوري بالألوفيرا من علامة Baroness. تشير العبوة إلى نقاوة ألوفيرا تبلغ 99,85 % وإلى تركيبة « 4 Free ».",
       "description_html_ar": "<p>يُعدّ <strong>Aloe Vera Soothing Gel</strong> من Baroness جلًّا بالألوفيرا مصنوعًا في كوريا.</p><h3>بيانات العبوة</h3><ul><li>الألوفيرا: نقاوة بنسبة 99,85 %.</li><li>« 4 Free »: خالٍ من البارابين والألوان الاصطناعية والزيوت المعدنية والبنزوفينون.</li><li>ألوفيرا حاصلة على شهادتي USDA وIASC.</li></ul>",
       "ingredients_ar": [
-        "الألوفيرا (Aloe vera) — نقاوة بنسبة 99,85 % حسب العبوة"
+        "الألوفيرا (Aloe vera) — نقاوة 99,85 % (حسب العبوة)"
       ],
       "benefits_ar": [
         "قوام جل",
@@ -83,10 +96,10 @@
         "ألوفيرا حاصلة على شهادتي USDA وIASC (حسب العبوة)"
       ],
       "usage_steps_ar": [
-        "ضعوا الجل على بشرة نظيفة.",
+        "قبل الاستعمال الأول، جرّبوا المنتج على منطقة صغيرة من البشرة.",
         "خذوا كمية صغيرة من الجل.",
-        "ربّتوا بلطف حتى يتغلغل في البشرة.",
-        "جرّبوا المنتج على منطقة صغيرة قبل الاستعمال الأول."
+        "ضعوه على بشرة نظيفة.",
+        "ربّتوا بلطف حتى يتغلغل في البشرة."
       ],
       "skin_types_ar": "",
       "highlights_ar": [
@@ -114,6 +127,11 @@
       ],
       "a_verifier": [
         "Étape « Faire un test sur une petite zone… » : ajoutée par nous, absente de l'emballage — à garder ou retirer (FR et AR)."
+      ],
+      "optimisation": [
+        "Ingrédients : formulation homogène « Nom — précision (source) ».",
+        "Consignes : ordre logique (test → prélever → appliquer → faire pénétrer) ; le test passe en 1re étape, avant toute application.",
+        "À décider : le test sur une petite zone n'est pas imprimé sur l'emballage (ajouté lors de la rédaction initiale)."
       ]
     },
     {
@@ -146,13 +164,22 @@
           "Pot de 60 g"
         ]
       },
+      "ingredients": [
+        "Extrait de yuja (agrume coréen) — 70 % (selon l'emballage)",
+        "Niacinamide — 5 % (selon l'emballage)"
+      ],
+      "usage_steps": [
+        "Après le nettoyage du visage, prélever une petite quantité de crème.",
+        "Appliquer sur le visage en évitant le contour des yeux.",
+        "Faire pénétrer par légers tapotements."
+      ],
       "display_name_ar": "كريم SOME BY MI Yuja Niacin Anti Blemish",
       "short_description_ar": "كريم باليوجا (70 %) والنياسيناميد (5 %)، علبة 60 غ.",
       "summary_ar": "كريم من مجموعة Yuja Niacin من علامة SOME BY MI. تشير العبوة إلى 70 % من مستخلص اليوجا (نوع من الحمضيات الكورية) و5 % من النياسيناميد.",
       "description_html_ar": "<p>يُعدّ <strong>Yuja Niacin Anti Blemish Cream</strong> من SOME BY MI كريمًا تقدّمه العلامة على أنه مضاد للشوائب (« Anti Blemish »).</p><h3>بيانات العبوة</h3><ul><li>مستخلص اليوجا: 70 %.</li><li>النياسيناميد: 5 %.</li><li>الوزن الصافي: 60 غ.</li></ul>",
       "ingredients_ar": [
-        "مستخلص اليوجا (Yuja) — 70 % حسب العبوة",
-        "النياسيناميد (Niacinamide) — 5 % حسب العبوة"
+        "مستخلص اليوجا (Yuja)، وهو نوع من الحمضيات الكورية — 70 % (حسب العبوة)",
+        "النياسيناميد (Niacinamide) — 5 % (حسب العبوة)"
       ],
       "benefits_ar": [
         "يجمع بين مستخلص اليوجا والنياسيناميد",
@@ -160,8 +187,8 @@
         "قوام كريمي"
       ],
       "usage_steps_ar": [
-        "بعد تنظيف البشرة، خذوا كمية صغيرة.",
-        "ضعوا الكريم على الوجه مع تجنّب محيط العينين.",
+        "بعد تنظيف الوجه، خذوا كمية صغيرة من الكريم.",
+        "ضعوه على الوجه مع تجنّب محيط العينين.",
         "ربّتوا بخفة حتى يتغلغل في البشرة."
       ],
       "skin_types_ar": "",
@@ -196,6 +223,10 @@
       ],
       "a_verifier": [
         "« Testé non comédogène » (visuels) : non repris ici, non lisible sur l'emballage."
+      ],
+      "optimisation": [
+        "« agrume coréen » repris de la description existante du produit.",
+        "Consignes : objet précisé (« de crème », « du visage »)."
       ]
     },
     {
@@ -228,6 +259,15 @@
           "60 patchs + spatule"
         ]
       },
+      "ingredients": [
+        "Tripeptide — mentionné sur l'emballage",
+        "Concombre (Cucumber) — mentionné sur l'emballage"
+      ],
+      "usage_steps": [
+        "Sur une peau propre et sèche, poser un patch sous chaque œil.",
+        "Laisser poser le temps indiqué sur la boîte.",
+        "Retirer les patchs, puis faire pénétrer le produit restant en tapotant doucement."
+      ],
       "display_name_ar": "لصقات Biovène Age-Defy لمحيط العينين",
       "short_description_ar": "لصقات لمحيط العينين بالتريببتيد والخيار، 60 لصقة.",
       "summary_ar": "لصقات لأسفل العينين من علامة Biovène (Barcelona)، تجمع بين التريببتيد والخيار. علبة من 60 لصقة، أي 30 زوجًا، مع ملعقة تطبيق، حسب العبوة.",
@@ -243,8 +283,8 @@
       ],
       "usage_steps_ar": [
         "على بشرة نظيفة وجافة، ضعوا لصقة تحت كل عين.",
-        "احترموا مدة الوضع المذكورة على العلبة.",
-        "انزعوا اللصقات وربّتوا على ما تبقّى من المنتج حتى يتغلغل."
+        "اتركوا اللصقات المدة المذكورة على العلبة.",
+        "انزعوا اللصقات، ثم ربّتوا بلطف على ما تبقّى من المنتج حتى يتغلغل."
       ],
       "skin_types_ar": "",
       "highlights_ar": [
@@ -279,6 +319,10 @@
       ],
       "a_verifier": [
         "Temps de pose : non repris (« 10-20 minutes » vu seulement sur un visuel)."
+      ],
+      "optimisation": [
+        "Nom anglais imprimé (« Cucumber ») ajouté entre parenthèses.",
+        "Temps de pose : toujours renvoyé à la boîte (aucune durée inventée)."
       ]
     },
     {
@@ -311,12 +355,21 @@
           "Contour des yeux 10 ml offert"
         ]
       },
+      "ingredients": [
+        "Vitamines — mentionnées dans le nom du produit (liste non précisée)",
+        "Collagène — mentionné dans le nom du produit"
+      ],
+      "usage_steps": [
+        "Nettoyer le visage.",
+        "Prélever une petite quantité de crème.",
+        "Masser doucement jusqu'à absorption."
+      ],
       "display_name_ar": "كريم Quret Vitamin Collagen Vital",
       "short_description_ar": "كريم بالفيتامينات والكولاجين 50 غ + كريم لمحيط العينين 10 مل هدية.",
       "summary_ar": "كريم من مجموعة Vitamin من علامة Quret، يجمع بين الفيتامينات والكولاجين. تحتوي العلبة على كريم بوزن 50 غ وكريم لمحيط العينين بحجم 10 مل هدية، حسب العبوة.",
       "description_html_ar": "<p>يُعدّ <strong>Vitamin Collagen Vital Cream</strong> من Quret كريمًا للوجه.</p><h3>بيانات العبوة</h3><ul><li>عبارة « brightening &amp; elasticity » (الإشراق والمرونة).</li><li>الوزن الصافي: 50 غ، مع كريم لمحيط العينين بحجم 10 مل هدية.</li><li>عبارة « #VitaminEnergy #CollagenCare ».</li></ul>",
       "ingredients_ar": [
-        "الفيتامينات (Vitamin) — مذكورة في اسم المنتج",
+        "الفيتامينات (Vitamin) — مذكورة في اسم المنتج (أنواعها غير محدّدة)",
         "الكولاجين (Collagen) — مذكور في اسم المنتج"
       ],
       "benefits_ar": [
@@ -362,6 +415,10 @@
       ],
       "a_verifier": [
         "Liste précise des vitamines inconnue : aucune explication donnée."
+      ],
+      "optimisation": [
+        "« liste non précisée » : dit clairement au client que les vitamines exactes ne sont pas connues.",
+        "Consignes déjà claires : inchangées en français."
       ]
     },
     {
@@ -394,12 +451,21 @@
           "25 ml + 10 ml offerts"
         ]
       },
+      "ingredients": [
+        "Vitamines — mentionnées dans le nom du produit (liste non précisée)",
+        "Collagène — mentionné dans le nom du produit"
+      ],
+      "usage_steps": [
+        "Partir d'une peau propre et sèche.",
+        "Déposer la crème sur le contour des yeux à l'aide de l'applicateur intégré.",
+        "Tapoter doucement pour faire pénétrer."
+      ],
       "display_name_ar": "كريم محيط العينين Quret Vitamin Collagen Vital",
       "short_description_ar": "كريم لمحيط العينين بالفيتامينات والكولاجين، 25 مل + 10 مل هدية.",
       "summary_ar": "كريم لمحيط العينين من مجموعة Vitamin من علامة Quret. أنبوب بحجم 25 مل مزوّد بأداة تطبيق لمحيط العينين، مع أنبوب 10 مل هدية، حسب العبوة.",
       "description_html_ar": "<p>يُعدّ <strong>Vitamin Collagen Vital Eye Cream</strong> من Quret كريمًا لمحيط العينين.</p><h3>بيانات العبوة</h3><ul><li>عبارة « Easy applicator for eye around »: أداة تطبيق لمحيط العينين.</li><li>عبارة « brightening &amp; elasticity » (الإشراق والمرونة).</li><li>25 مل + 10 مل هدية (« Special gift 10 ml eye cream »).</li><li>صُنع في كوريا (« Made in Korea »).</li></ul>",
       "ingredients_ar": [
-        "الفيتامينات (Vitamin) — مذكورة في اسم المنتج",
+        "الفيتامينات (Vitamin) — مذكورة في اسم المنتج (أنواعها غير محدّدة)",
         "الكولاجين (Collagen) — مذكور في اسم المنتج"
       ],
       "benefits_ar": [
@@ -408,8 +474,8 @@
         "أنبوب 10 مل هدية"
       ],
       "usage_steps_ar": [
-        "ضعوا الكريم على بشرة نظيفة وجافة.",
-        "وزّعوا الكريم على محيط العينين بأداة التطبيق.",
+        "ابدؤوا ببشرة نظيفة وجافة.",
+        "ضعوا الكريم على محيط العينين بأداة التطبيق المدمجة.",
         "ربّتوا بلطف حتى يتغلغل."
       ],
       "skin_types_ar": "",
@@ -446,6 +512,9 @@
       ],
       "a_verifier": [
         "Mention « 97 % » / niacinamide illisible sur le côté de la boîte : non reprise."
+      ],
+      "optimisation": [
+        "« applicateur intégré » : repris du picto existant et de la mention « Easy applicator » de l'emballage."
       ]
     },
     {
@@ -479,13 +548,23 @@
           "Flacon de 100 ml"
         ]
       },
+      "ingredients": [
+        "Collagène hydrolysé (Hydrolyzed collagen) — mentionné sur l'emballage",
+        "Gelidium cartilagineum (algue rouge) — mentionné sur l'emballage",
+        "Adénosine (Adenosine) — mentionnée sur l'emballage"
+      ],
+      "usage_steps": [
+        "Nettoyer le visage, puis appliquer votre lotion tonique.",
+        "Verser une petite quantité d'émulsion dans la paume de la main.",
+        "Appliquer sur le visage par pressions douces."
+      ],
       "display_name_ar": "مستحلب ORJENA Power Collagen",
       "short_description_ar": "مستحلب بالكولاجين المحلَّل مائيًا، لجميع أنواع البشرة، قارورة 100 مل.",
       "summary_ar": "مستحلب من مجموعة Power Collagen من علامة ORJENA. تذكر العبوة الكولاجين المحلَّل مائيًا وطحلب Gelidium cartilagineum والأدينوزين.",
       "description_html_ar": "<p>يُعدّ <strong>Power Collagen Emulsion</strong> من ORJENA مستحلبًا للوجه.</p><h3>بيانات العبوة</h3><ul><li>المكوّنات المذكورة: Hydrolyzed collagen، Gelidium cartilagineum، Adenosine.</li><li>العلبة: « Skin elasticity · Skin nutrition · Refresh » (مرونة البشرة، تغذية البشرة، الانتعاش).</li><li>القارورة: « Anti-wrinkle · Skin nutrition · Refresh ».</li><li>عبارة « For all skin types » (لجميع أنواع البشرة).</li><li>الحجم: 100 مل.</li></ul>",
       "ingredients_ar": [
         "الكولاجين المحلَّل مائيًا (Hydrolyzed collagen) — مذكور على العبوة",
-        "طحلب الجيليديوم (Gelidium cartilagineum) — مذكور على العبوة",
+        "طحلب الجيليديوم (Gelidium cartilagineum)، وهو طحلب أحمر — مذكور على العبوة",
         "الأدينوزين (Adenosine) — مذكور على العبوة"
       ],
       "benefits_ar": [
@@ -494,9 +573,9 @@
         "لجميع أنواع البشرة (بيان العبوة)"
       ],
       "usage_steps_ar": [
-        "نظّفوا الوجه ثم استعملوا التونر.",
-        "ضعوا كمية صغيرة في راحة اليد.",
-        "وزّعوا المستحلب على الوجه بضغطات خفيفة."
+        "نظّفوا الوجه، ثم ضعوا التونر.",
+        "ضعوا كمية صغيرة من المستحلب في راحة اليد.",
+        "وزّعوه على الوجه بضغطات خفيفة."
       ],
       "skin_types_ar": "جميع أنواع البشرة (بيان العبوة)",
       "highlights_ar": [
@@ -537,6 +616,10 @@
       ],
       "a_verifier": [
         "La description FR cite « Anti-wrinkle » (texte du flacon, entre guillemets) : reproduit tel quel, sans traduction — à décider (risque réglementaire)."
+      ],
+      "optimisation": [
+        "Noms anglais imprimés ajoutés entre parenthèses ; « algue rouge » = nature de l'ingrédient (définition, pas un bienfait).",
+        "« tonifier » remplacé par « appliquer votre lotion tonique » (plus clair, même sens)."
       ]
     }
   ]
