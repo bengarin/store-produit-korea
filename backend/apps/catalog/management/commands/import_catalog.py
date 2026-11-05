@@ -45,8 +45,17 @@ from apps.media_library.processing import inspect_existing
 IMPORT_ROOT = Path(settings.BASE_DIR) / "catalog_import"
 TRANSLATIONS = Path(settings.BASE_DIR).parent / "traductions" / "traductions_ar_6_produits.json"
 VALIDATED = "valide"
-# Français optimisé fourni par le fichier de traductions (remplace la version du catalogue si validé).
-FR_OVERRIDES = ["ingredients", "usage_steps"]
+# Nouveaux textes français (marketing) fournis par le fichier de contenu : ils remplacent le texte en base
+# seulement si celui-ci est encore l'original traduit (« source_fr ») — un texte modifié dans l'admin est conservé.
+FR_OVERRIDES = [
+    "short_description",
+    "summary",
+    "description_html",
+    "benefits",
+    "ingredients",
+    "usage_steps",
+    "skin_types",
+]
 LIST_FIELDS = {"ingredients", "benefits", "usage_steps", "ingredients_ar", "benefits_ar", "usage_steps_ar"}
 MAX_LINES, MAX_LINE = 30, 500
 # (champ français, champ arabe) : chaque traduction dépend du texte français de la même ligne.
@@ -230,9 +239,13 @@ class Command(BaseCommand):
                         errors.append(f"Traductions : {slug}.{key} : {MAX_LINES} lignes de {MAX_LINE} car. max.")
                 elif value is not None and (not isinstance(value, str) or len(value) > limits.get(key, 20000)):
                     errors.append(f"Traductions : {slug}.{key} : texte trop long ou invalide.")
-            labels = row.get("highlights_ar") or []
-            if labels and (len(labels) != len(catalog[slug]["highlights"]) or any(len(x) > 60 for x in labels)):
-                errors.append(f"Traductions : {slug}.highlights_ar : un libellé (60 car. max) par picto du catalogue.")
+            for key in ("highlights", "highlights_ar"):
+                labels = row.get(key) or []
+                if labels and (
+                    len(labels) != len(catalog[slug]["highlights"])
+                    or any(not isinstance(x, str) or len(x) > 60 for x in labels)
+                ):
+                    errors.append(f"Traductions : {slug}.{key} : un libellé (60 car. max) par picto du catalogue.")
         missing = sorted(set(catalog) - set(out))
         note = f"Produits sans traduction : {', '.join(missing)}." if missing else ""
         return out, data.get("categories_ar") or {}, note
@@ -336,11 +349,7 @@ class Command(BaseCommand):
         # Français : un produit EXISTANT garde ses textes (modifiés dans l'admin ou non) ; le catalogue ne sert
         # qu'à créer un produit nouveau.
         catalog_fr = {f: (sanitize_html(p[f]) if f == "description_html" else p[f]) for f in TEXT_FIELDS}
-        if product is None:
-            base = dict(catalog_fr)
-        else:
-            base = {f: getattr(product, f) for f in TEXT_FIELDS}
-            r["kept_fr"] = [f for f in TEXT_FIELDS if f != "position" and base[f] != catalog_fr[f]]
+        base = dict(catalog_fr) if product is None else {f: getattr(product, f) for f in TEXT_FIELDS}
         writes = {}
 
         def decide(fr_field, key, label):
@@ -367,9 +376,12 @@ class Command(BaseCommand):
 
         for fr_field, ar_field in PAIRS:
             if fr_field in FR_OVERRIDES:
-                decide(fr_field, fr_field, f"{fr_field} (FR optimisé)")
+                decide(fr_field, fr_field, f"{fr_field} (FR)")
             decide(fr_field, ar_field, ar_field)
 
+        if product is not None:
+            # Français de la base différent de catalogue.json et non remplacé : conservé tel quel (signalé).
+            r["kept_fr"] = [f for f in TEXT_FIELDS if f != "position" and base[f] != catalog_fr[f] and f not in writes]
         for key, value in writes.items():
             r["changes"].append(key)
             if product is not None:
@@ -438,45 +450,67 @@ class Command(BaseCommand):
             )
 
     def _highlights(self, product, p, r, tr, source):
-        """Pictos : français jamais réécrit pour un produit existant ; libellé arabe validé écrit par position."""
+        """
+        Pictos (icône, libellé FR, libellé AR), par position. Icônes jamais modifiées.
+        Libellé FR : remplacé par le nouveau texte du fichier de contenu seulement s'il est encore l'original
+        (« source_fr ») ; libellé AR : écrit si le libellé FR est l'original ou le nouveau texte. Rien n'est supprimé.
+        """
         existing = not self.is_new
         current = list(product.highlights.order_by("position")) if existing else []
         if not existing:
             r["changes"].append("pictos créés")
-        labels = [h.label for h in current] if existing else [h["label"] for h in p["highlights"]]
-        if existing and labels != [h["label"] for h in p["highlights"]]:
-            r["kept_fr"].append("pictos")
-        proposals = ((self.translations.get(p["slug"]) or {}).get("highlights_ar")) or []
+        row = self.translations.get(p["slug"]) or {}
+        new_fr_all, new_ar_all = row.get("highlights") or [], row.get("highlights_ar") or []
         sources = source.get("highlights") or []
-        new_ar = {}
+        labels = [h.label for h in current] if existing else [h["label"] for h in p["highlights"]]
+        pick = lambda xs, i: (xs[i].strip() or None) if i < len(xs) else None  # noqa: E731
+        new_fr, new_ar = {}, {}
         for i, fr in enumerate(labels):
-            proposal = proposals[i].strip() if i < len(proposals) and proposals[i].strip() else None
-            current_ar = current[i].label_ar if existing else ""
-            if proposal is None:
-                result = "rien à importer (aucune proposition)"
-            elif tr is None:
-                result = "non importé : " + r["translation"]
-            elif i >= len(sources) or sources[i] != fr:
-                result = "CONFLIT : picto français différent de celui traduit — rien n'est écrit"
-                r["warnings"].append(f"picto {i + 1} : le libellé français ne correspond pas au texte traduit.")
-            elif proposal == current_ar:
-                result = "inchangé (déjà identique)"
-            else:
-                result = "IMPORTÉ"
-                new_ar[i] = proposal
-            r["rows"].append((f"picto {i + 1} (label_ar)", fr, proposal, result))
+            original = sources[i] if i < len(sources) else None
+            proposal_fr, proposal_ar = pick(new_fr_all, i), pick(new_ar_all, i)
+            fr_ok = fr == original or (proposal_fr is not None and fr == proposal_fr)
+            for kind, proposal, current_value, out in (
+                ("label FR", proposal_fr, fr, new_fr),
+                ("label_ar", proposal_ar, current[i].label_ar if existing else "", new_ar),
+            ):
+                if proposal is None:
+                    result = "rien à importer (aucune proposition)"
+                elif tr is None:
+                    result = "non importé : " + r["translation"]
+                elif not fr_ok:
+                    result = "CONFLIT : picto français modifié depuis la traduction — rien n'est écrit"
+                    r["warnings"].append(f"picto {i + 1} : le libellé français ne correspond pas au texte traduit.")
+                elif proposal == current_value:
+                    result = "inchangé (déjà identique)"
+                else:
+                    result = "IMPORTÉ"
+                    out[i] = proposal
+                r["rows"].append((f"picto {i + 1} ({kind})", fr, proposal, result))
+        if new_fr:
+            r["changes"].append("pictos (FR)")
         if new_ar:
-            r["changes"].append("pictos arabes")
+            r["changes"].append("pictos (AR)")
+        if existing and [new_fr.get(i, x) for i, x in enumerate(labels)] != [h["label"] for h in p["highlights"]]:
+            r["kept_fr"].append("pictos")
         if self.dry:
             return
         if not existing:
             for i, h in enumerate(p["highlights"]):
                 ProductHighlight.objects.create(
-                    product=product, position=i, icon=h["icon"], label=h["label"], label_ar=new_ar.get(i, "")
+                    product=product,
+                    position=i,
+                    icon=h["icon"],
+                    label=new_fr.get(i, h["label"]),
+                    label_ar=new_ar.get(i, ""),
                 )
             return
-        for i, label_ar in new_ar.items():
-            ProductHighlight.objects.filter(pk=current[i].pk).update(label_ar=label_ar)
+        for i in set(new_fr) | set(new_ar):
+            fields = {}
+            if i in new_fr:
+                fields["label"] = new_fr[i]
+            if i in new_ar:
+                fields["label_ar"] = new_ar[i]
+            ProductHighlight.objects.filter(pk=current[i].pk).update(**fields)
 
     def _gallery(self, product, p, r):
         """Photos : liens existants jamais modifiés ni masqués ; seules les photos absentes sont ajoutées."""
@@ -567,9 +601,9 @@ class Command(BaseCommand):
             mode += " — SIMULATION : les traductions « proposition » sont traitées comme « valide »"
         lines = [f"# Import du catalogue — {mode}", ""]
         lines += [
-            "Règle : un produit existant garde ses textes français, ses pictos, ses photos, ses visuels, ses",
-            "catégories, son prix, son stock, ses variantes et son statut. Seuls l'arabe validé, le français",
-            "optimisé validé (ingrédients, mode d'utilisation) et les photos / visuels absents sont écrits.",
+            "Règle : un produit existant garde son prix, son stock, ses variantes, son statut, ses catégories, ses",
+            "photos et ses visuels existants. Les nouveaux textes FR et AR du fichier de contenu (produits « valide »)",
+            "remplacent un texte seulement s'il est encore l'original ; un texte modifié dans l'admin est conservé.",
             "",
             "| Produit | Action | Statut | Prix | Stock | Traduction arabe | Champs importés | Conflits |",
             "|---|---|---|---|---|---|---|---|",

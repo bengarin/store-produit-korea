@@ -55,6 +55,11 @@ type de peau (ORJENA uniquement : seul emballage qui l'indique), 4 pictos, galer
   refuse la mise en ligne tant que le prix vaut 0).
   **Depuis le 04/11/2026**, un produit **existant** garde son prix, son prix barré, son stock, ses variantes et son
   statut (« Actif » reste « Actif ») : relancer l'import ne retire plus rien de la boutique.
+- **Textes marketing FR + arabe (05/11/2026)** : `traductions/traductions_ar_6_produits.json` contient les nouveaux textes
+  français (description courte, présentation, description détaillée, points forts, ingrédients, mode d'utilisation,
+  type de peau, pictos) et leur version arabe. `catalogue.json` reste la référence des textes d'origine (`source_fr`).
+  Un texte FR n'est remplacé que s'il est encore l'original : un texte modifié dans l'Admin est conservé (CONFLIT signalé).
+  Aperçu complet sans écriture : `python manage.py import_catalog --dry-run --simuler-valide --report rapport.md`.
 - **Arabe** : importé en même temps que le catalogue depuis `traductions/traductions_ar_6_produits.json`, seulement
   pour les produits dont `content_status` vaut `"valide"` et dont le français traduit correspond au catalogue.
   Commande d'aperçu : `python manage.py import_catalog --dry-run` (rien n'est écrit) ; ajouter `--simuler-valide`

@@ -173,8 +173,10 @@ def test_traductions_validees_importees_avec_le_catalogue(tmp_path):
     p = Product.objects.get(slug="baroness-aloe-vera-gel")
     row = rows[p.slug]
     assert p.display_name_ar == row["display_name_ar"] and p.usage_steps_ar == row["usage_steps_ar"]
-    assert p.ingredients == row["ingredients"] and p.usage_steps == row["usage_steps"]  # français optimisé
-    assert p.summary == row["source_fr"]["summary"]  # le reste du français reste celui du catalogue
+    assert p.ingredients == row["ingredients"] and p.usage_steps == row["usage_steps"]  # nouveaux textes FR
+    assert p.summary == row["summary"] and p.short_description == row["short_description"]
+    assert p.display_name == row["source_fr"]["display_name"]  # nom : jamais remplacé
+    assert [h.label for h in p.highlights.order_by("position")] == row["highlights"]
     assert [h.label_ar for h in p.highlights.order_by("position")] == row["highlights_ar"]
     assert p.highlights.count() == 4  # aucun doublon de picto
     assert Category.objects.get(slug="eclat").name_ar == ""  # bloc catégories encore « proposition »
@@ -190,7 +192,7 @@ def test_dry_run_complet_n_ecrit_rien_et_montre_les_champs(tmp_path):
     path, _ = translations(tmp_path)
     text = run("--traductions", path, "--dry-run")
     assert snapshot() == before
-    assert "APERÇU" in text and "| summary_ar |" in text and "| ingredients (FR optimisé) |" in text
+    assert "APERÇU" in text and "| summary_ar |" in text and "| ingredients (FR) |" in text
     assert "| IMPORTÉ |" in text and "Traduction : validée" in text
 
 
@@ -271,3 +273,32 @@ def test_simulation_de_validation_uniquement_en_apercu(tmp_path):
     text = run("--traductions", path, "--dry-run", "--simuler-valide")
     assert "SIMULATION" in text and "| IMPORTÉ |" in text
     assert snapshot() == before
+
+
+@pytest.mark.django_db
+def test_base_existante_textes_marketing_appliques_sans_doublon(tmp_path):
+    """Base remplie avec les textes d'origine (cas réel) : nouveaux textes FR/AR et pictos appliqués, rien d'autre."""
+    run()
+    Variant.objects.filter(is_default=True).update(price=Decimal("120"), stock_quantity=3)
+    Product.objects.update(status="active")
+    p = Product.objects.get(slug="some-by-mi-yuja-niacin-cream")
+    p.highlights.filter(position=3).update(label="Picto modifié dans l'admin")
+    counts = (ProductHighlight.objects.count(), ProductImage.objects.count(), ProductMarketingImage.objects.count())
+    path, rows = translations(tmp_path)
+    run("--traductions", path)
+    p.refresh_from_db()
+    row = rows[p.slug]
+    assert p.summary == row["summary"] and p.description_html and p.summary_ar == row["summary_ar"]
+    labels = list(p.highlights.order_by("position").values_list("label", "label_ar"))
+    assert labels[:3] == list(zip(row["highlights"][:3], row["highlights_ar"][:3], strict=True))
+    assert labels[3] == ("Picto modifié dans l'admin", "")  # modifié dans l'admin : FR et AR non écrits
+    assert (
+        ProductHighlight.objects.count(),
+        ProductImage.objects.count(),
+        ProductMarketingImage.objects.count(),
+    ) == counts
+    assert set(Variant.objects.values_list("price", "stock_quantity")) == {(Decimal("120"), 3)}
+    assert set(Product.objects.values_list("status", flat=True)) == {"active"}
+    before = snapshot()
+    text = run("--traductions", path)  # 2e passage : aucune écriture
+    assert snapshot() == before and "| IMPORTÉ |" not in text
