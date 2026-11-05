@@ -30,7 +30,7 @@
   "produits": [
     {
       "slug": "baroness-aloe-vera-gel",
-      "content_status": "proposition",
+      "content_status": "valide",
       "source_fr": {
         "display_name": "Baroness Aloe Vera Soothing Gel",
         "short_description": "Gel apaisant à l'aloe vera (99,85 % selon l'emballage).",
@@ -139,7 +139,7 @@
     },
     {
       "slug": "some-by-mi-yuja-niacin-cream",
-      "content_status": "proposition",
+      "content_status": "valide",
       "source_fr": {
         "display_name": "SOME BY MI Yuja Niacin Anti Blemish Cream",
         "short_description": "Crème au yuja (70 %) et à la niacinamide (5 %), pot de 60 g.",
@@ -253,7 +253,7 @@
     },
     {
       "slug": "biovene-eye-patches",
-      "content_status": "proposition",
+      "content_status": "valide",
       "source_fr": {
         "display_name": "Biovène Age-Defy Eye Patches",
         "short_description": "Patchs contour des yeux au tripeptide et au concombre, 60 patchs.",
@@ -369,7 +369,7 @@
     },
     {
       "slug": "vitamin-collagen-vital-cream",
-      "content_status": "proposition",
+      "content_status": "valide",
       "source_fr": {
         "display_name": "Quret Vitamin Collagen Vital Cream",
         "short_description": "Crème vitamines et collagène 50 g + crème contour des yeux 10 ml offerte.",
@@ -484,7 +484,7 @@
     },
     {
       "slug": "vitamin-collagen-vital-eye-cream",
-      "content_status": "proposition",
+      "content_status": "valide",
       "source_fr": {
         "display_name": "Quret Vitamin Collagen Vital Eye Cream",
         "short_description": "Crème contour des yeux vitamines et collagène, 25 ml + 10 ml offerts.",
@@ -600,7 +600,7 @@
     },
     {
       "slug": "orjena-power-collagen-emulsion",
-      "content_status": "proposition",
+      "content_status": "valide",
       "source_fr": {
         "display_name": "ORJENA Power Collagen Emulsion",
         "short_description": "Émulsion au collagène hydrolysé, tous types de peau, flacon de 100 ml.",
