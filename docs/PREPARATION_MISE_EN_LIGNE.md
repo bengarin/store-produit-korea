@@ -27,7 +27,8 @@ Plus sûr (aucune donnée de test ne peut passer en production) et plus simple (
 1. base vide + `migrate` (crée les rôles et les 3 catégories du catalogue) ;
 2. `createcachetable` ;
 3. `import_store_config` puis vos vrais tarifs de livraison ;
-4. `import_catalog` ;
+4. `import_catalog` (textes et pictos seulement : **aucune image** n'est importée depuis le 05/11/2026,
+   photos et visuels à ajouter à la main dans l'Admin — une fiche sans photo ne peut pas être mise en ligne) ;
 5. vos comptes avec `create_staff_user` ;
 6. saisie des prix et des stocks réels dans l'administration ;
 7. `launch_check` doit répondre « PRÊT ».

@@ -1,29 +1,27 @@
 """
-Importe / met à jour le catalogue en UNE opération : backend/catalog_import/catalogue.json (français, photos,
-visuels, catégories, pictos) + traductions/traductions_ar_6_produits.json (arabe, français optimisé des
-ingrédients et du mode d'utilisation).
+Met à jour les TEXTES des 6 produits en UNE opération : backend/catalog_import/catalogue.json (français d'origine,
+catégories, pictos) + traductions/traductions_ar_6_produits.json (nouveaux textes FR, textes AR, pictos FR/AR).
 
-    python manage.py import_catalog --dry-run                    # aperçu : AUCUNE écriture
+    python manage.py import_catalog --dry-run --simuler-valide   # aperçu : AUCUNE écriture
     python manage.py import_catalog --report rapport_import.md   # import réel + rapport
 
 Règles :
-- idempotent : produit retrouvé par son slug, image par son empreinte, lien image ↔ produit par (produit, média) ;
-  une 2e exécution ne crée rien ;
-- prix, prix barrés, stocks, autres variantes, statut (en ligne / brouillon) des produits EXISTANTS : jamais
-  modifiés. Un produit NOUVEAU est créé en brouillon, variante à 0 DH (« prix à définir »), stock non renseigné ;
-- traductions : seuls les produits dont « content_status » vaut « valide » sont importés, et seulement si le
-  français traduit (« source_fr ») correspond encore au catalogue ; sinon l'arabe existant n'est ni écrit ni effacé ;
-  une valeur vide n'efface jamais rien ;
-- aucune suppression : une photo absente du fichier est MASQUÉE de la galerie (ligne et fichier conservés),
-  catégories et pictos en trop sont signalés, jamais retirés ;
-- visuels marketing absents du fichier : laissés tels quels (signalés) ; aucun « Avant / Après » importé.
+- seuls les produits dont « content_status » vaut « valide » sont importés ;
+- un texte FR n'est remplacé que s'il est encore l'original (« source_fr ») ; un texte modifié dans l'admin est
+  conservé et signalé « CONFLIT » ; un texte AR n'est écrit que si son français correspond ; une valeur vide
+  n'efface jamais rien ;
+- idempotent : produit retrouvé par son slug, pictos par leur position ; une 2e exécution n'écrit rien ;
+- prix, prix barrés, stocks, variantes, statut, catégories des produits EXISTANTS : jamais modifiés. Un produit
+  NOUVEAU est créé en brouillon, variante à 0 DH (« prix à définir »), stock non renseigné ;
+- IMAGES : jamais touchées. Aucune photo ni aucun visuel n'est ajouté, modifié, masqué ou réordonné, même s'il
+  manque en base (le rapport les liste seulement) : les images se gèrent à la main dans l'admin ;
+- aucune suppression : catégories et pictos en trop sont signalés, jamais retirés.
 """
 
 import json
 from pathlib import Path
 
 from django.conf import settings
-from django.core.files.base import ContentFile
 from django.core.management.base import BaseCommand, CommandError
 from django.db import transaction
 
@@ -34,12 +32,10 @@ from apps.catalog.models import (
     Product,
     ProductCategory,
     ProductHighlight,
-    ProductImage,
     ProductMarketingImage,
     Variant,
 )
 from apps.core.html import sanitize_html
-from apps.media_library.models import MediaAsset
 from apps.media_library.processing import inspect_existing
 
 IMPORT_ROOT = Path(settings.BASE_DIR) / "catalog_import"
@@ -99,7 +95,7 @@ class DryRunRollback(Exception):
 
 
 class Command(BaseCommand):
-    help = "Importe le catalogue complet (FR + traductions arabes validées). --dry-run : aperçu sans écriture."
+    help = "Met à jour les textes FR/AR et pictos des 6 produits (jamais les images). --dry-run : aperçu sans écriture."
 
     def add_arguments(self, parser):
         parser.add_argument("--manifest", default=str(IMPORT_ROOT / "catalogue.json"))
@@ -127,7 +123,6 @@ class Command(BaseCommand):
         if problems:
             raise CommandError("Fichier du catalogue invalide :\n- " + "\n- ".join(problems))
 
-        self.new_media = {}  # empreinte → média (créé pendant cette exécution)
         reports = []
         try:
             with transaction.atomic():
@@ -291,37 +286,6 @@ class Command(BaseCommand):
                     Category.objects.filter(pk=cat.pk).update(name_ar=new)
         return changes
 
-    # --------------------------------------------------------------- médias
-    def _media(self, entry: dict, alt: str, slug: str):
-        """Retourne (média ou None en aperçu, 'réutilisé' | 'créé')."""
-        info = self.index[entry["file"]]
-        key = info["key_sha256"]
-        media = MediaAsset.objects.filter(sha256=key).first() or self.new_media.get(key)
-        if media:
-            return media, "réutilisé"
-        if self.dry:
-            return None, "créé"
-        main = (IMPORT_ROOT / entry["file"]).read_bytes()
-        width, height, mime = inspect_existing(main)
-        media = MediaAsset(
-            original_filename=Path(info.get("original") or entry["file"]).name[:255],
-            mime_type=mime,
-            width=width,
-            height=height,
-            size_bytes=len(main),
-            sha256=key,
-            alt=alt[:255],
-            source=MediaAsset.Source.IMPORT,
-        )
-        folder = f"catalogue/{slug}"
-        media.file.save(f"{folder}/{Path(entry['file']).name}", ContentFile(main), save=False)
-        if info.get("file_640"):
-            small = (IMPORT_ROOT / info["file_640"]).read_bytes()
-            media.file_640.save(f"{folder}/{Path(info['file_640']).name}", ContentFile(small), save=False)
-        media.save()
-        self.new_media[key] = media
-        return media, "créé"
-
     # ------------------------------------------------------------- produits
     def _product(self, p: dict) -> dict:
         slug = p["slug"]
@@ -333,9 +297,7 @@ class Command(BaseCommand):
             "action": "créé" if product is None else "mis à jour",
             "changes": [],
             "images": [],
-            "removed_images": [],
-            "marketing": [],
-            "kept_marketing": [],
+            "missing_images": [],
             "warnings": [],
             "format": p.get("format", ""),
             "missing": p.get("missing", []),
@@ -401,8 +363,7 @@ class Command(BaseCommand):
         self._price(product, r)
         self._categories(product, p, r)
         self._highlights(product, p, r, tr, source)
-        self._gallery(product, p, r)
-        self._marketing(product, p, r)
+        self._images(product, p, r)
         if not r["changes"] and r["action"] == "mis à jour":
             r["action"] = "inchangé"
         return r
@@ -512,87 +473,21 @@ class Command(BaseCommand):
                 fields["label_ar"] = new_ar[i]
             ProductHighlight.objects.filter(pk=current[i].pk).update(**fields)
 
-    def _gallery(self, product, p, r):
-        """Photos : liens existants jamais modifiés ni masqués ; seules les photos absentes sont ajoutées."""
-        existing = not self.is_new
-        rows = list(product.images.select_related("media")) if existing else []
-        listed = set()
-        gallery_rows = []
-        dirty = False
-        wanted = [(e, True) for e in p["gallery"]] + ([(p["scene"], False)] if p.get("scene") else [])
-        start = max([x.position for x in rows], default=-1) + 1
-        for n, (e, in_gallery) in enumerate(wanted):
-            media, status = self._media(e, e["alt"], p["slug"])
-            row = next((x for x in rows if media and x.media_id == media.pk), None)
-            label = Path(e["file"]).name
-            if row is None:
-                r["images"].append(f"{label} — ajoutée (média {status})")
-                r["changes"].append(f"photo ajoutée {label}")
-                if not self.dry:
-                    row = ProductImage.objects.create(
-                        product=product,
-                        media=media,
-                        alt=e["alt"],
-                        kind=e["kind"],
-                        fit=e["fit"],
-                        position=(start + n) if existing else n,
-                        in_gallery=in_gallery,
-                    )
-            else:
-                listed.add(row.pk)
-                r["images"].append(f"{label} — déjà présente : conservée telle quelle")
-            if in_gallery:
-                gallery_rows.append(row)
-            elif not self.dry and row is not None and not product.scene_image_id:
-                product.scene_image = row  # seulement si aucune image « en situation » n'est choisie
-                dirty = True
-        for old in rows:
-            if old.pk not in listed:
-                r["removed_images"].append(
-                    f"{Path(old.media.file.name).name} absente du catalogue : conservée telle quelle (jamais masquée)"
-                )
-        if self.dry:
-            return
-        hover = p.get("hover")
-        if hover and not product.hover_image_id and gallery_rows[hover["gallery_index"]] is not None:
-            product.hover_image = gallery_rows[hover["gallery_index"]]
-            product.hover_image_position = hover.get("position", "")
-            dirty = True
-        if dirty:  # enregistré seulement si quelque chose a changé
-            product.save()
-
-    def _marketing(self, product, p, r):
-        """Visuels : existants jamais modifiés ; seuls les visuels absents sont ajoutés."""
-        existing = not self.is_new
-        rows = list(product.marketing_images.all()) if existing else []
-        keep = set()
-        start = max([x.position for x in rows], default=-1) + 1
-        for n, m in enumerate(p["marketing"]):
-            media, status = self._media(m, m["alt"], p["slug"])
-            row = next((x for x in rows if media and x.media_id == media.pk), None)
-            label = Path(m["file"]).name
-            if row is None:
-                r["marketing"].append(
-                    f"{label} — ajouté{' MASQUÉ' if m.get('active') is False else ''} (média {status})"
-                )
-                r["changes"].append(f"visuel ajouté {label}")
-                if not self.dry:
-                    # « active »: false = importé masqué (ex. traduction à corriger) ; ensuite, l'admin décide.
-                    ProductMarketingImage.objects.create(
-                        product=product,
-                        media=media,
-                        is_active=m.get("active", True),
-                        category=m["category"],
-                        language=m["language"],
-                        alt=m["alt"],
-                        position=(start + n) if existing else n,
-                    )
-            else:
-                keep.add(row.pk)
-                r["marketing"].append(f"{label} — déjà présent : conservé tel quel")
-        for row in rows:
-            if row.pk not in keep:
-                r["kept_marketing"].append(f"visuel n° {row.pk} ({row.category}) non listé : laissé tel quel")
+    def _images(self, product, p, r):
+        """Photos et visuels : LECTURE SEULE. Rien n'est ajouté, modifié, masqué ni réordonné, même si une image
+        du catalogue manque en base : les images sont gérées à la main dans l'admin. Le rapport dit seulement
+        ce qui est en base et ce qui manque."""
+        photos = list(product.images.select_related("media")) if not self.is_new else []
+        visuals = list(product.marketing_images.select_related("media")) if not self.is_new else []
+        have = {x.media.sha256 for x in photos} | {x.media.sha256 for x in visuals}
+        r["images"].append(
+            f"en base : {sum(1 for x in photos if x.in_gallery)} photo(s) en galerie, {len(visuals)} visuel(s) "
+            "— conservés tels quels (l'import ne touche jamais aux images)"
+        )
+        wanted = [*p["gallery"], *([p["scene"]] if p.get("scene") else []), *p["marketing"]]
+        for e in wanted:
+            if self.index[e["file"]]["key_sha256"] not in have:
+                r["missing_images"].append(Path(e["file"]).name)
 
     # --------------------------------------------------------------- rapport
     def _render(self, reports) -> str:
@@ -601,9 +496,10 @@ class Command(BaseCommand):
             mode += " — SIMULATION : les traductions « proposition » sont traitées comme « valide »"
         lines = [f"# Import du catalogue — {mode}", ""]
         lines += [
-            "Règle : un produit existant garde son prix, son stock, ses variantes, son statut, ses catégories, ses",
-            "photos et ses visuels existants. Les nouveaux textes FR et AR du fichier de contenu (produits « valide »)",
-            "remplacent un texte seulement s'il est encore l'original ; un texte modifié dans l'admin est conservé.",
+            "Règle : un produit existant garde son prix, son stock, ses variantes, son statut et ses catégories.",
+            "Les images (photos et visuels) ne sont jamais ajoutées, modifiées, masquées ni réordonnées.",
+            "Les nouveaux textes FR et AR du fichier de contenu (produits « valide ») remplacent un texte seulement",
+            "s'il est encore l'original ; un texte modifié dans l'admin est conservé (CONFLIT signalé).",
             "",
             "| Produit | Action | Statut | Prix | Stock | Traduction arabe | Champs importés | Conflits |",
             "|---|---|---|---|---|---|---|---|",
@@ -628,10 +524,12 @@ class Command(BaseCommand):
             lines += ["", "| Champ | Français actuel | Proposition | Résultat |", "|---|---|---|---|"]
             lines += [f"| {f} | {_cell(fr)} | {_cell(prop)} | {res} |" for f, fr, prop, res in r["rows"]]
             lines.append("")
-            lines += [f"- Image : {x}" for x in r["images"]]
-            lines += [f"- Image : {x}" for x in r["removed_images"]]
-            lines += [f"- Visuel : {x}" for x in r["marketing"]]
-            lines += [f"- Visuel : {x}" for x in r["kept_marketing"]]
+            lines += [f"- Images : {x}" for x in r["images"]]
+            if r["missing_images"]:
+                lines.append(
+                    f"- Images du catalogue absentes de la base (NON ajoutées, à gérer dans l'admin) : "
+                    f"{len(r['missing_images'])} — " + ", ".join(r["missing_images"])
+                )
             lines += [f"- ⚠️ {x}" for x in r["warnings"]]
             lines += [f"- [DONNÉES MANQUANTES] {x}" for x in r["missing"]]
             lines += [f"- [À VÉRIFIER] {x}" for x in r["to_verify"]]

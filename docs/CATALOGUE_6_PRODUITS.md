@@ -65,8 +65,11 @@ type de peau (ORJENA uniquement : seul emballage qui l'indique), 4 pictos, galer
   Commande d'aperçu : `python manage.py import_catalog --dry-run` (rien n'est écrit) ; ajouter `--simuler-valide`
   pour voir ce qui serait importé une fois les traductions validées (aperçu seulement).
 - **Produit existant** : textes français (y compris modifiés dans l'Admin), pictos, photos, visuels, catégories,
-  prix, stock, variantes et statut ne sont jamais réécrits depuis `catalogue.json` ; seuls l'arabe validé, le
-  français optimisé validé (ingrédients, mode d'utilisation) et les photos / visuels absents sont ajoutés.
+  prix, stock, variantes et statut ne sont jamais réécrits depuis `catalogue.json` ; seuls les textes FR/AR et
+  pictos validés sont importés.
+- **Images (décision du 05/11/2026, option B)** : `import_catalog` ne touche JAMAIS aux images. Aucune photo ni
+  aucun visuel n'est ajouté, modifié, masqué ou réordonné, même s'il manque en base, et même pour un produit nouveau.
+  Le rapport liste seulement les images du catalogue absentes de la base. Les images se gèrent à la main dans l'Admin.
 - **Stock** : jamais modifié. Le nouveau produit démarre « non renseigné » (non commandable).
 - **Arabe** : aucun champ arabe écrit ni effacé. Les propositions de `GUIDE_TRADUCTION_PRODUITS.md` restent à relire.
 
@@ -109,12 +112,11 @@ python manage.py import_catalog --dry-run --report aperçu_import.md
 python manage.py import_catalog --report rapport_import.md
 ```
 
-- **Idempotent** : produit retrouvé par son identifiant (slug), image par son empreinte, lien image↔produit par
-  (produit, image). Relancer ne crée aucun doublon (testé).
-- Les 16 visuels déjà en base sont **reconnus** (même empreinte) : pas de doublon dans la médiathèque.
-- **Aucune suppression** : une photo absente du fichier est masquée de la galerie (ligne et fichier conservés) ;
-  catégories et pictos en trop sont signalés, jamais retirés.
-- Visuels non listés dans le fichier : laissés tels quels et signalés. Aucun « Avant / Après » importé.
+- **Idempotent** : produit retrouvé par son identifiant (slug), pictos par leur position. Relancer n'écrit rien
+  et ne crée aucun doublon (testé).
+- **Images : lecture seule** (depuis le 05/11/2026). Le script ne crée, ne modifie, ne masque et ne réordonne aucune
+  photo ni aucun visuel ; il signale seulement les images de `catalog_import/images/` absentes de la base.
+- **Aucune suppression** : catégories et pictos en trop sont signalés, jamais retirés.
 - Tout ou rien : en cas d'erreur, la base revient à son état initial.
 - Tests : `backend/tests/test_import_catalog.py` (aperçu sans écriture, idempotence, stock/arabe protégés, fichier
   conservé).

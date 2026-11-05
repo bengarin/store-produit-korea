@@ -24,16 +24,6 @@ SLUGS = {
 
 # Catégories exigées par catalogue.json : créées par la migration catalog 0006 (aucun fixture ici).
 BASE_CATEGORIES = {"hydratation": "Hydratation", "anti-age": "Anti-âge", "eclat": "Éclat"}
-# Photos en galerie et visuels marketing attendus par produit (catalogue.json).
-# Par produit : (photos en galerie, visuels FR affichés, visuels AR affichés, visuels AR masqués).
-EXPECTED_MEDIA = {
-    "baroness-aloe-vera-gel": (3, 3, 1, 1),
-    "some-by-mi-yuja-niacin-cream": (4, 3, 3, 0),
-    "biovene-eye-patches": (5, 4, 3, 0),
-    "vitamin-collagen-vital-cream": (2, 4, 3, 1),
-    "vitamin-collagen-vital-eye-cream": (3, 3, 3, 1),
-    "orjena-power-collagen-emulsion": (3, 4, 3, 1),
-}
 
 
 @pytest.mark.django_db
@@ -77,6 +67,44 @@ def counts():
     )
 
 
+CATALOG = settings.BASE_DIR / "catalog_import"
+
+
+def seed_images(slug, gallery=1, marketing=1):
+    """Pose à la main (comme dans l'admin) des images du catalogue sur un produit : photos puis visuels."""
+    manifest = json.loads((CATALOG / "catalogue.json").read_text(encoding="utf-8"))
+    index = json.loads((CATALOG / "images" / "INDEX.json").read_text(encoding="utf-8"))
+    p = next(x for x in manifest["products"] if x["slug"] == slug)
+    product = Product.objects.get(slug=slug)
+
+    def media(e):
+        return MediaAsset.objects.create(
+            file=e["file"],
+            mime_type="image/webp",
+            width=10,
+            height=10,
+            size_bytes=1,
+            sha256=index[e["file"]]["key_sha256"],
+            alt=e["alt"],
+        )
+
+    for n, e in enumerate(p["gallery"][:gallery]):
+        ProductImage.objects.create(product=product, media=media(e), alt=e["alt"], position=n)
+    for n, m in enumerate(p["marketing"][:marketing]):
+        ProductMarketingImage.objects.create(
+            product=product, media=media(m), category=m["category"], language=m["language"], position=n
+        )
+    return product, len(p["gallery"]) + (1 if p.get("scene") else 0) + len(p["marketing"])
+
+
+def images_snapshot():
+    return (
+        list(MediaAsset.objects.order_by("pk").values()),
+        list(ProductImage.objects.order_by("pk").values()),
+        list(ProductMarketingImage.objects.order_by("pk").values()),
+    )
+
+
 @pytest.mark.django_db
 def test_apercu_n_ecrit_rien(db):
     before = counts()
@@ -95,22 +123,34 @@ def test_import_complet_et_idempotent(db):
         v = p.variants.get(is_default=True)
         assert v.price == Decimal("0") and v.compare_at_price is None
         assert v.stock_quantity is None  # jamais inventé
-        assert p.images.filter(in_gallery=True).exists()
-        assert not p.marketing_images.filter(category="before_after").exists()
-    for slug, (photos, fr, ar, ar_hidden) in EXPECTED_MEDIA.items():
-        p = Product.objects.get(slug=slug)
-        assert p.images.filter(in_gallery=True).count() == photos, slug
-        assert p.marketing_images.filter(language="fr", is_active=True).count() == fr, slug
-        assert p.marketing_images.filter(language="ar", is_active=True).count() == ar, slug
-        assert p.marketing_images.filter(language="ar", is_active=False).count() == ar_hidden, slug
-        assert all(i.media.file and (settings.MEDIA_ROOT / i.media.file.name).is_file() for i in p.images.all())
-    assert ProductMarketingImage.objects.count() == 41  # 21 FR + 20 AR (dont 4 masqués)
     assert set(Product.objects.values_list("categories__slug", flat=True)) == set(BASE_CATEGORIES)
+    # Images : jamais importées, même pour un produit nouveau (gestion manuelle dans l'admin).
+    assert first[2:] == (0, 0, 0)
 
     text = run()  # 2e passage : aucun doublon, rien à modifier
     assert counts() == first
-    assert "masquée" not in text
-    assert "lien créé" not in text and "— créé" not in text
+    assert "NON ajoutées" in text
+
+
+@pytest.mark.django_db
+def test_images_jamais_ajoutees_modifiees_masquees_ni_reordonnees(tmp_path):
+    """Images manquantes en base : signalées seulement. Images existantes : strictement identiques."""
+    run()
+    product, total = seed_images("vitamin-collagen-vital-cream", gallery=2, marketing=1)
+    photo = product.images.order_by("position").first()
+    ProductImage.objects.filter(pk=photo.pk).update(
+        alt="Modifié dans l'admin", in_gallery=False, position=7, fit="cover"
+    )
+    product.marketing_images.update(is_active=False, position=5)
+    before = images_snapshot()
+    path, _ = translations(tmp_path)
+    for args in (["--dry-run", "--simuler-valide"], [], []):  # aperçu, import réel, 2e passage
+        text = run("--traductions", path, *args)
+        assert images_snapshot() == before
+        assert f"absentes de la base (NON ajoutées, à gérer dans l'admin) : {total - 3} " in text
+    product.refresh_from_db()
+    assert product.hover_image_id is None and product.scene_image_id is None
+    assert product.summary_ar  # les textes, eux, sont bien importés
 
 
 @pytest.mark.django_db
@@ -124,10 +164,10 @@ def test_produit_existant_jamais_modifie_depuis_le_catalogue(db):
         summary="Texte modifié dans l'admin", summary_ar="نص عربي", status="active"
     )
     vital.highlights.filter(position=0).update(label="Picto modifié")
-    extra_media = MediaAsset.objects.filter(product_images__product__slug="vitamin-collagen-vital-eye-cream").first()
-    extra = ProductImage.objects.create(product=vital, media=extra_media, alt="Photo ajoutée dans l'admin", position=9)
+    seed_images("vitamin-collagen-vital-cream", gallery=1, marketing=0)
     first = vital.images.order_by("position").first()
     ProductImage.objects.filter(pk=first.pk).update(alt="Texte alternatif modifié")
+    images = images_snapshot()
 
     text = run()
     vital.refresh_from_db()
@@ -135,11 +175,10 @@ def test_produit_existant_jamais_modifie_depuis_le_catalogue(db):
     assert v.stock_quantity == 7 and v.price == Decimal("229") and vital.status == Product.Status.ACTIVE
     assert vital.summary == "Texte modifié dans l'admin" and vital.summary_ar == "نص عربي"
     assert vital.highlights.get(position=0).label == "Picto modifié"
-    extra.refresh_from_db()
-    assert extra.in_gallery is True  # jamais masquée
+    assert images_snapshot() == images  # images jamais touchées
     assert ProductImage.objects.get(pk=first.pk).alt == "Texte alternatif modifié"
     assert "Français conservé" in text and "summary" in text and "pictos" in text
-    assert "conservée telle quelle" in text
+    assert "conservés tels quels" in text
 
 
 # --- Import complet : traductions arabes (traductions/traductions_ar_6_produits.json) ---------------------
