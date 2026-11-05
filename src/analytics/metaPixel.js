@@ -2,12 +2,34 @@
  * Pixel Meta — une seule intégration pour toute la boutique.
  *
  * Équivalent du code officiel de Meta (même file d'attente `fbq`, même script fbevents.js), mais :
- * - chargé UNE fois, seulement après le consentement du visiteur (jamais dans l'administration ni en mode démo) ;
+ * - chargé UNE fois, sur la boutique publique uniquement (jamais dans l'administration ni en mode démo) ;
  * - écrit en module (aucun script en ligne : compatible avec la politique de sécurité du site) ;
  * - le PageView est envoyé à chaque navigation de l'application (voir MetaPixelTracker), pas au chargement ;
  * - si un `fbq` existe déjà (autre intégration), le script n'est pas injecté une seconde fois.
  */
-import { META_PIXEL_ID, getConsent, trackingAvailable } from './consent.js';
+import { DATA_SOURCE } from '../config/env.js';
+
+/** Identifiant public du pixel (pas un secret). `VITE_META_PIXEL_ID=off` désactive le pixel. */
+const rawPixelId = (import.meta.env.VITE_META_PIXEL_ID ?? '1665012938525216').trim();
+export const META_PIXEL_ID = /^\d{10,20}$/.test(rawPixelId) ? rawPixelId : '';
+
+const inPreview = typeof window !== 'undefined'
+  && (new URLSearchParams(window.location.search).has('apercu-theme') || window.parent !== window);
+
+/**
+ * Le suivi n'existe que sur la vraie boutique : mode API (vraies commandes, vrais produits), pixel configuré,
+ * hors aperçu de l'éditeur de thème. Le mode démo (commandes simulées) n'envoie jamais rien.
+ */
+export const trackingAvailable = DATA_SOURCE === 'api' && Boolean(META_PIXEL_ID) && !inPreview;
+
+/** Raison pour laquelle le pixel est inactif (affichée en développement uniquement), ou null. */
+export const trackingDisabledReason = DATA_SOURCE !== 'api'
+  ? 'mode démo (VITE_API_BASE_URL vide) : le pixel ne fonctionne qu\'en mode API, voir .env.example'
+  : !META_PIXEL_ID
+    ? 'VITE_META_PIXEL_ID absent, invalide ou « off »'
+    : inPreview
+      ? 'aperçu de l\'éditeur de thème'
+      : null;
 
 export const CURRENCY = 'MAD';
 
@@ -17,7 +39,6 @@ const STANDARD = new Set([
 ]);
 
 let initialised = false;
-let granted = false;
 
 function installQueue() {
   // Même amorce que le code officiel : file d'attente jusqu'au chargement de fbevents.js.
@@ -38,14 +59,10 @@ function installQueue() {
   document.head.appendChild(script);
 }
 
-/** Charge et initialise le pixel (idempotent). Ne fait rien sans consentement. */
+/** Charge et initialise le pixel (idempotent). */
 export function ensurePixel() {
-  if (!trackingAvailable || getConsent() !== 'granted') return false;
+  if (!trackingAvailable) return false;
   if (typeof window.fbq !== 'function') installQueue();
-  if (!granted) {
-    window.fbq('consent', 'grant');
-    granted = true;
-  }
   if (initialised) return true;
   const already = window.fbq.getState?.()?.pixels?.some?.((p) => p.id === META_PIXEL_ID);
   if (!already) {
@@ -61,19 +78,13 @@ export function ensurePixel() {
   return true;
 }
 
-/** Retrait du consentement : plus aucun envoi (le script déjà chargé reste inactif). */
-export function revokePixel() {
-  if (typeof window.fbq === 'function' && granted) window.fbq('consent', 'revoke');
-  granted = false;
-}
-
 let counter = 0;
 /** Identifiant d'événement : servira à dédupliquer navigateur + serveur (Conversions API) le jour où elle sera activée. */
 export const newEventId = (name) => `${name}.${Date.now().toString(36)}.${(counter += 1).toString(36)}${Math.random().toString(36).slice(2, 6)}`;
 
 /**
  * Envoie un événement. `eventId` : identifiant stable (ex. Purchase = numéro de commande).
- * Retourne l'identifiant envoyé, ou null si rien n'est parti (pas de consentement, démo, aperçu…).
+ * Retourne l'identifiant envoyé, ou null si rien n'est parti (démo, aperçu, pixel désactivé…).
  */
 export function track(name, params = {}, eventId = newEventId(name)) {
   if (!ensurePixel()) return null;

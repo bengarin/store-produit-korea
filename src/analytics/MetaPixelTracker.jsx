@@ -1,13 +1,10 @@
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
-import { getConsent, onConsentChange, trackingAvailable, trackingDisabledReason } from './consent.js';
-import { ensurePixel, revokePixel, track } from './metaPixel.js';
-import ConsentBanner from './ConsentBanner.jsx';
+import { ensurePixel, track, trackingAvailable, trackingDisabledReason } from './metaPixel.js';
 
 // Développement uniquement : explique dans la console pourquoi Meta Pixel Helper ne voit aucun pixel.
 if (import.meta.env.DEV) {
   if (trackingDisabledReason) console.info(`[Meta Pixel] inactif : ${trackingDisabledReason}.`);
-  else if (getConsent() !== 'granted') console.info('[Meta Pixel] en attente du consentement : cliquer « Accepter » sur le bandeau cookies.');
 }
 
 // Navigation déjà comptée (au niveau du module : le double appel des effets en mode strict ne la recompte pas).
@@ -17,27 +14,20 @@ const CONTACT_LINK = /^(https:\/\/(wa\.me|api\.whatsapp\.com)\/|tel:|mailto:)/i;
 const contactChannel = (href) => (href.startsWith('tel:') ? 'phone' : href.startsWith('mailto:') ? 'email' : 'whatsapp');
 
 /**
- * Boutique publique uniquement : bandeau de consentement, un PageView par navigation réelle,
+ * Boutique publique uniquement : un PageView par navigation réelle,
  * événement Contact sur les liens WhatsApp / téléphone / e-mail.
  */
 export default function MetaPixelTracker() {
   const location = useLocation();
-  const [consent, setConsentState] = useState(getConsent);
-
-  useEffect(() => onConsentChange(({ consent: value }) => {
-    setConsentState(value);
-    if (value === 'denied') revokePixel();
-  }), []);
-
-  // PageView : une fois par entrée d'historique (location.key), y compris la première page après consentement.
+  // PageView : une fois par entrée d'historique (location.key).
   useEffect(() => {
-    if (!trackingAvailable || consent !== 'granted') return;
+    if (!trackingAvailable) return;
     const pageKey = location.key;
     if (pageKey === lastPageKey) return;
     if (!ensurePixel()) return;
     lastPageKey = pageKey;
     track('PageView');
-  }, [location.key, consent]);
+  }, [location.key]);
 
   // Contact : clic sur un lien de contact (délégation, aucun composant à modifier).
   useEffect(() => {
@@ -50,6 +40,5 @@ export default function MetaPixelTracker() {
     return () => document.removeEventListener('click', onClick, true);
   }, []);
 
-  if (!trackingAvailable) return null;
-  return <ConsentBanner />;
+  return null;
 }

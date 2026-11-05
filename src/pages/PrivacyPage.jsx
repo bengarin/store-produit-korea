@@ -5,7 +5,6 @@ import { useCatalog } from '../context/CatalogContext.jsx';
 import { STORE_CONFIG } from '../config/store.js';
 import { useI18n } from '../i18n/I18nContext.jsx';
 import { PRIVACY_UPDATED, privacySections } from '../i18n/privacy.js';
-import { openConsentSettings, trackingAvailable } from '../analytics/consent.js';
 
 const URL_RE = /(https:\/\/[^\s]+|www\.[^\s]+)/;
 
@@ -46,9 +45,6 @@ export default function PrivacyPage() {
             <h2>{section.title}</h2>
             {section.list && <ul>{section.list.map((item) => <li key={item}>{item}</li>)}</ul>}
             {(section.paragraphs || []).map((p) => <p key={p}><WithLinks text={p} /></p>)}
-            {section.consentButton && trackingAvailable && (
-              <button type="button" className="btn btn--soft" onClick={openConsentSettings}>{t('privacy.manageConsent')}</button>
-            )}
           </section>
         ))}
       </main>

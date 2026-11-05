@@ -13,13 +13,13 @@ quand même qu'un `fbq` n'existe pas déjà avant d'injecter le script (cas d'un
 
 | Règle | Mise en œuvre |
 |-------|---------------|
-| Consentement | Rien n'est chargé ni envoyé avant « Accepter ». « Refuser » est aussi visible. Choix modifiable (lien « Cookies » du pied de page). Retrait → `fbq('consent','revoke')`. |
+| Consentement | **Aucun bandeau depuis le 05/11/2026** (décision de la propriétaire) : le pixel est chargé dès la première page de la boutique. Conformité (CNDP, visiteurs UE, conditions Meta) : à traiter par la personne responsable, voir docs/CONFIDENTIALITE.md. |
 | Une seule instance | `fbevents.js` injecté une fois par chargement de page, `init` une seule fois (testé). |
 | SPA React | Un `PageView` par entrée d'historique (`location.key`), pas au chargement du script. Changer de langue n'est pas une navigation. |
 | StrictMode | Garde au niveau du module (effets appelés deux fois en développement) : testé sans doublon. |
 | Périmètre | Boutique publique en **mode API** uniquement. Jamais dans l'administration, l'aperçu du thème, ni le mode démo (commandes simulées). |
 | CSP | Aucun script en ligne. CSP : `script-src 'self' https://connect.facebook.net`, envois vers `https://www.facebook.com`. |
-| `<noscript>` officiel | **Non installé** : il enverrait un PageView sans consentement possible. |
+| `<noscript>` officiel | **Non installé** (visiteurs sans JavaScript non suivis). |
 | Pas d'envoi automatique de Meta | `fbq.disablePushState = true` (sinon fbevents.js enverrait un PageView automatique à chaque changement d'URL de l'application, en double) et `fbq('set','autoConfig',false,ID)` (pas d'événements automatiques sur les clics). [À VÉRIFIER avec le vrai script dans Events Manager : non testable ici.] |
 
 ## 3. Événements
@@ -95,12 +95,11 @@ simple commande. La déduplication est prévue : même `event_id` = `purchase.<n
 
 ## 8. Dépannage : Meta Pixel Helper affiche « No Pixels found »
 
-C'est **normal** dans 3 cas (aucun bug) ; en développement, la console du navigateur indique lequel :
+C'est **normal** dans 2 cas (aucun bug) ; en développement, la console du navigateur indique lequel :
 
 | Message dans la console (`npm run dev`) | Cause | Solution |
 |---|---|---|
 | `[Meta Pixel] inactif : mode démo…` | `VITE_API_BASE_URL` vide : le site affiche les produits de démo et le pixel est volontairement coupé (commandes simulées) | Créer `.env.local` avec `VITE_API_BASE_URL=/api/v1/store`, lancer Django (`python manage.py runserver`), relancer `npm run dev` |
-| `[Meta Pixel] en attente du consentement…` | Le visiteur n'a pas cliqué « Accepter » (ou a refusé) : rien n'est chargé, conformément au consentement | Cliquer « Accepter » sur le bandeau (ou lien « Cookies » du pied de page pour changer d'avis) |
 | `[Meta Pixel] inactif : VITE_META_PIXEL_ID…` | Identifiant absent, invalide ou `off` | Mettre `VITE_META_PIXEL_ID=1665012938525216` (ou supprimer la ligne : valeur par défaut) |
 
 En mode API, les fiches **en brouillon** n'apparaissent pas : pour tester ViewContent / AddToCart / Purchase, au moins

@@ -36,6 +36,9 @@ function Field({ id, label, error, children }) {
   );
 }
 
+/** Frais égaux à 0 (nombre ou texte « 0 », « 0.00 ») ; une valeur absente n'est jamais considérée comme gratuite. */
+const isZeroFee = (fee) => fee !== null && fee !== undefined && fee !== '' && Number(fee) === 0;
+
 export default function CheckoutForm({ deliveryFee, submitting, onSubmit, alert = null, children }) {
   const { config } = useCatalog();
   const { t, lang } = useI18n();
@@ -119,7 +122,7 @@ export default function CheckoutForm({ deliveryFee, submitting, onSubmit, alert 
             <strong>{t('form.home')}</strong>
             <span>{t('form.everywhere')}</span>
           </div>
-          <span className="option-card__price">{deliveryFee === 0 ? t('form.free') : formatPrice(deliveryFee)}</span>
+          <span className="option-card__price">{isZeroFee(deliveryFee) ? t('form.deliveryFree') : formatPrice(deliveryFee)}</span>
         </div>
       </section>
 

@@ -221,6 +221,7 @@ const fr = {
   'form.home': 'Livraison à domicile',
   'form.everywhere': 'Partout au Maroc',
   'form.free': 'Offerte',
+  'form.deliveryFree': 'Gratuit',
   'form.paymentMode': 'Mode de paiement',
   'form.cod': 'Paiement à la livraison (COD)',
   'form.codText': 'Vous payez en espèces en recevant votre commande',
@@ -251,17 +252,9 @@ const fr = {
   'confirm.waHint': 'Le suivi WhatsApp n’est pas encore disponible : nous vous contacterons par téléphone pour confirmer votre commande.',
   'confirm.demo': 'Démo front-end : cette commande est simulée et n’a été transmise à aucun service.',
 
-  // Cookies / consentement publicitaire
-  'consent.label': 'Cookies et mesure d’audience',
-  'consent.text': 'Avec votre accord, nous utilisons le pixel Meta (Facebook, Instagram) pour mesurer l’efficacité de nos publicités. Aucune donnée n’est envoyée à Meta si vous refusez.',
-  'consent.accept': 'Accepter',
-  'consent.refuse': 'Refuser',
-  'consent.manage': 'Cookies',
-  'consent.more': 'En savoir plus',
   'privacy.title': 'Politique de confidentialité',
   'privacy.updated': ({ date }) => `Dernière mise à jour : ${date}`,
   'privacy.draft': 'Document d’information en cours de finalisation : il n’a pas encore été vérifié par un professionnel du droit.',
-  'privacy.manageConsent': 'Modifier mon choix concernant les cookies',
 };
 
 const ar = {
@@ -460,6 +453,7 @@ const ar = {
   'form.home': 'التوصيل إلى المنزل',
   'form.everywhere': 'إلى جميع أنحاء المغرب',
   'form.free': 'مجانًا',
+  'form.deliveryFree': 'مجانًا',
   'form.paymentMode': 'طريقة الدفع',
   'form.cod': 'الدفع عند الاستلام',
   'form.codText': 'الدفع نقدًا عند استلام الطلب',
@@ -489,16 +483,9 @@ const ar = {
   'confirm.waHint': 'تتبّع الطلب عبر واتساب غير متاح بعد: سنتصل بكم هاتفيًا لتأكيد طلبكم.',
   'confirm.demo': 'نسخة تجريبية: هذا الطلب غير حقيقي ولم يُرسل إلى أي خدمة.',
 
-  'consent.label': 'ملفات تعريف الارتباط وقياس الجمهور',
-  'consent.text': 'بموافقتكم، نستعمل بكسل Meta (فيسبوك وإنستغرام) لقياس فعالية إعلاناتنا. لن تُرسل أي بيانات إلى Meta في حال الرفض.',
-  'consent.accept': 'أوافق',
-  'consent.refuse': 'أرفض',
-  'consent.manage': 'ملفات تعريف الارتباط',
-  'consent.more': 'معرفة المزيد',
   'privacy.title': 'سياسة الخصوصية',
   'privacy.updated': ({ date }) => `آخر تحديث: ${date}`,
   'privacy.draft': 'وثيقة إعلامية قيد الإعداد: لم يتم التحقق منها بعد من طرف مختص قانوني.',
-  'privacy.manageConsent': 'تغيير الاختيار بشأن ملفات تعريف الارتباط',
 };
 
 export const MESSAGES = { fr, ar };

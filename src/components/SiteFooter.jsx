@@ -5,7 +5,6 @@ import ThemeLink from '../theme/ThemeLink.jsx';
 import { useTheme } from '../theme/ThemeContext.jsx';
 import Logo from './Logo.jsx';
 import { useI18n } from '../i18n/I18nContext.jsx';
-import { openConsentSettings, trackingAvailable } from '../analytics/consent.js';
 
 /** Pied de page : logo, texte et liens du thème (facultatifs), puis la mention © toujours présente. */
 export default function SiteFooter() {
@@ -25,9 +24,6 @@ export default function SiteFooter() {
       <p>© {new Date().getFullYear()} {STORE_CONFIG.brandName}{ORDERS_ARE_SIMULATED && t('demo.footer')}</p>
       <p className="site-footer__legal">
         <Link to="/confidentialite">{t('privacy.title')}</Link>
-        {trackingAvailable && (
-          <button type="button" className="site-footer__consent" onClick={openConsentSettings}>{t('consent.manage')}</button>
-        )}
       </p>
     </footer>
   );

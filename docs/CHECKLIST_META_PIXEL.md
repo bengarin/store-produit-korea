@@ -13,18 +13,16 @@ depuis l'environnement de développement (domaines de Meta bloqués) : cette che
 - [ ] Produit de test disponible (stock > 0) — **ne pas modifier le stock des produits réels pour le test**.
 - [ ] Prévenir l'équipe : la commande de test sera **annulée** ensuite dans l'admin (nom « Test Pixel »).
 
-## 1. Consentement (avant tout)
+## 1. Chargement du pixel (aucun bandeau de consentement depuis le 05/11/2026)
 
-- [ ] À l'arrivée : bandeau cookies visible ; Pixel Helper : **aucun pixel détecté**.
-- [ ] Cliquer **« Refuser »**, naviguer : toujours **aucun** événement dans Test Events.
-- [ ] Pied de page → « Cookies » → **« Accepter »** : Pixel Helper détecte le pixel `1665012938525216`, **une seule fois**
+- [ ] À l'arrivée sur la boutique : Pixel Helper détecte le pixel `1665012938525216`, **une seule fois**
       (pas d'avertissement « Duplicate Pixel ID » / « pixel chargé plusieurs fois »).
 
 ## 2. Événements à vérifier
 
 | # | Action | Attendu dans Test Events | Paramètres à contrôler |
 |---|--------|--------------------------|------------------------|
-| 1 | Accepter les cookies sur l'accueil | **1 PageView** | — |
+| 1 | Ouvrir l'accueil | **1 PageView** | — |
 | 2 | Cliquer « منتجاتنا / Nos produits », puis une catégorie | **1 PageView par clic** (pas 2) | — |
 | 3 | Ouvrir une fiche produit | 1 PageView + **1 ViewContent** | content_ids = identifiant du produit (ex. `baroness-aloe-vera-gel`), value = prix, currency = **MAD** |
 | 4 | Changer la langue (FR ↔ AR) | **Aucun** nouvel événement | — |
