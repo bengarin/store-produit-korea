@@ -6,7 +6,8 @@
     "Stock : jamais modifié par l'import (un nouveau produit démarre « non renseigné »).",
     "Arabe : lu dans traductions/traductions_ar_6_produits.json, importé seulement si content_status vaut « valide » et si le français traduit correspond à ce fichier ; sinon aucun champ arabe n'est écrit ni effacé.",
     "Avant / Après : aucun visuel importé (images générées, non authentiques).",
-    "Visuels arabes (3 nov. 2026) : langue « ar », affichés sur la version arabe ; la version française garde ses visuels. « active »: false = importé masqué (traduction à corriger)."
+    "Visuels arabes (3 nov. 2026) : langue « ar », affichés sur la version arabe ; la version française garde ses visuels. « active »: false = importé masqué (traduction à corriger).",
+    "Visuels arabes « utilisation » Quret (05/11/2026) : nouvelles versions -utilisation-ar-02 (fournies par la propriétaire) ; anciennes -utilisation-ar-01 conservées et masquées."
   ],
   "products": [
     {
@@ -563,7 +564,15 @@
           "original": "vitamin-collagen-vital-cream/visuels_ar/hf_20261102_143739_87337d4a-57a5-4a18-87a9-1ab69457bf03.png",
           "category": "usage",
           "language": "ar",
-          "alt": "طريقة الاستعمال في 3 خطوات: التنظيف، أخذ كمية صغيرة، التدليك بلطف"
+          "alt": "طريقة الاستعمال في 3 خطوات: التنظيف، أخذ كمية صغيرة، التدليك بلطف",
+          "active": false
+        },
+        {
+          "file": "images/vitamin-collagen-vital-cream/visuels/vitamin-collagen-vital-cream-utilisation-ar-02.webp",
+          "original": "vitamin-collagen-vital-cream/visuels_ar/vitamin-collagen-skincare-routine-1.webp",
+          "category": "usage",
+          "language": "ar",
+          "alt": "طريقة استعمال كريم Vitamin Collagen Vital في 4 خطوات: التنظيف، أخذ كمية صغيرة، التدليك بلطف، ثم النتيجة"
         },
         {
           "file": "images/vitamin-collagen-vital-cream/visuels/vitamin-collagen-vital-cream-presentation-ar-01.webp",
@@ -707,6 +716,14 @@
         {
           "file": "images/vitamin-collagen-vital-eye-cream/visuels/vitamin-collagen-vital-eye-cream-utilisation-ar-01.webp",
           "original": "vitamin-collagen-vital-eye-cream/visuels_ar/hf_20261102_144545_11d62503-75f5-42e6-8e85-4b30c9303979.png",
+          "category": "usage",
+          "language": "ar",
+          "alt": "طريقة الاستعمال في 3 خطوات: بشرة نظيفة وجافة، الوضع بأداة التطبيق، التربيت برفق",
+          "active": false
+        },
+        {
+          "file": "images/vitamin-collagen-vital-eye-cream/visuels/vitamin-collagen-vital-eye-cream-utilisation-ar-02.webp",
+          "original": "vitamin-collagen-vital-eye-cream/visuels_ar/vitamin-eye-cream-skincare-guide-2.webp",
           "category": "usage",
           "language": "ar",
           "alt": "طريقة الاستعمال في 3 خطوات: بشرة نظيفة وجافة، الوضع بأداة التطبيق، التربيت برفق"

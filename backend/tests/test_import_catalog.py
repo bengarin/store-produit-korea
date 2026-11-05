@@ -30,8 +30,8 @@ EXPECTED_MEDIA = {
     "baroness-aloe-vera-gel": (3, 3, 1, 1),
     "some-by-mi-yuja-niacin-cream": (4, 3, 3, 0),
     "biovene-eye-patches": (5, 4, 3, 0),
-    "vitamin-collagen-vital-cream": (2, 4, 3, 0),
-    "vitamin-collagen-vital-eye-cream": (3, 3, 3, 0),
+    "vitamin-collagen-vital-cream": (2, 4, 3, 1),
+    "vitamin-collagen-vital-eye-cream": (3, 3, 3, 1),
     "orjena-power-collagen-emulsion": (3, 4, 3, 1),
 }
 
@@ -104,7 +104,7 @@ def test_import_complet_et_idempotent(db):
         assert p.marketing_images.filter(language="ar", is_active=True).count() == ar, slug
         assert p.marketing_images.filter(language="ar", is_active=False).count() == ar_hidden, slug
         assert all(i.media.file and (settings.MEDIA_ROOT / i.media.file.name).is_file() for i in p.images.all())
-    assert ProductMarketingImage.objects.count() == 39  # 21 FR + 18 AR
+    assert ProductMarketingImage.objects.count() == 41  # 21 FR + 20 AR (dont 4 masqués)
     assert set(Product.objects.values_list("categories__slug", flat=True)) == set(BASE_CATEGORIES)
 
     text = run()  # 2e passage : aucun doublon, rien à modifier

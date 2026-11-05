@@ -93,3 +93,29 @@ Ajoutées : SOME BY MI « Mode d'utilisation » (FR), Baroness « Bienfaits » (
 « Mode d'utilisation » (AR). Écartées : 2 avant/après Biovène (FR et AR). Version française après ajout : Baroness 3
 visuels, SOME BY MI 3, Biovène 4, Vital Cream 4, Eye Cream 3, ORJENA 4.
 
+
+## Quret : nouveaux visuels arabes « Mode d'utilisation » (5 nov. 2026)
+
+Validés par la propriétaire et intégrés à la place des anciens (même position dans l'ordre d'affichage) :
+
+| Produit | Affiché | Ancien (conservé, masqué) |
+|---|---|---|
+| Quret Vital Cream | `vitamin-collagen-vital-cream-utilisation-ar-02.webp` (4 étapes) | `…-utilisation-ar-01.webp` |
+| Quret Eye Cream | `vitamin-collagen-vital-eye-cream-utilisation-ar-02.webp` (3 étapes) | `…-utilisation-ar-01.webp` |
+
+Images reçues en 1254 × 1254 px (au lieu de 1600 px pour les autres visuels).
+
+### ⚠️ À valider par la personne responsable : allégations sur le visuel Vital Cream (4 étapes)
+
+L'image n'a pas été modifiée. Ces mentions ne figurent ni sur l'emballage ni dans la fiche produit :
+
+| Texte sur l'image (arabe) | Sens | Remarque |
+|---|---|---|
+| مكافحة علامات التقدم في السن | Lutte contre les signes de l'âge | Allégation anti-âge, non vérifiée |
+| بمكونات طبيعية وآمنة على البشرة | Ingrédients naturels et sûrs pour la peau | Non vérifiable (liste INCI inconnue) |
+| ترطيب عميق وتغذية مكثفة | Hydratation profonde et nutrition intense | Non indiqué sur l'emballage |
+| مناسب لجميع أنواع البشرة | Convient à tous les types de peau | Non indiqué sur l'emballage de ce produit |
+| بشرة أكثر إشراقًا وشبابًا / استمتعي ببشرة مشرقة | Peau plus éclatante et plus jeune | « Plus jeune » : allégation non vérifiée |
+
+Pour retirer le visuel en attendant : Administration → produit → « Gérer les visuels » → décocher « Afficher sur la
+fiche produit » (et réafficher l'ancien `-ar-01`).

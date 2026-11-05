@@ -503,6 +503,17 @@
   "original_bytes": 6031302,
   "width": 1600
  },
+ "images/vitamin-collagen-vital-cream/visuels/vitamin-collagen-vital-cream-utilisation-ar-02.webp": {
+  "bytes": 126106,
+  "bytes_640": 51838,
+  "file_640": "images/vitamin-collagen-vital-cream/visuels/vitamin-collagen-vital-cream-utilisation-ar-02-640.webp",
+  "height": 1254,
+  "key_sha256": "3ec2eaf7774fbf129bdebed8139c18efe83cb1722b4634d1e0fac00e724a9406",
+  "mode": "conversion",
+  "original": "vitamin-collagen-vital-cream/visuels_ar/vitamin-collagen-skincare-routine-1.webp",
+  "original_bytes": 179692,
+  "width": 1254
+ },
  "images/vitamin-collagen-vital-cream/vitamin-collagen-vital-cream-01-packshot.webp": {
   "bytes": 22276,
   "key_sha256": "e395c5119dd3570c58dc3919ed0abf9dfa46351263c591b0aa4b8e8c6723821b",
@@ -591,6 +602,17 @@
   "original": "vitamin-collagen-vital-eye-cream/visuels_ar/hf_20261102_144545_11d62503-75f5-42e6-8e85-4b30c9303979.png",
   "original_bytes": 6156409,
   "width": 1600
+ },
+ "images/vitamin-collagen-vital-eye-cream/visuels/vitamin-collagen-vital-eye-cream-utilisation-ar-02.webp": {
+  "bytes": 86278,
+  "bytes_640": 34916,
+  "file_640": "images/vitamin-collagen-vital-eye-cream/visuels/vitamin-collagen-vital-eye-cream-utilisation-ar-02-640.webp",
+  "height": 1254,
+  "key_sha256": "cfb07cf5f3dc05b35b3e7a2b879353a23b11b3f9ed6ba9da112d232be10a9e30",
+  "mode": "conversion",
+  "original": "vitamin-collagen-vital-eye-cream/visuels_ar/vitamin-eye-cream-skincare-guide-2.webp",
+  "original_bytes": 127318,
+  "width": 1254
  },
  "images/vitamin-collagen-vital-eye-cream/vitamin-collagen-vital-eye-cream-01-packshot.webp": {
   "bytes": 19442,
