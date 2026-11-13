@@ -28,21 +28,21 @@ export function CategoryChips({ value, onChange, extra = null }) {
 }
 
 /** Grille produits filtrée + ajout au panier avec toast. */
-export default function ProductGrid({ category = 'all', onlyFavorites = false, ids = null, emptyText }) {
-  const { products, inCategory } = useCatalog();
+export default function ProductGrid({ category = 'all', onlyFavorites = false, ids = null, query = '', emptyText }) {
+  const { products, inCategory, searchProducts } = useCatalog();
   const { favorites, toggleFavorite } = useCart();
   const handleAdd = useQuickAdd();
   const { t } = useI18n();
 
   const visible = useMemo(
     () =>
-      products.filter(
+      (query ? searchProducts(query) : products).filter(
         (p) =>
           (category === 'all' || inCategory(p, category)) &&
           (!onlyFavorites || favorites.includes(p.id)) &&
           (!ids || ids.includes(p.id)),
       ),
-    [products, category, onlyFavorites, ids, favorites, inCategory],
+    [products, category, onlyFavorites, ids, query, favorites, inCategory, searchProducts],
   );
 
   return (

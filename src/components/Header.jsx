@@ -4,6 +4,7 @@ import { Menu, ShoppingCart } from 'lucide-react';
 import Logo from './Logo.jsx';
 import MenuDrawer from './MenuDrawer.jsx';
 import CategoriesMenu from './CategoriesMenu.jsx';
+import HeaderSearch from './HeaderSearch.jsx';
 import AnnouncementBar from './AnnouncementBar.jsx';
 import { useCart } from '../context/CartContext.jsx';
 import { useCatalog } from '../context/CatalogContext.jsx';
@@ -45,9 +46,13 @@ export default function Header() {
       <AnnouncementBar />
       <header className="site-header">
         <div className="site-header__inner container">
-          <button className="icon-btn site-header__menu" onClick={() => setMenuOpen(true)} aria-label={t('header.openMenu')} aria-expanded={menuOpen}>
-            <Menu size={22} strokeWidth={1.6} />
-          </button>
+          {/* Mobile : menu + loupe à gauche (logo centré) ; ordinateur : loupe à droite, avant la langue. */}
+          <div className="site-header__start">
+            <button className="icon-btn site-header__menu" onClick={() => setMenuOpen(true)} aria-label={t('header.openMenu')} aria-expanded={menuOpen}>
+              <Menu size={22} strokeWidth={1.6} />
+            </button>
+            <HeaderSearch placement="start" />
+          </div>
           <Logo />
           <nav className="site-nav" aria-label={t('header.mainNav')}>
             {links.map(({ label, link }, i) => (
@@ -58,6 +63,7 @@ export default function Header() {
             ))}
           </nav>
           <div className="site-header__actions">
+            <HeaderSearch placement="end" />
             <LanguageSwitcher />
             <CartButton count={count} />
           </div>

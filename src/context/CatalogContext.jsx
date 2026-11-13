@@ -4,6 +4,7 @@ import { fetchProducts, LOCAL_CATALOG, localizeCategory, localizeProduct } from 
 import { useI18n } from '../i18n/I18nContext.jsx';
 import { fetchCategories } from '../services/categoryService.js';
 import { fetchStoreConfig } from '../services/configService.js';
+import { indexProduct, searchEntries } from '../utils/search.js';
 import { LOCAL_CATEGORIES } from '../data/local/categories.js';
 import { STORE_CONFIG } from '../config/store.js';
 
@@ -43,8 +44,19 @@ export function CatalogProvider({ children }) {
   const products = useMemo(() => state.products.map((p) => localizeProduct(p, lang)), [state.products, lang]);
   const categories = useMemo(() => state.categories.map((c) => localizeCategory(c, lang)), [state.categories, lang]);
 
+  // Index de recherche : textes français et arabes du produit + libellés de ses catégories (toutes langues).
+  const searchIndex = useMemo(() => {
+    const catLabels = new Map(state.categories.map((c) => [c.id, [c.label, ...Object.values(c.translations || {}).map((t) => t?.label)]]));
+    const parentOf = new Map(state.categories.filter((c) => c.parent).map((c) => [c.id, c.parent]));
+    return state.products.map((raw) => {
+      const ids = new Set(raw.categories.flatMap((id) => [id, parentOf.get(id)]).filter(Boolean));
+      return { id: raw.id, index: indexProduct(raw, [...ids].flatMap((id) => catLabels.get(id) || [])) };
+    });
+  }, [state.products, state.categories]);
+
   const value = useMemo(() => {
     const byId = new Map(products.map((p) => [p.id, p]));
+    const entries = searchIndex.map((e) => ({ product: byId.get(e.id), index: e.index })).filter((e) => e.product);
     const labels = Object.fromEntries(categories.map((c) => [c.id, c.label]));
     const tree = buildCategoryTree(categories);
     const parentOf = Object.fromEntries(categories.filter((c) => c.parent).map((c) => [c.id, c.parent]));
@@ -58,6 +70,8 @@ export function CatalogProvider({ children }) {
       allCategories: categories,
       retry,
       getProductById: (id) => byId.get(id),
+      /** Produits correspondant à une recherche (FR ou AR), les plus pertinents d'abord. */
+      searchProducts: (query) => searchEntries(entries, query),
       categoryLabel: (id) => labels[id] || id,
       /** Catégorie principale d'une catégorie ou sous-catégorie (elle-même si principale). */
       topCategory: (id) => parentOf[id] || id,
@@ -67,7 +81,7 @@ export function CatalogProvider({ children }) {
         return product.categories.some((c) => family.has(c));
       },
     };
-  }, [state, products, categories, retry]);
+  }, [state, products, categories, searchIndex, retry]);
 
   return <CatalogContext.Provider value={value}>{children}</CatalogContext.Provider>;
 }
