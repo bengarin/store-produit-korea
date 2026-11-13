@@ -8,7 +8,7 @@ Format PUBLIC d'un produit : identique à celui du catalogue local du front
 
 from decimal import Decimal
 
-from django.db.models import Prefetch
+from django.db.models import Prefetch, Q
 
 from .models import Category, Product, ProductCategory, ProductImage, ProductMarketingImage, ProductOption, Variant
 
@@ -31,6 +31,23 @@ def image_payload(image: ProductImage | None, position: str = ""):
     return data
 
 
+# Catégorie visible = active ET (catégorie principale OU parente active) : masquer une catégorie masque
+# aussi ses sous-catégories dans le menu et les filtres. Les produits restent dans l'administration.
+VISIBLE_CATEGORY = Q(is_active=True) & (Q(parent__isnull=True) | Q(parent__is_active=True))
+VISIBLE_LINK = Q(category__is_active=True) & (Q(category__parent__isnull=True) | Q(category__parent__is_active=True))
+
+
+def visible_categories():
+    """Catégories du menu, dans l'ordre : chaque catégorie principale puis ses sous-catégories."""
+    rows = list(Category.objects.filter(VISIBLE_CATEGORY).select_related("parent"))
+    tops = [c for c in rows if c.parent_id is None]
+    ordered = []
+    for top in tops:
+        ordered.append(top)
+        ordered += [c for c in rows if c.parent_id == top.pk]
+    return ordered
+
+
 def public_products_queryset(statuses=(Product.Status.ACTIVE,)):
     """Produits au format public. `statuses` élargi uniquement pour l'aperçu de l'administration."""
     return (
@@ -39,7 +56,7 @@ def public_products_queryset(statuses=(Product.Status.ACTIVE,)):
         .prefetch_related(
             Prefetch(
                 "category_links",
-                queryset=ProductCategory.objects.filter(category__is_active=True).select_related("category"),
+                queryset=ProductCategory.objects.filter(VISIBLE_LINK).select_related("category"),
             ),
             "highlights",
             Prefetch("images", queryset=ProductImage.objects.filter(in_gallery=True).select_related("media")),
@@ -180,6 +197,8 @@ def arabic_payload(product: Product) -> dict:
 
 def category_payload(category: Category) -> dict:
     payload = {"id": category.slug, "label": category.name}
+    if category.parent_id:
+        payload["parent"] = category.parent.slug  # sous-catégorie : rangée sous sa catégorie dans le menu
     if category.name_ar:
         payload["translations"] = {"ar": {"label": category.name_ar}}
     return payload

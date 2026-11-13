@@ -9,6 +9,7 @@ OWN, A, M, E, N = Role.OWNER, Role.ADMIN, Role.ORDER_MANAGER, Role.CONTENT_EDITO
 READ = {OWN, A, M, E, N}
 WRITE = {OWN, A, E}
 DELETE = {OWN, A}
+CATEGORY = {OWN, A}  # menu Catégories : réservé aux administrateurs
 
 
 def expected(role, allowed, ok):
@@ -42,11 +43,12 @@ def test_creation_et_modification(staff, product, role):
         (api.patch(f"/api/v1/admin/products/{p.pk}", {"cardLine": "x"}, format="json"), 200),
         (api.post(f"/api/v1/admin/products/{p.pk}/status", {"status": "active"}, format="json"), 200),
         (api.patch(f"/api/v1/admin/variants/{variant.pk}", {"lowStockThreshold": 3}, format="json"), 200),
-        (api.post("/api/v1/admin/categories", {"name": f"Cat {role}"}, format="json"), 201),
         (api.post("/api/v1/admin/media", {"file": upload()}, format="multipart"), 201),
     ]
     for response, ok in checks:
         assert response.status_code == expected(role, WRITE, ok), response.content
+    created = api.post("/api/v1/admin/categories", {"name": f"Cat {role}"}, format="json")
+    assert created.status_code == expected(role, CATEGORY, 201), created.content
 
 
 @pytest.mark.django_db
@@ -56,7 +58,7 @@ def test_suppression(staff, product, category, role):
     empty = category(slug="vide", name="Vide")
     api = staff(role)
     assert api.delete(f"/api/v1/admin/products/{p.pk}").status_code == expected(role, DELETE, 204)
-    assert api.delete(f"/api/v1/admin/categories/{empty.pk}").status_code == expected(role, DELETE, 204)
+    assert api.delete(f"/api/v1/admin/categories/{empty.pk}").status_code == expected(role, CATEGORY, 204)
 
 
 @pytest.mark.django_db

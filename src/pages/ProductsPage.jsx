@@ -9,11 +9,15 @@ import { useI18n } from '../i18n/I18nContext.jsx';
 
 export default function ProductsPage() {
   const [params, setParams] = useSearchParams();
-  const { products } = useCatalog();
+  const { products, categoryTree, topCategory } = useCatalog();
   const { t, tc } = useI18n();
   const category = params.get('categorie') || 'all';
   const onlyFavorites = params.get('favoris') === '1';
   const ingredient = getIngredientById(params.get('ingredient'));
+
+  // Catégorie choisie (ou parente de la sous-catégorie choisie) : ses sous-catégories en 2e ligne de filtres.
+  const parent = category === 'all' ? null : categoryTree.find((c) => c.id === topCategory(category));
+  const subcategories = parent?.children || [];
 
   const selectCategory = (id) => {
     const next = new URLSearchParams(params);
@@ -37,10 +41,20 @@ export default function ProductsPage() {
                 : t('products.intro', { count: products.length })}
           </p>
           <CategoryChips
-            value={category}
+            value={category === 'all' ? 'all' : topCategory(category)}
             onChange={selectCategory}
             extra={(onlyFavorites || ingredient) && <Link className="chip chip--link" to="/produits">{t('products.all')}</Link>}
           />
+          {subcategories.length > 0 && (
+            <div className="chips chips--sub" role="group" aria-label={t('nav.toggleSub', { label: tc(parent.label) })}>
+              {[{ id: parent.id, label: t('nav.allInCategory', { label: tc(parent.label) }) }, ...subcategories.map((c) => ({ ...c, label: tc(c.label) }))].map((c) => (
+                <button key={c.id} type="button" className={`chip chip--sub ${category === c.id ? 'is-active' : ''}`}
+                  aria-pressed={category === c.id} onClick={() => selectCategory(c.id)}>
+                  {c.label}
+                </button>
+              ))}
+            </div>
+          )}
         </header>
         <ProductGrid
           category={category}

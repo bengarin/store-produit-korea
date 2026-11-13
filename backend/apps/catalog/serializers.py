@@ -88,6 +88,13 @@ class CategorySerializer(serializers.ModelSerializer):
             if self.instance is not None and node.pk == self.instance.pk:
                 raise serializers.ValidationError("Une catégorie ne peut pas être sa propre parente.")
             node = node.parent
+        # Menu à 2 niveaux : catégorie → sous-catégories (pas de sous-sous-catégorie).
+        if parent is not None and parent.parent_id is not None:
+            raise serializers.ValidationError("Choisissez une catégorie principale (pas une sous-catégorie).")
+        if parent is not None and self.instance is not None and self.instance.children.exists():
+            raise serializers.ValidationError(
+                "Cette catégorie a des sous-catégories : elle doit rester une catégorie principale."
+            )
         return parent
 
     def create(self, validated_data):

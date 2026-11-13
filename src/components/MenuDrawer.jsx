@@ -1,7 +1,7 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
-import { NavLink } from 'react-router-dom';
-import { X, Home, Store, Heart, ShoppingCart } from 'lucide-react';
+import { Link, NavLink } from 'react-router-dom';
+import { X, Home, Store, Heart, ShoppingCart, ChevronDown } from 'lucide-react';
 import Logo from './Logo.jsx';
 import { useCatalog } from '../context/CatalogContext.jsx';
 import { ORDERS_ARE_SIMULATED } from '../services/orderService.js';
@@ -15,7 +15,7 @@ const BUILT_IN = new Set(['/', '/produits', '/produits?favoris=1', '/panier']);
 
 export default function MenuDrawer({ open, onClose }) {
   const { count, favorites } = useCart();
-  const { categories } = useCatalog();
+  const { categoryTree } = useCatalog();
   const { theme } = useTheme();
   const { t, tc } = useI18n();
   const extra = theme.header.items.filter((l) => !BUILT_IN.has(l.link));
@@ -45,12 +45,11 @@ export default function MenuDrawer({ open, onClose }) {
         </div>
         <ul className="drawer__links" onClick={onClose}>
           <li><NavLink to="/" end><Home size={18} /> {t('nav.home')}</NavLink></li>
-          <li><NavLink to="/produits" end><Store size={18} /> {t('nav.products')}</NavLink></li>
-          {categories.map((c) => (
-            <li key={c.id} className="drawer__sub">
-              <NavLink to={`/produits?categorie=${c.id}`}>{tc(c.label)}</NavLink>
-            </li>
-          ))}
+          {categoryTree.length ? (
+            <CategoryAccordion tree={categoryTree} />
+          ) : (
+            <li><NavLink to="/produits" end><Store size={18} /> {t('nav.products')}</NavLink></li>
+          )}
           {extra.map(({ label, link }, i) => (
             <li key={`${i}-${link}`}><NavLink to={link}>{tc(label)}</NavLink></li>
           ))}
@@ -62,5 +61,57 @@ export default function MenuDrawer({ open, onClose }) {
       </nav>
     </div>,
     document.body,
+  );
+}
+
+/**
+ * « Catégories » (mobile) : s'ouvre au toucher ; chaque catégorie mène à ses produits, la flèche affiche
+ * ses sous-catégories. Les boutons n'ont pas d'effet sur la fermeture du menu (seuls les liens le ferment).
+ */
+function CategoryAccordion({ tree }) {
+  const { t, tc } = useI18n();
+  const [open, setOpen] = useState(false);
+  const [expanded, setExpanded] = useState(null);
+  const keep = (fn) => (e) => {
+    e.stopPropagation();
+    fn();
+  };
+  return (
+    <li className="drawer__group">
+      <button type="button" className={`drawer__toggle ${open ? 'is-open' : ''}`} aria-expanded={open}
+        onClick={keep(() => setOpen((v) => !v))}>
+        <Store size={18} /> <span>{t('nav.categories')}</span>
+        <ChevronDown size={18} aria-hidden="true" className="drawer__chevron" />
+      </button>
+      {open && (
+        <ul className="drawer__cats">
+          <li><Link to="/produits" end>{t('nav.allProducts')}</Link></li>
+          {tree.map((cat) => {
+            const isOpen = expanded === cat.id;
+            const label = tc(cat.label);
+            return (
+              <li key={cat.id} className="drawer__cat">
+                <div className="drawer__cat-row">
+                  <Link to={`/produits?categorie=${encodeURIComponent(cat.id)}`}>{label}</Link>
+                  {cat.children.length > 0 && (
+                    <button type="button" className={`drawer__cat-toggle ${isOpen ? 'is-open' : ''}`} aria-expanded={isOpen}
+                      aria-label={t('nav.toggleSub', { label })} onClick={keep(() => setExpanded(isOpen ? null : cat.id))}>
+                      <ChevronDown size={18} aria-hidden="true" />
+                    </button>
+                  )}
+                </div>
+                {isOpen && (
+                  <ul className="drawer__subs">
+                    {cat.children.map((sub) => (
+                      <li key={sub.id}><Link to={`/produits?categorie=${encodeURIComponent(sub.id)}`}>{tc(sub.label)}</Link></li>
+                    ))}
+                  </ul>
+                )}
+              </li>
+            );
+          })}
+        </ul>
+      )}
+    </li>
   );
 }

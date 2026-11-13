@@ -3,8 +3,10 @@ import { Link, useLocation } from 'react-router-dom';
 import { Menu, ShoppingCart } from 'lucide-react';
 import Logo from './Logo.jsx';
 import MenuDrawer from './MenuDrawer.jsx';
+import CategoriesMenu from './CategoriesMenu.jsx';
 import AnnouncementBar from './AnnouncementBar.jsx';
 import { useCart } from '../context/CartContext.jsx';
+import { useCatalog } from '../context/CatalogContext.jsx';
 import { useTheme } from '../theme/ThemeContext.jsx';
 import { useI18n } from '../i18n/I18nContext.jsx';
 import LanguageSwitcher from './LanguageSwitcher.jsx';
@@ -25,6 +27,8 @@ function activeLink(links, pathname, search) {
   return matches.sort((a, b) => b.length - a.length)[0];
 }
 
+const CATALOG_LINK = '/produits';
+
 export default function Header() {
   const { count } = useCart();
   const { theme } = useTheme();
@@ -32,6 +36,8 @@ export default function Header() {
   const [menuOpen, setMenuOpen] = useState(false);
   const { pathname, search } = useLocation();
   const links = theme.header.items;
+  const { categoryTree } = useCatalog();
+  const hasCategories = categoryTree.length > 0;
   const active = activeLink(links.map((l) => l.link), pathname, search);
 
   return (
@@ -45,7 +51,10 @@ export default function Header() {
           <Logo />
           <nav className="site-nav" aria-label={t('header.mainNav')}>
             {links.map(({ label, link }, i) => (
-              <Link key={`${i}-${link}`} to={link} aria-current={link === active ? 'page' : undefined} className={link === active ? 'active' : ''}>{tc(label)}</Link>
+              // Le lien du catalogue (« Nos produits ») devient le menu « Catégories » (Admin → Catégories).
+              link === CATALOG_LINK && hasCategories
+                ? <CategoriesMenu key={`${i}-${link}`} active={link === active} />
+                : <Link key={`${i}-${link}`} to={link} aria-current={link === active ? 'page' : undefined} className={link === active ? 'active' : ''}>{tc(label)}</Link>
             ))}
           </nav>
           <div className="site-header__actions">

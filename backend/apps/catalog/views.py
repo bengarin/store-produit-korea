@@ -11,7 +11,7 @@ from apps.core.http import Conflict
 
 from . import public, services
 from .models import Category, Product, ProductCategory, ProductImage, ProductMarketingImage, Variant
-from .permissions import CATALOG_PERMISSION
+from .permissions import CATALOG_PERMISSION, CATEGORY_PERMISSION
 from .serializers import (
     CategorySerializer,
     MarketingImageSerializer,
@@ -43,13 +43,13 @@ class PublicProductDetailView(PublicView):
 
 class PublicCategoryListView(PublicView):
     def get(self, request):
-        return Response({"items": [public.category_payload(c) for c in Category.objects.filter(is_active=True)]})
+        return Response({"items": [public.category_payload(c) for c in public.visible_categories()]})
 
 
 # =============================== API ADMIN ================================
 class CategoryListCreateView(generics.ListCreateAPIView):
     serializer_class = CategorySerializer
-    permission_classes = [CATALOG_PERMISSION]
+    permission_classes = [CATEGORY_PERMISSION]
     pagination_class = None  # quelques catégories : liste complète
 
     def get_queryset(self):
@@ -68,7 +68,7 @@ class CategoryListCreateView(generics.ListCreateAPIView):
 
 class CategoryDetailView(generics.RetrieveUpdateDestroyAPIView):
     serializer_class = CategorySerializer
-    permission_classes = [CATALOG_PERMISSION]
+    permission_classes = [CATEGORY_PERMISSION]
     http_method_names = ["get", "patch", "delete"]
 
     def get_queryset(self):
@@ -81,6 +81,11 @@ class CategoryDetailView(generics.RetrieveUpdateDestroyAPIView):
         log_action("category.update", actor=self.request.user, target=category, changes=changes, request=self.request)
 
     def perform_destroy(self, category):
+        if category.children.exists():
+            raise Conflict(
+                "Cette catégorie contient des sous-catégories : déplacez-les ou supprimez-les d'abord.",
+                "category_has_children",
+            )
         try:
             with transaction.atomic():
                 snapshot = {"slug": category.slug, "name": category.name}
@@ -103,7 +108,7 @@ class ReorderSerializer(serializers.Serializer):
 
 
 class CategoryReorderView(APIView):
-    permission_classes = [CATALOG_PERMISSION]
+    permission_classes = [CATEGORY_PERMISSION]
 
     @transaction.atomic
     def post(self, request):
@@ -116,6 +121,63 @@ class CategoryReorderView(APIView):
             Category.objects.filter(pk=pk).update(position=position)
         log_action("category.reorder", actor=request.user, changes={"order": ids}, request=request)
         return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+class CategoryProductsSerializer(serializers.Serializer):
+    productIds = serializers.ListField(child=serializers.IntegerField(min_value=1), allow_empty=True, max_length=2000)
+
+
+class CategoryProductsView(APIView):
+    """Produits rattachés à une catégorie : GET = liste des ids ; PUT = remplace la liste (ajouts / retraits).
+
+    Seuls les liens de CETTE catégorie changent : les autres catégories des produits, leurs prix, stocks et
+    statuts ne sont jamais touchés. Un produit en ligne garde au moins une catégorie (règle de publication).
+    """
+
+    permission_classes = [CATEGORY_PERMISSION]
+
+    def get(self, request, pk):
+        category = get_object_or_404(Category, pk=pk)
+        ids = list(category.product_links.order_by("product_id").values_list("product_id", flat=True))
+        return Response({"productIds": ids})
+
+    @transaction.atomic
+    def put(self, request, pk):
+        category = get_object_or_404(Category.objects.select_for_update(), pk=pk)
+        data = CategoryProductsSerializer(data=request.data)
+        data.is_valid(raise_exception=True)
+        wanted = set(data.validated_data["productIds"])
+        unknown = wanted - set(Product.objects.filter(pk__in=wanted).values_list("pk", flat=True))
+        if unknown:
+            raise serializers.ValidationError({"productIds": [f"Produit introuvable : {sorted(unknown)}."]})
+        current = set(category.product_links.values_list("product_id", flat=True))
+        removed, added = current - wanted, wanted - current
+        orphans = list(
+            Product.objects.filter(pk__in=removed, status=Product.Status.ACTIVE)
+            .annotate(n=Count("category_links"))
+            .filter(n__lte=1)
+            .values_list("display_name", "name")
+        )
+        if orphans:
+            names = ", ".join(d or n for d, n in orphans)
+            raise Conflict(
+                f"Un produit en ligne doit garder au moins une catégorie : {names}.", "product_needs_category"
+            )
+        ProductCategory.objects.filter(category=category, product_id__in=removed).delete()
+        for product_id in sorted(added):
+            last = ProductCategory.objects.filter(product_id=product_id).order_by("-position").first()
+            ProductCategory.objects.create(
+                product_id=product_id, category=category, position=(last.position + 1) if last else 0
+            )
+        if added or removed:
+            log_action(
+                "category.products",
+                actor=request.user,
+                target=category,
+                changes={"added": sorted(added), "removed": sorted(removed)},
+                request=request,
+            )
+        return Response({"productIds": sorted(wanted)})
 
 
 def admin_products_queryset():

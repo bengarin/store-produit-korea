@@ -20,6 +20,8 @@ const RULES = {
   viewProducts: [OWNER, ADMIN, ORDERS, EDITOR, ANALYST],
   editProducts: [OWNER, ADMIN, EDITOR],
   deleteProducts: [OWNER, ADMIN],
+  // Menu « Catégories » de la boutique : réservé aux administrateurs.
+  manageCategories: [OWNER, ADMIN],
   editCost: [OWNER, ADMIN],
   editSettings: [OWNER, ADMIN],
   // Phase 6 : thème. Lecture : toute l'équipe ; brouillon : + Éditeur ; publier / restaurer : Propriétaire, Admin.

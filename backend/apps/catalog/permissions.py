@@ -11,6 +11,10 @@ COST_EDIT = frozenset({Role.OWNER, Role.ADMIN})
 
 # Lecture : toute l'équipe · écriture : Propriétaire, Admin, Éditeur · suppression : Propriétaire, Admin
 CATALOG_PERMISSION = ReadWriteRoles.of(read=ALL_ROLES, write=CATALOG_WRITE, delete=CATALOG_DELETE)
+# Catégories et sous-catégories (menu de la boutique) : lecture par toute l'équipe (formulaire produit),
+# création / modification / ordre / masquage / suppression par Propriétaire et Admin uniquement.
+CATEGORY_WRITE = frozenset({Role.OWNER, Role.ADMIN})
+CATEGORY_PERMISSION = ReadWriteRoles.of(read=ALL_ROLES, write=CATEGORY_WRITE, delete=CATEGORY_WRITE)
 
 # --- Phase 2 -------------------------------------------------------------
 _OPS_READ = frozenset({Role.OWNER, Role.ADMIN, Role.ORDER_MANAGER, Role.ANALYST})

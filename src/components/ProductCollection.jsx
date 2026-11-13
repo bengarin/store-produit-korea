@@ -8,11 +8,11 @@ import { useI18n } from '../i18n/I18nContext.jsx';
 
 /** Collection de produits (carrousel) : tout le catalogue ou une catégorie. {nombre} = nombre de produits. */
 export default function ProductCollection({ section }) {
-  const { products } = useCatalog();
+  const { products, inCategory } = useCatalog();
   const { t, tc } = useI18n();
   const { category } = section.settings;
   const [eyebrow, heading, intro, viewAllLabel] = ['eyebrow', 'heading', 'intro', 'viewAllLabel'].map((k) => tc(section.settings[k]));
-  const list = category ? products.filter((p) => p.categories.includes(category)) : products;
+  const list = category ? products.filter((p) => inCategory(p, category)) : products;
   if (!list.length) return null;
   const titleId = `${section.id}-title`;
   return (

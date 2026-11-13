@@ -10,7 +10,7 @@ import { useI18n } from '../i18n/I18nContext.jsx';
 
 // `linked` : toute la carte mène à la fiche (le nom du produit couvre la carte ; favoris et panier restent au-dessus).
 function ProductCard({ product, index = 0, isFavorite, onToggleFavorite, onAdd, animate = true, variant = 'default', linked = false }) {
-  const { categoryLabel } = useCatalog();
+  const { categoryLabel, topCategory } = useCatalog();
   const { t, tc, autoDir } = useI18n();
   const scene = variant === 'scene';
   const url = `/produits/${product.id}`;
@@ -47,7 +47,7 @@ function ProductCard({ product, index = 0, isFavorite, onToggleFavorite, onAdd, 
       >
         <Heart size={19} strokeWidth={1.6} />
       </button>
-      <span className="product-card__badge"><Leaf size={13} aria-hidden="true" />{product.categories.map((c) => tc(categoryLabel(c))).join(' · ')}</span>
+      <span className="product-card__badge"><Leaf size={13} aria-hidden="true" />{[...new Set(product.categories.map(topCategory))].map((c) => tc(categoryLabel(c))).join(' · ')}</span>
       <Link to={url} className="product-card__media" tabIndex={-1} aria-hidden="true">
         <ProductImage image={scene ? product.image : product.cardImage} />
         {scene && product.hoverImage && (

@@ -21,6 +21,7 @@ const ProductNewPage = lazy(() => import('./pages/ProductNewPage.jsx'));
 const ProductEditPage = lazy(() => import('./pages/ProductEditPage.jsx'));
 const ProductPreviewPage = lazy(() => import('./pages/ProductPreviewPage.jsx'));
 const MarketingPage = lazy(() => import('./pages/MarketingPage.jsx'));
+const CategoriesPage = lazy(() => import('./pages/CategoriesPage.jsx'));
 const ProductMarketingPage = lazy(() => import('./pages/ProductMarketingPage.jsx'));
 const ThemeEditorPage = lazy(() => import('./pages/ThemeEditorPage.jsx'));
 
@@ -82,6 +83,7 @@ function AdminShellRoutes() {
         <Route path="products/:id" element={<Allow perm="viewProducts"><ProductEditPage /></Allow>} />
         <Route path="products/:id/marketing" element={<Allow perm="viewProducts"><ProductMarketingPage /></Allow>} />
         <Route path="marketing" element={<Allow perm="viewProducts"><MarketingPage /></Allow>} />
+        <Route path="categories" element={<Allow perm="manageCategories"><CategoriesPage /></Allow>} />
         <Route path="*" element={<Home />} />
       </Route>
     </Routes>

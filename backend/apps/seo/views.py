@@ -123,7 +123,7 @@ def products(request):
             request, title=f"Mes favoris — {settings.SITE_NAME}", description=DEFAULT_DESCRIPTION, noindex=True
         )
     slug = request.GET.get("categorie")
-    category = Category.objects.filter(slug=slug, is_active=True).first() if slug else None
+    category = Category.objects.filter(public.VISIBLE_CATEGORY, slug=slug).first() if slug else None
     if slug and not category:
         return render(
             request,
@@ -255,7 +255,9 @@ def robots_txt(request):
 def sitemap_xml(request):
     base = site_url(request)
     urls = [(f"{base}/", None, []), (f"{base}/produits", None, [])]
-    for c in Category.objects.filter(is_active=True, product_links__product__status=Product.Status.ACTIVE).distinct():
+    for c in Category.objects.filter(
+        public.VISIBLE_CATEGORY, product_links__product__status=Product.Status.ACTIVE
+    ).distinct():
         urls.append((f"{base}/produits?categorie={c.slug}", None, []))
     for p in public.public_products_queryset():
         payload = public.product_payload(p)

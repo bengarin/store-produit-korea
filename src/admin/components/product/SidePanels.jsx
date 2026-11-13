@@ -1,6 +1,8 @@
 import { useState } from 'react';
 import { AlertTriangle, ArrowDown, ArrowUp, Archive, CheckCircle2, Eye, Plus, RotateCcw, Zap } from 'lucide-react';
 import { admin } from '../../api.js';
+import { useAuth } from '../../auth.jsx';
+import { can } from '../../permissions.js';
 import ConfirmDialog from '../ConfirmDialog.jsx';
 import { Badge, Button, Card } from '../ui.jsx';
 import { PRODUCT_STATUS } from '../../format.js';
@@ -63,8 +65,21 @@ export function StatusCard({ product, editable, dirty, onChanged, onPreview, toa
 export function CategoriesCard({ categories, value, onChange, editable, onCreated, toast }) {
   const [name, setName] = useState('');
   const [busy, setBusy] = useState(false);
-  const selected = value.map((id) => categories.find((c) => c.id === id)).filter(Boolean);
-  const others = categories.filter((c) => !value.includes(c.id));
+  const { user } = useAuth();
+  const canCreate = can(user, 'manageCategories'); // création réservée aux administrateurs (Admin → Catégories)
+  // Sous-catégorie affichée « Catégorie › Sous-catégorie » ; liste dans l'ordre du menu.
+  const byId = new Map(categories.map((c) => [c.id, c]));
+  const label = (c) => (c.parentId && byId.get(c.parentId) ? `${byId.get(c.parentId).name} › ${c.name}` : c.name);
+  const rank = (c) => {
+    const top = c.parentId ? byId.get(c.parentId) : c;
+    return [top?.position ?? 0, top?.id ?? 0, c.parentId ? 1 : 0, c.position, c.id];
+  };
+  const ordered = [...categories].sort((a, b) => {
+    const [x, y] = [rank(a), rank(b)];
+    return x.reduce((acc, v, i) => acc || v - y[i], 0);
+  });
+  const selected = value.map((id) => byId.get(id)).filter(Boolean);
+  const others = ordered.filter((c) => !value.includes(c.id));
   const move = (i, d) => {
     const next = [...value];
     [next[i], next[i + d]] = [next[i + d], next[i]];
@@ -91,7 +106,7 @@ export function CategoriesCard({ categories, value, onChange, editable, onCreate
       <ol className="adm-cat-list">
         {selected.map((c, i) => (
           <li key={c.id}>
-            <span>{c.name} {i === 0 && <Badge tone="success">Principale</Badge>}</span>
+            <span>{label(c)} {i === 0 && <Badge tone="success">Principale</Badge>}</span>
             {editable && (
               <span className="adm-cat-list__tools">
                 <button type="button" aria-label={`Monter ${c.name}`} disabled={i === 0} onClick={() => move(i, -1)}><ArrowUp size={14} /></button>
@@ -105,10 +120,10 @@ export function CategoriesCard({ categories, value, onChange, editable, onCreate
       {editable && others.length > 0 && (
         <select className="adm-input adm-mt" value="" aria-label="Ajouter une catégorie" onChange={(e) => e.target.value && onChange([...value, Number(e.target.value)])}>
           <option value="">+ Ajouter une catégorie…</option>
-          {others.map((c) => <option key={c.id} value={c.id}>{c.name}{c.isActive ? '' : ' (masquée)'}</option>)}
+          {others.map((c) => <option key={c.id} value={c.id}>{label(c)}{c.isActive ? '' : ' (masquée)'}</option>)}
         </select>
       )}
-      {editable && (
+      {editable && canCreate && (
         <div className="adm-inline-create">
           <input className="adm-input" placeholder="Nouvelle catégorie" maxLength={100} value={name} aria-label="Nom de la nouvelle catégorie"
             onChange={(e) => setName(e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); create(); } }} />

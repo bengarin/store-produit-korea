@@ -51,7 +51,26 @@ def test_migration_des_categories_rejouable_sans_doublon():
     assert Category.objects.get(slug="eclat").name == "Éclat (renommée dans l'admin)"  # jamais écrasée
 
 
+# Base des tests : le catalogue SANS traductions validées (copie du fichier de traductions, statuts
+# « proposition »), pour ne pas dépendre du statut réel du fichier (« valide » depuis le 05/11/2026).
+_BASE_TRAD = {}
+
+
+@pytest.fixture(autouse=True)
+def _base_traductions(tmp_path_factory):
+    if "path" not in _BASE_TRAD:
+        data = json.loads(TRANSLATIONS.read_text(encoding="utf-8"))
+        for row in data["produits"]:
+            row["content_status"] = "proposition"
+        path = tmp_path_factory.mktemp("trad") / "traductions_proposition.json"
+        path.write_text(json.dumps(data, ensure_ascii=False), encoding="utf-8")
+        _BASE_TRAD["path"] = str(path)
+
+
 def run(*args):
+    """Lance l'import ; sans --traductions, avec la copie « proposition » (catalogue de base seul)."""
+    if "--traductions" not in args:
+        args = ("--traductions", _BASE_TRAD["path"], *args)
     out = StringIO()
     call_command("import_catalog", *args, stdout=out)
     return out.getvalue()
@@ -341,3 +360,15 @@ def test_base_existante_textes_marketing_appliques_sans_doublon(tmp_path):
     before = snapshot()
     text = run("--traductions", path)  # 2e passage : aucune écriture
     assert snapshot() == before and "| IMPORTÉ |" not in text
+
+
+@pytest.mark.django_db
+def test_fichier_reel_six_produits_valides_en_apercu():
+    """Le fichier de traductions du dépôt (6 statuts « valide ») est importable ; l'aperçu n'écrit rien."""
+    run()
+    before = snapshot()
+    out = StringIO()
+    call_command("import_catalog", "--dry-run", stdout=out)  # fichier réel, sans --traductions
+    text = out.getvalue()
+    assert snapshot() == before
+    assert text.count("| validée |") == 6 and "| IMPORTÉ |" in text and "CONFLIT :" not in text
