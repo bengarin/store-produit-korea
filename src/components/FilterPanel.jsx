@@ -58,7 +58,11 @@ export default function FilterPanel({ state, onChange, bounds, counts, categoryC
             <span className="filter-option__label">{t('grid.all')}</span>
             <span className="filter-option__count">{categoryCounts.all ?? 0}</span>
           </label>
-          {categoryTree.map((cat) => [categoryRow(cat), ...cat.children.map((c) => categoryRow(c, true))])}
+          {/* Sous-catégories : affichées seulement sous la catégorie choisie (liste courte et lisible). */}
+          {categoryTree.map((cat) => {
+            const open = state.category === cat.id || cat.children.some((c) => c.id === state.category);
+            return [categoryRow(cat), ...(open ? cat.children.map((c) => categoryRow(c, true)) : [])];
+          })}
         </Section>
       )}
       {bounds.max > 0 && (
@@ -71,7 +75,7 @@ export default function FilterPanel({ state, onChange, bounds, counts, categoryC
       {filterGroups.map((g, i) => {
         const selected = state.options[g.id] || [];
         return (
-          <Section key={g.id} title={tc(g.label)} badge={selected.length} defaultOpen={i < 2 || selected.length > 0}>
+          <Section key={g.id} title={tc(g.label)} badge={selected.length} defaultOpen={i < 1 || selected.length > 0}>
             {g.options.map((o) => {
               const count = counts[`${g.id}:${o.id}`] ?? 0;
               const checked = selected.includes(o.id);

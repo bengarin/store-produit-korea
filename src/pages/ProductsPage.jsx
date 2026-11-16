@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
-import { SlidersHorizontal, X } from 'lucide-react';
+import { Heart, SlidersHorizontal, X } from 'lucide-react';
 import Header from '../components/Header.jsx';
 import SiteFooter from '../components/SiteFooter.jsx';
 import ProductGrid from '../components/ProductGrid.jsx';
@@ -30,6 +30,8 @@ export default function ProductsPage() {
 
   const onlyFavorites = params.get('favoris') === '1';
   const ingredient = getIngredientById(params.get('ingredient'));
+  // Listes « sélection » (favoris, ingrédient à l'honneur) : produits seuls, sans filtres ni tri.
+  const curated = onlyFavorites || Boolean(ingredient);
   const query = (params.get('q') || '').trim();
   // Filtres affichés immédiatement (état local), puis recopiés dans l'adresse (partage, retour arrière).
   const filtersKey = params.toString();
@@ -128,14 +130,18 @@ export default function ProductsPage() {
               : ingredient ? tc(ingredient.description)
               : t('products.intro', { count: products.length })}
           </p>
-          {(onlyFavorites || ingredient) && <Link className="chip chip--link" to="/produits">{t('products.all')}</Link>}
         </header>
 
+        {curated ? (
+          <CuratedList items={pool} onlyFavorites={onlyFavorites} />
+        ) : (
         <div className="collection">
           <aside className="collection__sidebar" aria-label={t('filters.title')}>
-            <h2 className="collection__sidebar-title">{t('filters.title')}</h2>
+            <div className="collection__sidebar-head">
+              <h2 className="collection__sidebar-title">{t('filters.title')}</h2>
+              {nActive > 0 && <button type="button" className="filter-clear" onClick={clearAll}>{t('filters.clearShort')}</button>}
+            </div>
             <FilterPanel {...panel} state={filters} onChange={apply} live />
-            {nActive > 0 && <button type="button" className="filter-clear" onClick={clearAll}>{t('price.clearAll')}</button>}
           </aside>
 
           <div className="collection__main">
@@ -145,7 +151,7 @@ export default function ProductsPage() {
                 {t('filters.button')}
                 {nActive > 0 && <span className="collection__filter-count">{nActive}</span>}
               </button>
-              <p className="collection__count" aria-live="polite">{t('grid.count', { count: visible.length })}</p>
+              <p className="collection__count" aria-live="polite"><strong>{t('grid.count', { count: visible.length })}</strong></p>
               <label className="collection__sort">
                 <span>{t('sort.label')}</span>
                 <select value={filters.sort} onChange={(e) => apply({ ...filters, sort: e.target.value })}>
@@ -172,13 +178,36 @@ export default function ProductsPage() {
               emptyAction={chips.length > 0 && <button type="button" className="btn btn--outline" onClick={clearAll}>{t('price.clearAll')}</button>} />
           </div>
         </div>
+        )}
 
         {STORE_CONFIG.showDemoNotices && <p className="demo-note">{t('demo.prices')}</p>}
       </main>
       <SiteFooter />
-      <FilterDrawer open={drawerOpen} onClose={() => setDrawerOpen(false)} applied={filters} empty={EMPTY}
+      {!curated && <FilterDrawer open={drawerOpen} onClose={() => setDrawerOpen(false)} applied={filters} empty={EMPTY}
         countFor={(state) => filterFor(state).length} panelProps={panelProps}
-        onApply={(state) => { apply(state); setDrawerOpen(false); }} />
+        onApply={(state) => { apply(state); setDrawerOpen(false); }} />}
     </>
+  );
+}
+
+/** Favoris / ingrédient : grille simple. Favoris vides : message centré avec cœur et lien vers le catalogue. */
+function CuratedList({ items, onlyFavorites }) {
+  const { t } = useI18n();
+  if (onlyFavorites && !items.length) {
+    return (
+      <div className="empty-state favorites-empty">
+        <span className="empty-state__icon"><Heart size={30} strokeWidth={1.4} /></span>
+        <h2>{t('favorites.emptyTitle')}</h2>
+        <p>{t('favorites.emptyText')}</p>
+        <Link className="btn btn--primary" to="/produits">{t('favorites.discover')}</Link>
+      </div>
+    );
+  }
+  return (
+    <div className="curated">
+      <p className="grid-count" aria-live="polite">{t('grid.count', { count: items.length })}</p>
+      <ProductGrid items={items} showCount={false} />
+      {!onlyFavorites && <p className="curated__more"><Link className="btn btn--outline" to="/produits">{t('products.all')}</Link></p>}
+    </div>
   );
 }
