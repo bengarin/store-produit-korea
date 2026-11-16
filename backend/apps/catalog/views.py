@@ -46,6 +46,13 @@ class PublicCategoryListView(PublicView):
         return Response({"items": [public.category_payload(c) for c in public.visible_categories()]})
 
 
+class PublicFilterListView(PublicView):
+    """GET /api/v1/store/filters — groupes de filtres de la page produits (Admin → Filtres)."""
+
+    def get(self, request):
+        return Response({"items": public.filter_groups_payload()})
+
+
 # =============================== API ADMIN ================================
 class CategoryListCreateView(generics.ListCreateAPIView):
     serializer_class = CategorySerializer

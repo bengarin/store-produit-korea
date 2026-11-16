@@ -30,8 +30,13 @@ BASE_CATEGORIES = {"hydratation": "Hydratation", "anti-age": "Anti-âge", "eclat
 def test_categories_creees_par_migrate():
     # Base « sans catégories », puis vraie exécution de `migrate` : la migration catalog 0006 les recrée.
     Category.objects.filter(slug__in=BASE_CATEGORIES).delete()
+    # Les migrations postérieures à 0006 créent des tables : MySQL ne peut pas les annuler dans la transaction
+    # du test. Elles sont donc « sautées » sans toucher au schéma (fake) ; 0006 est, elle, réellement rejouée.
+    call_command("migrate", "catalog", "0006", fake=True, verbosity=0)
     call_command("migrate", "catalog", "0005", verbosity=0)
     assert not Category.objects.filter(slug__in=BASE_CATEGORIES).exists()
+    call_command("migrate", "catalog", "0006", verbosity=0)
+    call_command("migrate", "catalog", fake=True, verbosity=0)
     call_command("migrate", verbosity=0)
     rows = list(Category.objects.filter(slug__in=BASE_CATEGORIES).values_list("slug", "name"))
     assert dict(rows) == BASE_CATEGORIES

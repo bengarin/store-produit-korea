@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { NavLink, Outlet, useLocation } from 'react-router-dom';
-import { BookOpen, Boxes, ExternalLink, FolderTree, MessageSquareHeart, LayoutDashboard, Leaf, LogOut, Menu, Package, Images, Palette, Settings, ShoppingBag, Users, X } from 'lucide-react';
+import { BookOpen, Boxes, SlidersHorizontal, ExternalLink, FolderTree, MessageSquareHeart, LayoutDashboard, Leaf, LogOut, Menu, Package, Images, Palette, Settings, ShoppingBag, Users, X } from 'lucide-react';
 import { useAuth } from '../auth.jsx';
 import { can } from '../permissions.js';
 import { ROLE_LABELS } from '../format.js';
@@ -11,6 +11,7 @@ const NAV = [
   { to: '/admin/orders', label: 'Commandes', icon: ShoppingBag, perm: 'viewOrders', badge: 'pending' },
   { to: '/admin/products', label: 'Produits', icon: Package, perm: 'viewProducts' },
   { to: '/admin/categories', label: 'Catégories', icon: FolderTree, perm: 'manageCategories' },
+  { to: '/admin/filters', label: 'Filtres', icon: SlidersHorizontal, perm: 'manageFilters' },
   { to: '/admin/marketing', label: 'Visuels marketing', icon: Images, perm: 'viewProducts' },
   { to: '/admin/blog', label: 'Blog', icon: BookOpen, perm: 'viewBlog' },
   { to: '/admin/reviews', label: 'Avis clients', icon: MessageSquareHeart, perm: 'viewReviews', badge: 'reviews' },

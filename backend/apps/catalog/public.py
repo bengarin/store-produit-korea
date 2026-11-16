@@ -10,7 +10,20 @@ from decimal import Decimal
 
 from django.db.models import Prefetch, Q
 
-from .models import Category, Product, ProductCategory, ProductImage, ProductMarketingImage, ProductOption, Variant
+from .models import (
+    Category,
+    FilterGroup,
+    FilterOption,
+    Product,
+    ProductCategory,
+    ProductImage,
+    ProductMarketingImage,
+    ProductOption,
+    Variant,
+)
+
+# Valeur de filtre visible = valeur visible ET groupe visible (masquer un groupe masque toutes ses valeurs).
+VISIBLE_FILTER_OPTION = Q(is_active=True, group__is_active=True)
 
 
 def number(value: Decimal | None):
@@ -68,6 +81,9 @@ def public_products_queryset(statuses=(Product.Status.ACTIVE,)):
             Prefetch(
                 "marketing_images",
                 queryset=ProductMarketingImage.objects.filter(is_active=True).select_related("media"),
+            ),
+            Prefetch(
+                "filter_options", queryset=FilterOption.objects.filter(VISIBLE_FILTER_OPTION).select_related("group")
             ),
         )
     )
@@ -134,6 +150,10 @@ def product_payload(product: Product) -> dict:
         "usage": product.usage_steps,
         "benefits": product.benefits,
         "skinTypes": product.skin_types,
+        # Filtres de la page produits (Admin → Filtres) : « groupe:valeur », valeurs visibles uniquement.
+        "filters": [f"{o.group.slug}:{o.slug}" for o in product.filter_options.all()],
+        # Première mise en ligne : tri « Nouveautés ».
+        "publishedAt": product.published_at.isoformat() if product.published_at else None,
         "stock": None,  # quantité exacte volontairement non publiée
         "inStock": any(v.is_available for v in variants),
         "cardImage": main,
@@ -202,3 +222,23 @@ def category_payload(category: Category) -> dict:
     if category.name_ar:
         payload["translations"] = {"ar": {"label": category.name_ar}}
     return payload
+
+
+def _label(obj) -> dict:
+    data = {"id": obj.slug, "label": obj.name}
+    if obj.name_ar:
+        data["translations"] = {"ar": {"label": obj.name_ar}}
+    return data
+
+
+def filter_groups_payload() -> list:
+    """Groupes de filtres visibles avec leurs valeurs visibles, dans l'ordre de l'admin (groupes vides omis)."""
+    groups = FilterGroup.objects.filter(is_active=True).prefetch_related(
+        Prefetch("options", queryset=FilterOption.objects.filter(is_active=True))
+    )
+    out = []
+    for g in groups:
+        options = [_label(o) for o in g.options.all()]
+        if options:
+            out.append({**_label(g), "options": options})
+    return out

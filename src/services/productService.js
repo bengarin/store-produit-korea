@@ -50,6 +50,9 @@ export function normalizeProduct(raw, images = {}) {
     usage: raw.usage || [],
     benefits: raw.benefits || [],
     skinTypes: raw.skinTypes || '',
+    // Valeurs de filtre (« groupe:valeur », Admin → Filtres) et première mise en ligne (tri « Nouveautés »).
+    filters: Array.isArray(raw.filters) ? raw.filters : [],
+    publishedAt: raw.publishedAt || null,
     stock: raw.stock ?? null, // inconnu en local
     // Variantes et prix barré (mode API). Mode démo : aucune variante, produit disponible, pas de prix barré.
     compareAtPrice: toNumberOrNull(raw.compareAtPrice),

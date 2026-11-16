@@ -22,6 +22,8 @@ const RULES = {
   deleteProducts: [OWNER, ADMIN],
   // Menu « Catégories » de la boutique : réservé aux administrateurs.
   manageCategories: [OWNER, ADMIN],
+  // Filtres de la page produits (groupes et valeurs) : administrateurs ; cocher les valeurs d'un produit : editProducts.
+  manageFilters: [OWNER, ADMIN],
   editCost: [OWNER, ADMIN],
   editSettings: [OWNER, ADMIN],
   // Phase 6 : thème. Lecture : toute l'équipe ; brouillon : + Éditeur ; publier / restaurer : Propriétaire, Admin.

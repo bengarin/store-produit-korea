@@ -813,3 +813,18 @@ textarea.adm-input { resize: vertical; min-height: 80px; }
 .adm-review__actions { display: flex; flex-wrap: wrap; gap: 6px; }
 .adm-stars { display: inline-flex; gap: 1px; color: #d4c7b0; }
 .adm-stars .is-on { color: #c9973f; fill: #c9973f; }
+
+/* ---------- Filtres ---------- */
+.adm-fgroup { margin-bottom: 14px; }
+.adm-fgroup.is-hidden { opacity: 0.75; }
+.adm-fgroup__title { display: inline-flex; flex-wrap: wrap; align-items: baseline; gap: 4px 10px; }
+.adm-fgroup__actions, .adm-foption__actions { display: inline-flex; flex-wrap: wrap; gap: 2px; }
+.adm-foptions { list-style: none; margin: 0 0 12px; padding: 0; }
+.adm-foption { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 12px; padding: 8px 0; border-top: 1px solid var(--adm-line); }
+.adm-foption:first-child { border-top: 0; }
+.adm-foption.is-hidden .adm-foption__name { opacity: 0.6; }
+.adm-foption__name { display: grid; flex: 1; min-width: 160px; }
+.adm-filter-pick { margin: 0 0 12px; padding: 0; border: 0; }
+.adm-filter-pick legend { margin-bottom: 4px; font-weight: 600; font-size: 13px; color: var(--adm-ink-2); }
+.adm-filter-pick .adm-check { margin: 6px 0; }
+.adm-foption__name > * { justify-self: start; }

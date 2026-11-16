@@ -346,3 +346,46 @@ class VariantOptionValue(models.Model):
 
     def __str__(self):
         return f"{self.variant_id} : {self.option_value_id}"
+
+
+class FilterGroup(Timestamped):
+    """
+    Groupe de filtres de la page produits (ex. « Mes solutions », « Zone d'application », « Type de peau »).
+    Entièrement géré dans Admin → Filtres : rien n'est écrit en dur dans la boutique.
+    """
+
+    slug = models.SlugField("identifiant URL", max_length=80, unique=True)
+    name = models.CharField("nom", max_length=80)
+    name_ar = models.CharField("nom (arabe)", max_length=80, blank=True)
+    position = models.PositiveIntegerField("ordre", default=0)
+    is_active = models.BooleanField("visible", default=True)
+
+    class Meta:
+        verbose_name = "groupe de filtres"
+        verbose_name_plural = "groupes de filtres"
+        ordering = ["position", "id"]
+
+    def __str__(self):
+        return self.name
+
+
+class FilterOption(Timestamped):
+    """Valeur d'un groupe (ex. « Hydratation » dans « Mes solutions »), cochée sur chaque produit concerné."""
+
+    group = models.ForeignKey(FilterGroup, on_delete=models.CASCADE, related_name="options")
+    slug = models.SlugField("identifiant URL", max_length=80)
+    name = models.CharField("nom", max_length=80)
+    name_ar = models.CharField("nom (arabe)", max_length=80, blank=True)
+    position = models.PositiveIntegerField("ordre", default=0)
+    is_active = models.BooleanField("visible", default=True)
+    # Supprimer une valeur retire seulement son lien avec les produits (les produits restent intacts).
+    products = models.ManyToManyField(Product, related_name="filter_options", blank=True)
+
+    class Meta:
+        verbose_name = "valeur de filtre"
+        verbose_name_plural = "valeurs de filtre"
+        ordering = ["position", "id"]
+        constraints = [models.UniqueConstraint(fields=["group", "slug"], name="uniq_filter_option_slug")]
+
+    def __str__(self):
+        return f"{self.group_id} · {self.name}"

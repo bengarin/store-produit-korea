@@ -9,3 +9,10 @@ export async function fetchCategories({ signal } = {}) {
   const data = await api.get(ENDPOINTS.categories, { signal });
   return data?.items || data || [];
 }
+
+/** Groupes de filtres de la page produits (Admin → Filtres). Mode démo : aucun (rien n'est écrit en dur). */
+export async function fetchFilters({ signal } = {}) {
+  if (DATA_SOURCE === 'local') return [];
+  const data = await api.get(ENDPOINTS.filters, { signal });
+  return data?.items || [];
+}

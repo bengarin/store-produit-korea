@@ -2,13 +2,24 @@ from django.urls import path
 
 from apps.media_library import views as media_views
 
-from . import views
+from . import filters_admin, views
 
 urlpatterns = [
     path("categories", views.CategoryListCreateView.as_view(), name="admin-categories"),
     path("categories/reorder", views.CategoryReorderView.as_view(), name="admin-categories-reorder"),
     path("categories/<int:pk>", views.CategoryDetailView.as_view(), name="admin-category"),
     path("categories/<int:pk>/products", views.CategoryProductsView.as_view(), name="admin-category-products"),
+    path("filters", filters_admin.FilterGroupListCreateView.as_view(), name="admin-filters"),
+    path("filters/reorder", filters_admin.FilterGroupReorderView.as_view(), name="admin-filters-reorder"),
+    path("filters/<int:pk>", filters_admin.FilterGroupDetailView.as_view(), name="admin-filter-group"),
+    path("filters/<int:pk>/options", filters_admin.FilterOptionCreateView.as_view(), name="admin-filter-options"),
+    path(
+        "filters/<int:pk>/options/reorder",
+        filters_admin.FilterOptionReorderView.as_view(),
+        name="admin-filter-options-reorder",
+    ),
+    path("filter-options/<int:pk>", filters_admin.FilterOptionDetailView.as_view(), name="admin-filter-option"),
+    path("products/<int:pk>/filters", filters_admin.ProductFiltersView.as_view(), name="admin-product-filters"),
     path("products", views.ProductListCreateView.as_view(), name="admin-products"),
     path("products/<int:pk>", views.ProductDetailView.as_view(), name="admin-product"),
     path("products/<int:pk>/status", views.ProductStatusView.as_view(), name="admin-product-status"),

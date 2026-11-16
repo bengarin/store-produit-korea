@@ -8,6 +8,7 @@ import { HighlightsEditor, LinesField, linesToList, listToLines } from '../compo
 import MediaCard from '../components/product/MediaCard.jsx';
 import PreviewModal from '../components/product/PreviewModal.jsx';
 import { CategoriesCard, StatusCard } from '../components/product/SidePanels.jsx';
+import FiltersCard from '../components/product/FiltersCard.jsx';
 import VariantsCard from '../components/product/VariantsCard.jsx';
 import ArabicCard from '../components/product/ArabicCard.jsx';
 import RichTextEditor from '../components/RichTextEditor.jsx';
@@ -215,6 +216,7 @@ export default function ProductEditPage() {
           <StatusCard product={product} editable={editable} dirty={dirty} onChanged={refresh} onPreview={() => setPreview(true)} toast={toast} />
           <CategoriesCard categories={categories || []} value={form.categoryIds} editable={editable} toast={toast}
             onChange={(ids) => setForm((f) => ({ ...f, categoryIds: ids }))} onCreated={(c) => setCategories([...(categories || []), c])} />
+          <FiltersCard productId={product.id} editable={editable} toast={toast} />
           <Card title="Visuels de l’accueil">
             <Field label="Image au survol (carrousel « produits du moment »)" htmlFor="pe-hover" error={errors.hoverImageId}>
               <select id="pe-hover" className="adm-input" value={form.hoverImageId || ''} disabled={!editable}

@@ -7,6 +7,7 @@ export const ENDPOINTS = {
   products: '/products',
   product: (slug) => `/products/${encodeURIComponent(slug)}`,
   categories: '/categories',
+  filters: '/filters',
   config: '/config',
   promoValidate: '/promo-codes/validate',
   orders: '/orders',
