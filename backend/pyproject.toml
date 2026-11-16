@@ -2,7 +2,7 @@
 name = "mapetitecoree-backend"
 version = "0.1.0"
 description = "API Django de la boutique Ma Petite Corée.ma"
-requires-python = ">=3.12"
+requires-python = ">=3.11"
 
 [tool.pytest.ini_options]
 DJANGO_SETTINGS_MODULE = "config.settings.test"
@@ -12,7 +12,7 @@ addopts = "--reuse-db -ra --strict-markers"
 
 [tool.ruff]
 line-length = 120
-target-version = "py312"
+target-version = "py311"
 extend-exclude = [".venv", "**/migrations/0001_*.py"]
 
 [tool.ruff.lint]

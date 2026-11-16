@@ -151,7 +151,8 @@ def home(products: list, categories: list, articles: list, lang: str) -> str:
     body = f"<h1>{escape(settings.SITE_NAME)} — {escape(t(lang, 'tagline'))}</h1><p>{escape(t(lang, 'intro'))}</p>"
     body += f"<h2>{escape(t(lang, 'products'))}</h2>" + product_list(products, lang)
     if articles:
-        posts = "".join(f"<li>{_link(f'{p}/blog/{a["slug"]}', localized(a, lang, 'title'))}</li>" for a in articles[:3])
+        links = (_link(p + "/blog/" + a["slug"], localized(a, lang, "title")) for a in articles[:3])
+        posts = "".join(f"<li>{link}</li>" for link in links)
         body += f"<h2>{escape(t(lang, 'latest_posts'))}</h2><ul>{posts}</ul>"
     return page(body, categories, lang)
 
@@ -205,7 +206,7 @@ def blog_page(articles: list, categories: list, lang: str) -> str:
         excerpt = localized(a, lang, "excerpt") or ""
         date = (a.get("publishedAt") or "")[:10]
         items.append(
-            f"<li><h2>{_link(f'{p}/blog/{a["slug"]}', title)}</h2>"
+            f"<li><h2>{_link(p + '/blog/' + a['slug'], title)}</h2>"
             + (f'<p><time datetime="{escape(date)}">{escape(date)}</time></p>' if date else "")
             + (f"<p>{escape(excerpt)}</p>" if excerpt else "")
             + "</li>"
