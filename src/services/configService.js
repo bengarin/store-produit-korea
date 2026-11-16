@@ -11,7 +11,11 @@ import { STORE_CONFIG } from '../config/store.js';
 
 export async function fetchStoreConfig({ signal } = {}) {
   if (DATA_SOURCE === 'local') return STORE_CONFIG;
-  const remote = await api.get(ENDPOINTS.config, { signal });
+  return mergeStoreConfig(await api.get(ENDPOINTS.config, { signal }));
+}
+
+/** Config publique du serveur (API ou données de démarrage) fusionnée avec les valeurs par défaut. */
+export function mergeStoreConfig(remote) {
   // Les codes promo ne viennent JAMAIS de la config publique : ils sont vérifiés par POST /promo-codes/validate.
   return { ...STORE_CONFIG, ...remote, promoCodes: {} };
 }

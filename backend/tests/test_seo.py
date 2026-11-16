@@ -58,7 +58,9 @@ def test_fiche_produit_html_complet_sans_javascript(client, sellable):
     (product,) = ld(html)
     assert product["@type"] == "Product" and product["offers"]["price"] == "129.00"
     assert product["offers"]["priceCurrency"] == "MAD" and product["offers"]["availability"].endswith("InStock")
-    assert "<noscript><h1>Marque Crème test</h1>" in html and "Prix : 129.00 DH" in html
+    # Contenu lisible sans JavaScript, dans <div id="root"> (remplacé par l'application à son démarrage).
+    root = html.split('<div id="root">')[1].split('<script id="mpc-data"')[0]
+    assert "<h1>Marque Crème test</h1>" in root and "Prix : 129 DH · Disponible" in root
     assert "noindex" not in h
     assert "script-src 'self'" in r["Content-Security-Policy"] and r["X-Frame-Options"] == "SAMEORIGIN"
 
@@ -68,7 +70,7 @@ def test_produit_epuise_reste_indexe_avec_disponibilite(client, sellable):
     sellable(slug="epuise", stock=0)
     r = client.get("/produits/epuise")
     assert r.status_code == 200 and ld(r.content.decode())[0]["offers"]["availability"].endswith("OutOfStock")
-    assert "épuisé" in r.content.decode()
+    assert "épuisé" in r.content.decode().lower()
 
 
 @pytest.mark.django_db
@@ -148,6 +150,7 @@ def test_variante_par_defaut_et_sku(client, sellable):
     assert ld(client.get("/produits/avec-sku").content.decode())[0]["sku"] == "MPC-001"
 
 
+@pytest.mark.django_db
 def test_csp_autorise_seulement_le_pixel_meta_sans_script_en_ligne(client):
     header = client.get("/panier")["Content-Security-Policy"]
     csp = dict(part.strip().split(" ", 1) for part in header.split(";") if part.strip())
@@ -183,3 +186,93 @@ def test_blog_et_avis_html_et_sitemap(client):
     assert client.get("/blog").status_code == client.get("/avis").status_code == 200
     sitemap = client.get("/sitemap.xml").content.decode()
     assert "/blog/routine</loc>" in sitemap and "/blog/brouillon" not in sitemap and "/avis</loc>" in sitemap
+
+
+@pytest.mark.django_db
+def test_contenu_html_et_donnees_de_demarrage(client, sellable, category):
+    """G2 : contenu lisible sans JavaScript ; P1 : données de l'application jointes à la page (mêmes que l'API)."""
+    sellable(slug="creme-test", stock=5, price="129.00")
+    html = client.get("/").content.decode()
+    root = html.split('<div id="root">')[1].split('<script id="mpc-data"')[0]
+    assert '<a href="/produits/creme-test">' in root and "129 DH" in root and "<h1>" in root
+    assert '<a href="/produits?categorie=hydratation">Hydratation</a>' in root  # liens vers les catégories
+    data = json.loads(re.search(r'<script id="mpc-data" type="application/json">(.*?)</script>', html, re.S).group(1))
+    assert set(data) == {"products", "categories", "filters", "config", "theme"}
+    assert data["products"] == client.get("/api/v1/store/products").json()["items"]
+    assert data["categories"] == client.get("/api/v1/store/categories").json()["items"]
+    assert data["config"] == client.get("/api/v1/store/config").json()
+    assert "promoCodes" not in data["config"]  # jamais les codes promo
+    cat = client.get("/produits?categorie=cat-creme-test").content.decode()  # catégorie du produit de test
+    assert "<h1>Cat creme-test</h1>" in cat and "/produits/creme-test" in cat
+    assert (
+        "/produits/creme-test"
+        not in client.get("/produits?categorie=hydratation").content.decode().split("mpc-data")[0]
+    )
+    # Administration : ni contenu ni données de la boutique.
+    admin = client.get("/admin/orders").content.decode()
+    assert 'id="mpc-data"' not in admin and '<div id="root"></div>' in admin
+
+
+@pytest.mark.django_db
+def test_donnees_de_demarrage_ne_peuvent_pas_fermer_la_balise(client, sellable):
+    p = sellable(slug="piege2", stock=5)
+    Product.objects.filter(pk=p.pk).update(display_name="</script><script>alert(1)</script>")
+    html = client.get("/produits").content.decode()
+    block = re.search(r'<script id="mpc-data" type="application/json">(.*?)</script>', html, re.S).group(1)
+    assert "</script>" not in block and "<script>alert(1)" not in html
+    assert json.loads(block)["products"][0]["displayName"] == "</script><script>alert(1)</script>"
+
+
+@pytest.mark.django_db
+def test_pages_arabes_indexables_avec_hreflang(client, sellable):
+    """G1 : chaque page existe en arabe sous /ar, avec langue, sens, canonique et liens fr/ar (hreflang)."""
+    p = sellable(slug="creme-test", stock=5, price="129.00")
+    Product.objects.filter(pk=p.pk).update(display_name_ar="كريم تجريبي", summary_ar="ملخص بالعربية")
+    base = "https://boutique.exemple.ma"
+    r = client.get("/ar/produits/creme-test")
+    html = r.content.decode()
+    assert r.status_code == 200 and '<html lang="ar" dir="rtl">' in html
+    h = head(html)
+    assert "<title>كريم تجريبي — Ma Petite Corée</title>" in h and 'content="ملخص بالعربية"' in h
+    assert f'<link rel="canonical" href="{base}/ar/produits/creme-test" />' in h
+    assert f'hreflang="fr-MA" href="{base}/produits/creme-test"' in h
+    assert f'hreflang="ar-MA" href="{base}/ar/produits/creme-test"' in h
+    assert f'hreflang="x-default" href="{base}/produits/creme-test"' in h
+    assert '<meta property="og:locale" content="ar_MA" />' in h
+    assert ld(html)[0]["name"] == "كريم تجريبي" and ld(html)[0]["url"] == f"{base}/ar/produits/creme-test"
+    root = html.split('<div id="root">')[1].split('<script id="mpc-data"')[0]
+    assert "<h1>كريم تجريبي</h1>" in root and 'href="/ar/produits"' in root and "129 درهم" in root
+    # Version française : inchangée, avec les mêmes liens fr/ar.
+    fr = client.get("/produits/creme-test").content.decode()
+    assert '<html lang="fr">' in fr and f'hreflang="ar-MA" href="{base}/ar/produits/creme-test"' in fr
+    # Toutes les pages publiques existent en arabe.
+    for url in ("/ar", "/ar/produits", "/ar/blog", "/ar/avis", "/ar/confidentialite"):
+        page = client.get(url)
+        assert page.status_code == 200 and '<html lang="ar" dir="rtl">' in page.content.decode(), url
+    assert client.get("/ar/produits/inconnu").status_code == 404
+    missing = client.get("/ar/nexiste-pas")
+    assert missing.status_code == 404 and '<html lang="ar" dir="rtl">' in missing.content.decode()
+    # Pages privées en arabe : jamais indexées, sans hreflang.
+    cart = client.get("/ar/panier")
+    assert cart["X-Robots-Tag"] == "noindex, nofollow" and "hreflang" not in cart.content.decode()
+
+
+@pytest.mark.django_db
+def test_sitemap_et_robots_bilingues(client, sellable):
+    sellable(slug="creme-test", stock=5)
+    sitemap = client.get("/sitemap.xml").content.decode()
+    tree = ElementTree.fromstring(sitemap)  # noqa: S314 - XML produit par notre propre serveur
+    ns = {"s": "http://www.sitemaps.org/schemas/sitemap/0.9", "x": "http://www.w3.org/1999/xhtml"}
+    locs = [u.find("s:loc", ns).text for u in tree.findall("s:url", ns)]
+    base = "https://boutique.exemple.ma"
+    assert f"{base}/produits/creme-test" in locs and f"{base}/ar/produits/creme-test" in locs
+    assert f"{base}/" in locs and f"{base}/ar" in locs
+    entry = next(u for u in tree.findall("s:url", ns) if u.find("s:loc", ns).text == f"{base}/ar/produits/creme-test")
+    links = {link.get("hreflang"): link.get("href") for link in entry.findall("x:link", ns)}
+    assert links == {
+        "fr-MA": f"{base}/produits/creme-test",
+        "ar-MA": f"{base}/ar/produits/creme-test",
+        "x-default": f"{base}/produits/creme-test",
+    }
+    robots = client.get("/robots.txt").content.decode()
+    assert "Disallow: /ar/panier" in robots and "Disallow: /panier" in robots and "Disallow: /ar/admin" not in robots

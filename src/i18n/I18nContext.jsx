@@ -1,30 +1,23 @@
 import { createContext, Fragment, useCallback, useContext, useLayoutEffect, useMemo, useState } from 'react';
 import { MESSAGES } from './messages.js';
 import { translateContent } from './content.js';
+import { storeLang, urlFor, urlLang } from './langUrl.js';
 
 /**
  * Langue de la boutique publique : français (défaut) ou arabe (RTL).
- * - choix mémorisé dans le navigateur (localStorage) ;
+ * - donnée par l'ADRESSE : /… en français, /ar/… en arabe (pages indexables séparément, voir langUrl.js) ;
+ * - choix mémorisé dans le navigateur (localStorage) pour les visites suivantes ;
  * - <html lang/dir> mis à jour ; remis en français/LTR en quittant la boutique (administration) ;
  * - `t(clé, paramètres)` : textes de l'interface ; `tc(texte)` : textes de contenu (thème, catégories…)
  *   traduits seulement s'ils correspondent exactement à un texte d'origine connu (sinon affichés tels quels).
  */
 export const LANGS = { fr: { dir: 'ltr', label: 'Français' }, ar: { dir: 'rtl', label: 'العربية' } };
-const STORAGE_KEY = 'mpc.lang';
 // Police arabe (les polices latines de la marque n'ont pas de glyphes arabes). Chargée seulement en arabe.
 const ARABIC_FONTS = 'https://fonts.googleapis.com/css2?family=Noto+Kufi+Arabic:wght@500;600;700&family=Noto+Sans+Arabic:wght@400;500;600;700&display=swap';
 
 let current = 'fr';
 /** Langue active (pour les fonctions hors composants : prix, lien WhatsApp…). */
 export const currentLang = () => current;
-
-function storedLang() {
-  try {
-    return window.localStorage.getItem(STORAGE_KEY) === 'ar' ? 'ar' : 'fr';
-  } catch {
-    return 'fr';
-  }
-}
 
 export function translate(lang, key, params = {}) {
   const entry = MESSAGES[lang]?.[key] ?? MESSAGES.fr[key];
@@ -40,7 +33,7 @@ const I18nContext = createContext({
 });
 
 export function I18nProvider({ children }) {
-  const [lang, setLangState] = useState(storedLang);
+  const [lang] = useState(() => urlLang());
   current = lang; // lu par formatPrice pendant ce rendu
 
   useLayoutEffect(() => {
@@ -65,14 +58,11 @@ export function I18nProvider({ children }) {
     current = 'fr';
   }, []);
 
+  // Changer de langue = aller à la même page dans l'autre langue (adresse /ar/… ou sans préfixe).
   const setLang = useCallback((next) => {
     const value = next === 'ar' ? 'ar' : 'fr';
-    try {
-      window.localStorage.setItem(STORAGE_KEY, value);
-    } catch {
-      /* stockage bloqué : le choix vaut pour cette visite */
-    }
-    setLangState(value);
+    storeLang(value);
+    if (value !== urlLang()) window.location.assign(urlFor(value));
   }, []);
 
   const value = useMemo(() => {

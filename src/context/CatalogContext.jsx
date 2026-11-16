@@ -1,9 +1,10 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 import { DATA_SOURCE } from '../config/env.js';
-import { fetchProducts, LOCAL_CATALOG, localizeCategory, localizeProduct } from '../services/productService.js';
+import { fetchProducts, LOCAL_CATALOG, localizeCategory, localizeProduct, normalizeProducts } from '../services/productService.js';
+import { bootstrapData } from '../services/bootstrap.js';
 import { useI18n } from '../i18n/I18nContext.jsx';
 import { fetchCategories, fetchFilters } from '../services/categoryService.js';
-import { fetchStoreConfig } from '../services/configService.js';
+import { fetchStoreConfig, mergeStoreConfig } from '../services/configService.js';
 import { indexProduct, searchEntries } from '../utils/search.js';
 import { LOCAL_CATEGORIES } from '../data/local/categories.js';
 import { STORE_CONFIG } from '../config/store.js';
@@ -16,16 +17,30 @@ const isLocal = DATA_SOURCE === 'local';
  * - Local : disponible immédiatement (aucun écran de chargement, rendu identique).
  * - API   : chargé au démarrage ; écran d'attente puis d'erreur avec « Réessayer ».
  */
+/** Données jointes par le serveur à la page : catalogue prêt dès le premier rendu (aucun appel réseau). */
+function bootState() {
+  const boot = isLocal ? null : bootstrapData();
+  if (!boot?.products || !boot.categories || !boot.config) return null;
+  return {
+    status: 'ready',
+    products: normalizeProducts(boot.products),
+    categories: boot.categories,
+    filters: boot.filters || [],
+    config: mergeStoreConfig(boot.config),
+    error: null,
+  };
+}
+
 export function CatalogProvider({ children }) {
-  const [state, setState] = useState(() =>
-    isLocal
-      ? { status: 'ready', products: LOCAL_CATALOG, categories: LOCAL_CATEGORIES, filters: [], config: STORE_CONFIG, error: null }
-      : { status: 'loading', products: [], categories: [], filters: [], config: STORE_CONFIG, error: null },
-  );
+  const [state, setState] = useState(() => {
+    if (isLocal) return { status: 'ready', products: LOCAL_CATALOG, categories: LOCAL_CATEGORIES, filters: [], config: STORE_CONFIG, error: null };
+    return bootState() || { status: 'loading', products: [], categories: [], filters: [], config: STORE_CONFIG, error: null };
+  });
   const [attempt, setAttempt] = useState(0);
 
   useEffect(() => {
-    if (isLocal) return undefined;
+    // Mode démo, ou catalogue déjà fourni par la page (1er chargement) : rien à télécharger.
+    if (isLocal || (attempt === 0 && state.status === 'ready')) return undefined;
     const controller = new AbortController();
     setState((s) => ({ ...s, status: 'loading', error: null }));
     const { signal } = controller;
@@ -37,6 +52,7 @@ export function CatalogProvider({ children }) {
         if (!controller.signal.aborted) setState((s) => ({ ...s, status: 'error', error }));
       });
     return () => controller.abort();
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- l'état initial ne sert qu'au 1er passage
   }, [attempt]);
 
   const retry = useCallback(() => setAttempt((n) => n + 1), []);

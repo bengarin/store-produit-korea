@@ -1259,3 +1259,19 @@ html[lang="ar"] .filter-drawer__head h2 { font-family: var(--font-sans); font-si
 @media (min-width: 1280px) {
   .collection .product-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 28px; }
 }
+
+/* ---------- Contenu HTML envoyé par le serveur (lisible sans JavaScript, remplacé au démarrage de l'application) ---------- */
+.ssr { max-width: var(--max-w); margin-inline: auto; padding: 16px var(--gutter) 40px; color: var(--text); line-height: 1.6; }
+.ssr-header { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px 24px; padding-block: 12px 18px; border-bottom: 1px solid var(--border); }
+.ssr-brand { font-family: var(--font-serif); font-size: 26px; font-weight: 600; color: var(--green-deep); }
+.ssr-header nav, .ssr-footer nav { display: flex; flex-wrap: wrap; gap: 6px 18px; font-size: 14px; }
+.ssr a { color: var(--green-deep); }
+.ssr-main { padding-block: 32px; }
+.ssr h1 { font-family: var(--font-serif); font-size: clamp(32px, 6vw, 52px); line-height: 1.1; color: var(--green-deep); margin-bottom: 12px; }
+.ssr h2 { font-family: var(--font-serif); font-size: 24px; color: var(--green-deep); margin: 28px 0 10px; }
+.ssr ul { padding-inline-start: 1.2em; }
+.ssr-products { list-style: none; display: grid; gap: 14px; padding: 0; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); }
+.ssr-products li { padding: 16px; border: 1px solid var(--border); border-radius: 16px; background: var(--surface); }
+.ssr-products a { font-weight: 600; font-size: 17px; }
+.ssr-crumbs { font-size: 14px; margin-bottom: 14px; }
+.ssr-footer { padding-top: 18px; border-top: 1px solid var(--border); font-size: 14px; color: var(--text-2); }

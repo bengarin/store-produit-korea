@@ -32,6 +32,17 @@ def public_payload(r: StoreReview) -> dict:
     }
 
 
+def public_reviews() -> dict:
+    """Avis approuvés + moyenne et nombre (page « Avis » et contenu HTML serveur)."""
+    approved = StoreReview.objects.filter(status=StoreReview.Status.APPROVED)
+    stats = approved.aggregate(count=Count("id"), average=Avg("rating"))
+    return {
+        "count": stats["count"],
+        "average": round(float(stats["average"]), 1) if stats["average"] is not None else None,
+        "items": [public_payload(r) for r in approved.order_by("-approved_at", "-id")[:100]],
+    }
+
+
 # --- Boutique ------------------------------------------------------------------
 class ReviewSubmitSerializer(serializers.Serializer):
     name = serializers.CharField(max_length=60)
@@ -80,15 +91,7 @@ class PublicReviewsView(APIView):
         return super().get_throttles()
 
     def get(self, request):
-        approved = StoreReview.objects.filter(status=StoreReview.Status.APPROVED)
-        stats = approved.aggregate(count=Count("id"), average=Avg("rating"))
-        return Response(
-            {
-                "count": stats["count"],
-                "average": round(float(stats["average"]), 1) if stats["average"] is not None else None,
-                "items": [public_payload(r) for r in approved.order_by("-approved_at", "-id")[:100]],
-            }
-        )
+        return Response(public_reviews())
 
     def post(self, request):
         s = ReviewSubmitSerializer(data=request.data)

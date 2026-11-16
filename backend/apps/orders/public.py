@@ -61,37 +61,37 @@ class PublicView(APIView):
     authentication_classes = []  # pas de session : rien à voler par CSRF
 
 
-class StoreConfigView(PublicView):
+def store_config_payload() -> dict:
     """Configuration publique (format de src/config/store.js). Jamais les codes promo."""
+    settings = StoreSettings.load()
+    default_zone = ShippingZone.objects.filter(is_default=True, is_active=True).first()
+    reference = default_zone or ShippingZone.objects.filter(is_active=True).order_by("fee").first()
+    fee, free_over = shipping_svc.delivery_rule(reference)  # même règle que le calcul de la commande
+    return {
+        "brandName": settings.brand_name,
+        "whatsappNumber": settings.whatsapp_number,
+        "deliveryMode": settings.delivery_mode,
+        "deliveryFee": number(fee) if fee is not None else None,
+        "freeDeliveryThreshold": number(free_over) if free_over is not None else None,
+        "cities": list(City.objects.filter(is_active=True, zone__is_active=True).values_list("name", flat=True)),
+        "allowOtherCity": default_zone is not None or settings.delivery_mode != StoreSettings.DeliveryMode.ZONES,
+        "maxQtyPerLine": settings.max_qty_per_line,
+        # Identité et contact du responsable du traitement (page Politique de confidentialité).
+        # Vides tant que le propriétaire ne les a pas saisis : rien n'est inventé.
+        "legal": {
+            "name": settings.legal_name,
+            "address": settings.legal_address,
+            "email": settings.contact_email,
+            "phone": settings.contact_phone,
+        },
+    }
+
+
+class StoreConfigView(PublicView):
+    """GET /api/v1/store/config — voir store_config_payload()."""
 
     def get(self, request):
-        settings = StoreSettings.load()
-        default_zone = ShippingZone.objects.filter(is_default=True, is_active=True).first()
-        reference = default_zone or ShippingZone.objects.filter(is_active=True).order_by("fee").first()
-        fee, free_over = shipping_svc.delivery_rule(reference)  # même règle que le calcul de la commande
-        return Response(
-            {
-                "brandName": settings.brand_name,
-                "whatsappNumber": settings.whatsapp_number,
-                "deliveryMode": settings.delivery_mode,
-                "deliveryFee": number(fee) if fee is not None else None,
-                "freeDeliveryThreshold": number(free_over) if free_over is not None else None,
-                "cities": list(
-                    City.objects.filter(is_active=True, zone__is_active=True).values_list("name", flat=True)
-                ),
-                "allowOtherCity": default_zone is not None
-                or settings.delivery_mode != StoreSettings.DeliveryMode.ZONES,
-                "maxQtyPerLine": settings.max_qty_per_line,
-                # Identité et contact du responsable du traitement (page Politique de confidentialité).
-                # Vides tant que le propriétaire ne les a pas saisis : rien n'est inventé.
-                "legal": {
-                    "name": settings.legal_name,
-                    "address": settings.legal_address,
-                    "email": settings.contact_email,
-                    "phone": settings.contact_phone,
-                },
-            }
-        )
+        return Response(store_config_payload())
 
 
 class PromoValidateSerializer(serializers.Serializer):

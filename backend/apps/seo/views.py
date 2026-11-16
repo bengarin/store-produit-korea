@@ -4,7 +4,8 @@ WhatsApp… reçoivent les VRAIES informations de chaque page SANS exécuter Jav
 construit par Vite (FRONTEND_DIST_DIR) en y injectant, selon l'URL :
 - <title>, meta description, URL canonique, Open Graph / Twitter ;
 - données structurées schema.org Product (prix, devise MAD, disponibilité) sur les fiches produit ;
-- un résumé <noscript> (nom, description, prix) pour les robots qui n'exécutent pas JavaScript ;
+- le CONTENU principal de la page en HTML dans <div id="root"> (apps/seo/content.py) : lisible sans JavaScript ;
+- les données de démarrage de l'application (apps/seo/bootstrap.py) : premier affichage sans attendre l'API ;
 - robots noindex sur les pages privées (panier, commande, administration) ;
 - 404 (produit inconnu ou brouillon) et 410 (produit archivé), avec noindex.
 Plus /sitemap.xml et /robots.txt.
@@ -23,6 +24,10 @@ from django.utils.html import escape
 from apps.blog.public import article_payload, published_articles
 from apps.catalog import public
 from apps.catalog.models import Category, Product
+from apps.reviews.views import public_reviews
+
+from . import content
+from .bootstrap import data_script, store_data
 
 PRIVATE_PREFIXES = ("/panier", "/commande", "/confirmation", "/admin")
 DEFAULT_DESCRIPTION = (
@@ -58,6 +63,73 @@ def json_ld(data: dict) -> str:
     return f'<script type="application/ld+json">{text}</script>'
 
 
+# Titres et descriptions des pages, par langue (arabe : adresses /ar/…). [À VÉRIFIER] relecture arabophone.
+PAGE_TEXTS = {
+    "fr": {
+        "home": f"{settings.SITE_NAME} — soins coréens et naturels au Maroc",
+        "description": DEFAULT_DESCRIPTION,
+        "products": "Nos produits",
+        "favorites": "Mes favoris",
+        "category_404": "Catégorie introuvable",
+        "category_description": "Nos soins coréens {name} : livraison partout au Maroc, paiement à la livraison.",
+        "product_404": "Produit introuvable",
+        "product_410": "Produit retiré",
+        "blog": "Blog",
+        "blog_description": "Conseils de soin, routines et ingrédients coréens : le blog de Ma Petite Corée.",
+        "article_404": "Article introuvable",
+        "reviews": "Avis clients",
+        "reviews_description": "Les avis de nos clientes et clients sur la boutique Ma Petite Corée.",
+        "privacy": "Politique de confidentialité",
+        "privacy_description": (
+            "Données collectées, cookies, pixel Meta et consentement sur la boutique Ma Petite Corée."
+        ),
+        "not_found": "Page introuvable",
+    },
+    "ar": {
+        "home": f"{settings.SITE_NAME} — منتجات عناية كورية وطبيعية في المغرب",
+        "description": (
+            f"{settings.SITE_NAME} — منتجات عناية كورية وطبيعية. التوصيل إلى جميع أنحاء المغرب، والدفع عند الاستلام."
+        ),
+        "products": "منتجاتنا",
+        "favorites": "مفضلاتي",
+        "category_404": "الفئة غير موجودة",
+        "category_description": "منتجات العناية الكورية — {name}: التوصيل إلى جميع أنحاء المغرب، والدفع عند الاستلام.",
+        "product_404": "المنتج غير موجود",
+        "product_410": "المنتج لم يعد متوفرًا",
+        "blog": "المدونة",
+        "blog_description": "نصائح العناية والروتين والمكونات الكورية: مدونة Ma Petite Corée.",
+        "article_404": "المقال غير موجود",
+        "reviews": "آراء العملاء",
+        "reviews_description": "آراء عملائنا حول متجر Ma Petite Corée.",
+        "privacy": "سياسة الخصوصية",
+        "privacy_description": "البيانات المجمعة وملفات تعريف الارتباط وبكسل Meta والموافقة في متجر Ma Petite Corée.",
+        "not_found": "الصفحة غير موجودة",
+    },
+}
+LANGS = ("fr", "ar")
+OG_LOCALE = {"fr": "fr_MA", "ar": "ar_MA"}
+HREFLANG = {"fr": "fr-MA", "ar": "ar-MA"}
+
+
+def pt(lang: str, key: str) -> str:
+    return PAGE_TEXTS[lang][key]
+
+
+def lang_url(base: str, lang: str, path: str) -> str:
+    """Adresse d'une page dans une langue : /produits → /ar/produits ; / → /ar."""
+    if lang == "ar":
+        return f"{base}/ar" if path == "/" else f"{base}/ar{path}"
+    return f"{base}{path}"
+
+
+def alternates(base: str, path: str) -> dict:
+    return {lang: lang_url(base, lang, path) for lang in LANGS}
+
+
+def request_lang(request) -> str:
+    return "ar" if request.path == "/ar" or request.path.startswith("/ar/") else "fr"
+
+
 def render(
     request,
     *,
@@ -68,10 +140,15 @@ def render(
     og_type="website",
     noindex=False,
     extra_head="",
-    noscript="",
+    body="",
+    data=None,
     status=200,
+    lang="fr",
+    alternate=None,
 ) -> HttpResponse:
     html = index_html()
+    if lang == "ar":  # page arabe : langue et sens de lecture dès le HTML envoyé
+        html = html.replace('<html lang="fr">', '<html lang="ar" dir="rtl">', 1)
     # Retire le titre et la description par défaut de index.html : remplacés par ceux de la page.
     html = re.sub(r"<title>.*?</title>", "", html, count=1, flags=re.S)
     html = re.sub(r'<meta name="description"[^>]*>', "", html, count=1)
@@ -80,12 +157,20 @@ def render(
         tags.append('<meta name="robots" content="noindex, nofollow" />')
     if canonical:
         tags.append(f'<link rel="canonical" href="{escape(canonical)}" />')
+    # Versions française et arabe de la même page (hreflang), français par défaut.
+    if alternate and not noindex:
+        tags += [
+            f'<link rel="alternate" hreflang="{HREFLANG[code]}" href="{escape(url)}" />'
+            for code, url in alternate.items()
+        ]
+        tags.append(f'<link rel="alternate" hreflang="x-default" href="{escape(alternate["fr"])}" />')
     tags += [
         f'<meta property="og:site_name" content="{escape(settings.SITE_NAME)}" />',
         f'<meta property="og:title" content="{escape(title)}" />',
         f'<meta property="og:description" content="{escape(description)}" />',
         f'<meta property="og:type" content="{og_type}" />',
-        '<meta property="og:locale" content="fr_MA" />',
+        f'<meta property="og:locale" content="{OG_LOCALE[lang]}" />',
+        f'<meta property="og:locale:alternate" content="{OG_LOCALE["fr" if lang == "ar" else "ar"]}" />',
         f'<meta name="twitter:card" content="{"summary_large_image" if image else "summary"}" />',
     ]
     if canonical:
@@ -93,8 +178,9 @@ def render(
     if image:
         tags.append(f'<meta property="og:image" content="{escape(image)}" />')
     html = html.replace("</head>", "    " + "\n    ".join(tags) + "\n" + extra_head + "  </head>", 1)
-    if noscript:
-        html = html.replace('<div id="root"></div>', f'<div id="root"></div>\n    <noscript>{noscript}</noscript>', 1)
+    # Contenu lisible sans JavaScript (remplacé par l'application à son démarrage) + données de démarrage.
+    root = f'<div id="root">{body}</div>' + (f"\n    {data_script(data)}" if data is not None else "")
+    html = html.replace('<div id="root"></div>', root, 1)
     response = HttpResponse(html, status=status, content_type="text/html; charset=utf-8")
     if noindex:
         response["X-Robots-Tag"] = "noindex, nofollow"
@@ -105,75 +191,107 @@ def render(
     return response
 
 
-def home(request):
+def _page(request, lang, path, *, title, description, **kwargs):
+    """Page indexable : adresse canonique dans sa langue + versions fr/ar (hreflang)."""
     base = site_url(request)
-    org = {"@context": "https://schema.org", "@type": "OnlineStore", "name": settings.SITE_NAME, "url": f"{base}/"}
+    links = alternates(base, path)
     return render(
+        request, title=title, description=description, canonical=links[lang], lang=lang, alternate=links, **kwargs
+    )
+
+
+def _missing(request, lang, key, status=404):
+    title = f"{pt(lang, key)} — {settings.SITE_NAME}"
+    return render(
+        request, title=title, description=pt(lang, "description"), noindex=True, status=status, lang=lang,
+        data=store_data(),
+    )  # fmt: skip
+
+
+def home(request, lang="fr"):
+    base = site_url(request)
+    org = {
+        "@context": "https://schema.org",
+        "@type": "OnlineStore",
+        "name": settings.SITE_NAME,
+        "url": lang_url(base, lang, "/"),
+    }
+    data = store_data()
+    articles = [article_payload(a) for a in published_articles()[:3]]
+    return _page(
         request,
-        title=f"{settings.SITE_NAME} — soins coréens et naturels au Maroc",
-        description=DEFAULT_DESCRIPTION,
-        canonical=f"{base}/",
+        lang,
+        "/",
+        title=pt(lang, "home"),
+        description=pt(lang, "description"),
         extra_head="    " + json_ld(org) + "\n",
+        body=content.home(data["products"], data["categories"], articles, lang),
+        data=data,
     )
 
 
-def products(request):
-    base = site_url(request)
+def _in_category(products: list, categories: list, slug: str) -> list:
+    """Produits d'une catégorie ET de ses sous-catégories (même règle que la boutique)."""
+    family = {slug, *(c["id"] for c in categories if c.get("parent") == slug)}
+    return [p for p in products if family.intersection(p.get("categories", []))]
+
+
+def products(request, lang="fr"):
+    data = store_data()
     if request.GET.get("favoris"):
-        return render(
-            request, title=f"Mes favoris — {settings.SITE_NAME}", description=DEFAULT_DESCRIPTION, noindex=True
-        )
+        title = f"{pt(lang, 'favorites')} — {settings.SITE_NAME}"
+        return render(request, title=title, description=pt(lang, "description"), noindex=True, data=data, lang=lang)
     slug = request.GET.get("categorie")
-    category = Category.objects.filter(public.VISIBLE_CATEGORY, slug=slug).first() if slug else None
+    category = next((c for c in data["categories"] if c["id"] == slug), None) if slug else None
     if slug and not category:
-        return render(
-            request,
-            title=f"Catégorie introuvable — {settings.SITE_NAME}",
-            description=DEFAULT_DESCRIPTION,
-            noindex=True,
-            status=404,
-        )
+        return _missing(request, lang, "category_404")
     if category:
-        return render(
+        name = content.localized(category, lang, "label")
+        description = pt(lang, "category_description").format(name=name.lower() if lang == "fr" else name)
+        items = _in_category(data["products"], data["categories"], slug)
+        return _page(
             request,
-            title=f"{category.name} — {settings.SITE_NAME}",
-            description=(
-                f"Nos soins coréens {category.name.lower()} : livraison partout au Maroc, paiement à la livraison."
-            ),
-            canonical=f"{base}/produits?categorie={category.slug}",
+            lang,
+            f"/produits?categorie={slug}",
+            title=f"{name} — {settings.SITE_NAME}",
+            description=description,
+            body=content.products_page(items, data["categories"], lang, name, description),
+            data=data,
         )
-    # Autres filtres (ingrédient…) : même contenu que la liste → URL canonique = la liste.
-    return render(
+    # Autres filtres (ingrédient, recherche, prix…) : même contenu que la liste → adresse canonique = la liste.
+    return _page(
         request,
-        title=f"Nos produits — {settings.SITE_NAME}",
-        description=DEFAULT_DESCRIPTION,
-        canonical=f"{base}/produits",
+        lang,
+        "/produits",
+        title=f"{pt(lang, 'products')} — {settings.SITE_NAME}",
+        description=pt(lang, "description"),
+        body=content.products_page(
+            data["products"], data["categories"], lang, pt(lang, "products"), pt(lang, "description")
+        ),
+        data=data,
     )
 
 
-def product(request, slug):
-    base = site_url(request)
+def product(request, slug, lang="fr"):
     p = Product.objects.filter(slug=slug).first()
     if p is None or p.status == Product.Status.DRAFT:
-        return render(
-            request,
-            title=f"Produit introuvable — {settings.SITE_NAME}",
-            description=DEFAULT_DESCRIPTION,
-            noindex=True,
-            status=404,
-        )
+        return _missing(request, lang, "product_404")
     if p.status == Product.Status.ARCHIVED:
-        return render(
-            request,
-            title=f"Produit retiré — {settings.SITE_NAME}",
-            description=DEFAULT_DESCRIPTION,
-            noindex=True,
-            status=410,
-        )
-    data = public.product_payload(public.public_products_queryset().get(pk=p.pk))
-    url = f"{base}/produits/{p.slug}"
+        return _missing(request, lang, "product_410", status=410)
+    base = site_url(request)
+    store = store_data()
+    # Le produit actif est déjà dans les données de démarrage (même format que l'API).
+    data = next(x for x in store["products"] if x["slug"] == p.slug)
+    url = lang_url(base, lang, f"/produits/{p.slug}")
     image = absolute(base, data["seo"]["image"])
     in_stock = data["inStock"]
+    if lang == "ar":
+        ar = (data.get("translations") or {}).get("ar", {})
+        name = ar.get("displayName") or data["displayName"]
+        title = ar.get("displayName") or data["seo"]["title"]
+        description = (ar.get("summary") or ar.get("cardLine") or data["seo"]["description"])[:300]
+    else:
+        name, title, description = data["displayName"], data["seo"]["title"], data["seo"]["description"]
     offer = {
         "@type": "Offer",
         "url": url,
@@ -185,8 +303,8 @@ def product(request, slug):
     ld = {
         "@context": "https://schema.org",
         "@type": "Product",
-        "name": data["displayName"],
-        "description": data["seo"]["description"],
+        "name": name,
+        "description": description,
         "brand": {"@type": "Brand", "name": data["brand"]},
         "url": url,
         "offers": offer,
@@ -200,52 +318,50 @@ def product(request, slug):
         "    " + json_ld(ld) + "\n" + f'    <meta property="product:price:amount" content="{data["price"]:.2f}" />\n'
         '    <meta property="product:price:currency" content="MAD" />\n'
     )
-    noscript = (
-        f"<h1>{escape(data['displayName'])}</h1><p>{escape(data['summary'])}</p>"
-        f"<p>Prix : {data['price']:.2f} DH{'' if in_stock else ' — épuisé'}</p>"
-    )
-    return render(
+    return _page(
         request,
-        title=data["seo"]["title"] + f" — {settings.SITE_NAME}",
-        description=data["seo"]["description"],
-        canonical=url,
+        lang,
+        f"/produits/{p.slug}",
+        title=f"{title} — {settings.SITE_NAME}",
+        description=description,
         image=image,
         og_type="product",
         extra_head=head,
-        noscript=noscript,
+        body=content.product_page(data, store["categories"], lang),
+        data=store,
     )
 
 
-def blog(request):
-    base = site_url(request)
-    return render(
+def blog(request, lang="fr"):
+    data = store_data()
+    return _page(
         request,
-        title=f"Blog — {settings.SITE_NAME}",
-        description="Conseils de soin, routines et ingrédients coréens : le blog de Ma Petite Corée.",
-        canonical=f"{base}/blog",
+        lang,
+        "/blog",
+        title=f"{pt(lang, 'blog')} — {settings.SITE_NAME}",
+        description=pt(lang, "blog_description"),
+        body=content.blog_page([article_payload(a) for a in published_articles()], data["categories"], lang),
+        data=data,
     )
 
 
-def blog_article(request, slug):
-    base = site_url(request)
+def blog_article(request, slug, lang="fr"):
     article = published_articles().filter(slug=slug).first()
     if article is None:
-        return render(
-            request,
-            title=f"Article introuvable — {settings.SITE_NAME}",
-            description=DEFAULT_DESCRIPTION,
-            noindex=True,
-            status=404,
-        )
-    data = article_payload(article)
-    url = f"{base}/blog/{article.slug}"
+        return _missing(request, lang, "article_404")
+    base = site_url(request)
+    data = article_payload(article, full=True)
+    store = store_data()
+    url = lang_url(base, lang, f"/blog/{article.slug}")
     image = absolute(base, data["cover"]["src"]) if data["cover"] else None
-    description = (data["excerpt"] or DEFAULT_DESCRIPTION)[:300]
+    headline = content.localized(data, lang, "title")
+    description = (content.localized(data, lang, "excerpt") or pt(lang, "description"))[:300]
     ld = {
         "@context": "https://schema.org",
         "@type": "BlogPosting",
-        "headline": article.title,
+        "headline": headline,
         "description": description,
+        "inLanguage": lang,
         "datePublished": data["publishedAt"],
         "dateModified": article.updated_at.isoformat(),
         "url": url,
@@ -253,89 +369,99 @@ def blog_article(request, slug):
     }
     if image:
         ld["image"] = [image]
-    return render(
+    return _page(
         request,
-        title=f"{article.title} — {settings.SITE_NAME}",
+        lang,
+        f"/blog/{article.slug}",
+        title=f"{headline} — {settings.SITE_NAME}",
         description=description,
-        canonical=url,
         image=image,
         og_type="article",
         extra_head="    " + json_ld(ld) + "\n",
-        noscript=f"<h1>{escape(article.title)}</h1><p>{escape(article.excerpt)}</p>",
+        body=content.article_page(data, store["categories"], lang),
+        data=store,
     )
 
 
-def reviews(request):
-    base = site_url(request)
-    return render(
+def reviews(request, lang="fr"):
+    data = store_data()
+    return _page(
         request,
-        title=f"Avis clients — {settings.SITE_NAME}",
-        description="Les avis de nos clientes et clients sur la boutique Ma Petite Corée.",
-        canonical=f"{base}/avis",
+        lang,
+        "/avis",
+        title=f"{pt(lang, 'reviews')} — {settings.SITE_NAME}",
+        description=pt(lang, "reviews_description"),
+        body=content.reviews_page(public_reviews(), data["categories"], lang),
+        data=data,
     )
 
 
 def private_page(request, *args, **kwargs):
-    """Panier, commande, confirmation, administration : jamais indexés."""
-    return render(request, title=settings.SITE_NAME, description=DEFAULT_DESCRIPTION, noindex=True)
+    """Panier, commande, confirmation, administration : jamais indexés. Données de démarrage : boutique seulement."""
+    lang = request_lang(request)
+    data = None if request.path.startswith("/admin") else store_data()
+    title = settings.SITE_NAME
+    return render(request, title=title, description=pt(lang, "description"), noindex=True, data=data, lang=lang)
 
 
-def privacy(request):
+def privacy(request, lang="fr"):
     """Politique de confidentialité : non indexée tant que le texte n'a pas été validé juridiquement."""
     return render(
         request,
-        title=f"Politique de confidentialité — {settings.SITE_NAME}",
-        description="Données collectées, cookies, pixel Meta et consentement sur la boutique Ma Petite Corée.",
-        canonical=f"{site_url(request)}/confidentialite",
+        title=f"{pt(lang, 'privacy')} — {settings.SITE_NAME}",
+        description=pt(lang, "privacy_description"),
+        canonical=lang_url(site_url(request), lang, "/confidentialite"),
         noindex=True,
+        data=store_data(),
+        lang=lang,
     )
 
 
 def not_found(request, *args, **kwargs):
-    return render(
-        request,
-        title=f"Page introuvable — {settings.SITE_NAME}",
-        description=DEFAULT_DESCRIPTION,
-        noindex=True,
-        status=404,
-    )
+    return _missing(request, request_lang(request), "not_found")
 
 
 def robots_txt(request):
     base = site_url(request)
-    lines = [
-        "User-agent: *",
-        "Allow: /",
-        *[f"Disallow: {p}" for p in (*PRIVATE_PREFIXES, "/api/")],
-        f"Sitemap: {base}/sitemap.xml",
-    ]
+    private = [*PRIVATE_PREFIXES, *(f"/ar{p}" for p in PRIVATE_PREFIXES if p != "/admin"), "/api/"]
+    lines = ["User-agent: *", "Allow: /", *[f"Disallow: {p}" for p in private], f"Sitemap: {base}/sitemap.xml"]
     return HttpResponse("\n".join(lines) + "\n", content_type="text/plain; charset=utf-8")
 
 
 def sitemap_xml(request):
+    """Chaque page en français ET en arabe, avec les liens entre les deux versions (hreflang)."""
     base = site_url(request)
-    urls = [(f"{base}{path}", None, []) for path in ("/", "/produits", "/blog", "/avis")]
+    pages = [(path, None, []) for path in ("/", "/produits", "/blog", "/avis")]
     for a in published_articles():
         cover = [absolute(base, a.cover.url)] if a.cover_id else []
-        urls.append((f"{base}/blog/{a.slug}", a.updated_at.date().isoformat(), cover))
+        pages.append((f"/blog/{a.slug}", a.updated_at.date().isoformat(), cover))
     for c in Category.objects.filter(
         public.VISIBLE_CATEGORY, product_links__product__status=Product.Status.ACTIVE
     ).distinct():
-        urls.append((f"{base}/produits?categorie={c.slug}", None, []))
+        pages.append((f"/produits?categorie={c.slug}", None, []))
     for p in public.public_products_queryset():
         payload = public.product_payload(p)
         images = [absolute(base, i["src"]) for i in payload["galleryImages"]]
-        urls.append((f"{base}/produits/{p.slug}", p.updated_at.date().isoformat(), images))
+        pages.append((f"/produits/{p.slug}", p.updated_at.date().isoformat(), images))
     parts = [
         '<?xml version="1.0" encoding="UTF-8"?>',
-        '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:image="http://www.google.com/schemas/sitemap-image/1.1">',
+        '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"'
+        ' xmlns:image="http://www.google.com/schemas/sitemap-image/1.1"'
+        ' xmlns:xhtml="http://www.w3.org/1999/xhtml">',
     ]
-    for loc, lastmod, images in urls:
-        parts.append("  <url>")
-        parts.append(f"    <loc>{xml_escape(loc)}</loc>")
-        if lastmod:
-            parts.append(f"    <lastmod>{lastmod}</lastmod>")
-        parts += [f"    <image:image><image:loc>{xml_escape(i)}</image:loc></image:image>" for i in images]
-        parts.append("  </url>")
+    for path, lastmod, images in pages:
+        links = alternates(base, path)
+        for lang in LANGS:
+            parts.append("  <url>")
+            parts.append(f"    <loc>{xml_escape(links[lang])}</loc>")
+            parts += [
+                f'    <xhtml:link rel="alternate" hreflang="{HREFLANG[code]}" href="{xml_escape(url)}" />'
+                for code, url in links.items()
+            ]
+            parts.append(f'    <xhtml:link rel="alternate" hreflang="x-default" href="{xml_escape(links["fr"])}" />')
+            if lastmod:
+                parts.append(f"    <lastmod>{lastmod}</lastmod>")
+            parts += [f"    <image:image><image:loc>{xml_escape(i)}</image:loc></image:image>" for i in images]
+            parts.append("  </url>")
     parts.append("</urlset>")
     return HttpResponse("\n".join(parts) + "\n", content_type="application/xml; charset=utf-8")

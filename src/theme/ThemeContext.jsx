@@ -1,5 +1,6 @@
 import { createContext, useContext, useEffect, useMemo, useState } from 'react';
 import { ADMIN_API_BASE_URL, DATA_SOURCE } from '../config/env.js';
+import { bootstrapData } from '../services/bootstrap.js';
 import { api } from '../api/client.js';
 import { ENDPOINTS } from '../api/endpoints.js';
 import DEFAULT_THEME from './defaultTheme.js';
@@ -38,12 +39,14 @@ async function loadPublished() {
 
 export function ThemeProvider({ children }) {
   const isLocal = DATA_SOURCE === 'local';
-  const [state, setState] = useState(() => ({
-    status: isLocal && !PREVIEW ? 'ready' : 'loading', theme: DEFAULT_THEME, media: {}, version: null,
-  }));
+  // Thème publié joint par le serveur à la page : prêt dès le premier rendu (pas en aperçu du brouillon).
+  const boot = !isLocal && !PREVIEW ? bootstrapData()?.theme : null;
+  const [state, setState] = useState(() => (boot
+    ? { status: 'ready', theme: safeTheme(boot.theme), media: boot.media || {}, version: boot.version ?? null }
+    : { status: isLocal && !PREVIEW ? 'ready' : 'loading', theme: DEFAULT_THEME, media: {}, version: null }));
 
   useEffect(() => {
-    if (isLocal && !PREVIEW) return undefined;
+    if ((isLocal && !PREVIEW) || boot) return undefined;
     let alive = true;
     const attempt = PREVIEW && ADMIN_API_BASE_URL
       ? loadDraft().catch(() => (isLocal ? { theme: null, media: {} } : loadPublished()))
@@ -53,6 +56,7 @@ export function ThemeProvider({ children }) {
       // L'API du thème ne répond pas : la boutique reste ouverte avec le thème par défaut.
       .catch(() => alive && setState({ status: 'ready', theme: DEFAULT_THEME, media: {}, version: null }));
     return () => { alive = false; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- `boot` ne change pas après le 1er rendu
   }, [isLocal]);
 
   // Aperçu en direct : l'éditeur (même origine) envoie le brouillon non enregistré.

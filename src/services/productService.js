@@ -99,10 +99,13 @@ export const localizeCategory = (category, lang) => {
 /** Catalogue local normalisé, disponible immédiatement (sans réseau). */
 export const LOCAL_CATALOG = LOCAL_PRODUCTS.map((p) => normalizeProduct(p, PRODUCT_IMAGES[p.id]));
 
+/** Réponse de GET /products (ou données de démarrage) → produits au format de la boutique. */
+export const normalizeProducts = (items) => (items || []).map((p) => normalizeProduct(p, p));
+
 export async function fetchProducts({ signal } = {}) {
   if (DATA_SOURCE === 'local') return LOCAL_CATALOG;
   const data = await api.get(ENDPOINTS.products, { signal });
-  return (data?.items || data || []).map((p) => normalizeProduct(p, p));
+  return normalizeProducts(data?.items || data);
 }
 
 /**
