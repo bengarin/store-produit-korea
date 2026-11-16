@@ -1,23 +1,42 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { Search, X } from 'lucide-react';
 import Header from '../components/Header.jsx';
 import SiteFooter from '../components/SiteFooter.jsx';
 import ProductGrid, { CategoryChips } from '../components/ProductGrid.jsx';
+import PriceFilter from '../components/PriceFilter.jsx';
 import { useCatalog } from '../context/CatalogContext.jsx';
 import { STORE_CONFIG } from '../config/store.js';
 import { getIngredientById } from '../data/ingredients.js';
 import { useI18n } from '../i18n/I18nContext.jsx';
 import { track } from '../analytics/metaPixel.js';
 
+/** Filtre prix lu dans l'adresse (?prix_min=100&prix_max=250) ; invalide ou absent = pas de filtre. */
+function readPrice(params) {
+  const min = params.get('prix_min');
+  const max = params.get('prix_max');
+  if (min === null && max === null) return null;
+  const lo = min === null || min === '' ? 0 : Number(min);
+  const hi = max === null || max === '' ? Infinity : Number(max);
+  if (Number.isNaN(lo) || Number.isNaN(hi) || lo < 0 || lo > hi) return null;
+  return { min: lo, max: hi };
+}
+
 export default function ProductsPage() {
   const [params, setParams] = useSearchParams();
   const { products, categoryTree, topCategory } = useCatalog();
+  // Bornes du curseur : prix le plus bas / le plus haut du catalogue (arrondis à l'unité).
+  const bounds = useMemo(() => {
+    const prices = products.map((p) => p.price).filter((n) => Number.isFinite(n));
+    return prices.length ? { min: Math.floor(Math.min(...prices)), max: Math.ceil(Math.max(...prices)) } : { min: 0, max: 0 };
+  }, [products]);
   const { t, tc } = useI18n();
   const category = params.get('categorie') || 'all';
   const onlyFavorites = params.get('favoris') === '1';
   const ingredient = getIngredientById(params.get('ingredient'));
   const query = (params.get('q') || '').trim();
+  const price = readPrice(params);
+  const hasFilters = Boolean(query || price || category !== 'all');
   const [draft, setDraft] = useState(query);
   useEffect(() => setDraft(query), [query]);
   // Meta Pixel « Search » : une fois par recherche affichée (si le pixel est actif et accepté).
@@ -32,6 +51,23 @@ export default function ProductsPage() {
     if (value) next.set('q', value);
     else next.delete('q');
     setParams(next);
+  };
+  const applyPrice = (range) => {
+    const next = new URLSearchParams(params);
+    if (range) {
+      next.set('prix_min', String(range.min));
+      next.set('prix_max', String(range.max));
+    } else {
+      next.delete('prix_min');
+      next.delete('prix_max');
+    }
+    setParams(next, { replace: true });
+  };
+  // « Effacer les filtres » : catégorie, recherche et prix (les favoris / l'ingrédient restent).
+  const clearFilters = () => {
+    const next = new URLSearchParams(params);
+    ['categorie', 'q', 'prix_min', 'prix_max'].forEach((k) => next.delete(k));
+    setParams(next, { replace: true });
   };
   const clearSearch = () => {
     const next = new URLSearchParams(params);
@@ -82,6 +118,10 @@ export default function ProductsPage() {
             onChange={selectCategory}
             extra={(onlyFavorites || ingredient) && <Link className="chip chip--link" to="/produits">{t('products.all')}</Link>}
           />
+          {bounds.max > 0 && (
+            <PriceFilter bounds={bounds} value={price} onApply={applyPrice}
+              extra={hasFilters && <button type="button" className="filter-bar__clear" onClick={clearFilters}>{t('price.clearAll')}</button>} />
+          )}
           {subcategories.length > 0 && (
             <div className="chips chips--sub" role="group" aria-label={t('nav.toggleSub', { label: tc(parent.label) })}>
               {[{ id: parent.id, label: t('nav.allInCategory', { label: tc(parent.label) }) }, ...subcategories.map((c) => ({ ...c, label: tc(c.label) }))].map((c) => (
@@ -98,7 +138,9 @@ export default function ProductsPage() {
           onlyFavorites={onlyFavorites}
           ids={ingredient ? ingredient.productIds : null}
           query={query}
-          emptyText={query ? t('search.empty', { query }) : onlyFavorites ? t('products.emptyFavorites') : undefined}
+          price={price}
+          emptyText={price ? t('price.empty') : query ? t('search.empty', { query }) : onlyFavorites ? t('products.emptyFavorites') : undefined}
+          emptyAction={hasFilters && <button type="button" className="btn btn--outline" onClick={clearFilters}>{t('price.clearAll')}</button>}
         />
         {STORE_CONFIG.showDemoNotices && (
           <p className="demo-note">{t('demo.prices')}</p>

@@ -163,3 +163,23 @@ def test_politique_de_confidentialite_servie_mais_non_indexee(client):
     assert r.status_code == 200 and "<title>Politique de confidentialité — Ma Petite Corée</title>" in html
     assert r["X-Robots-Tag"] == "noindex, nofollow"  # pas d'indexation tant que le texte n'est pas validé
     assert "/confidentialite" not in client.get("/sitemap.xml").content.decode()
+
+
+@pytest.mark.django_db
+def test_blog_et_avis_html_et_sitemap(client):
+    from django.utils import timezone
+
+    from apps.blog.models import Article
+
+    Article.objects.create(
+        title="Routine <coréenne>", slug="routine", excerpt="Les bases.", body="<p>x</p>",
+        status="published", published_at=timezone.now(),
+    )  # fmt: skip
+    Article.objects.create(title="Brouillon", slug="brouillon", body="<p>x</p>")
+    html = client.get("/blog/routine").content.decode()
+    assert "<title>Routine &lt;coréenne&gt; — " in html and '"@type": "BlogPosting"' in html
+    assert 'rel="canonical" href="https://boutique.exemple.ma/blog/routine"' in html
+    assert client.get("/blog/brouillon").status_code == 404
+    assert client.get("/blog").status_code == client.get("/avis").status_code == 200
+    sitemap = client.get("/sitemap.xml").content.decode()
+    assert "/blog/routine</loc>" in sitemap and "/blog/brouillon" not in sitemap and "/avis</loc>" in sitemap

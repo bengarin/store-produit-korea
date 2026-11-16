@@ -11,11 +11,15 @@ urlpatterns = [
     path("api/v1/admin/", include("apps.themes.urls_admin")),
     path("api/v1/admin/", include("apps.newsletter.urls_admin")),
     path("api/v1/admin/", include("apps.notifications.urls_admin")),
+    path("api/v1/admin/", include("apps.blog.urls_admin")),
+    path("api/v1/admin/", include("apps.reviews.urls_admin")),
     # Boutique publique : chemins attendus par src/api/endpoints.js
     path("api/v1/store/", include("apps.catalog.urls_public")),
     path("api/v1/store/", include("apps.orders.urls_public")),
     path("api/v1/store/", include("apps.themes.urls_public")),
     path("api/v1/store/", include("apps.newsletter.urls_public")),
+    path("api/v1/store/", include("apps.blog.urls_public")),
+    path("api/v1/store/", include("apps.reviews.urls_public")),
 ]
 
 if settings.DEBUG:  # en développement uniquement ; en production les médias sont servis par le stockage

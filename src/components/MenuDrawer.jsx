@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { Link, NavLink } from 'react-router-dom';
-import { X, Home, Store, Heart, ShoppingCart, ChevronDown } from 'lucide-react';
+import { X, Home, Store, Heart, ShoppingCart, ChevronDown, BookOpen, Star } from 'lucide-react';
 import Logo from './Logo.jsx';
 import { useCatalog } from '../context/CatalogContext.jsx';
 import { ORDERS_ARE_SIMULATED } from '../services/orderService.js';
@@ -11,7 +11,7 @@ import { useI18n } from '../i18n/I18nContext.jsx';
 import LanguageSwitcher from './LanguageSwitcher.jsx';
 
 // Liens déjà présents dans le menu mobile (avec icône) ; les autres liens du thème sont ajoutés en dessous.
-const BUILT_IN = new Set(['/', '/produits', '/produits?favoris=1', '/panier']);
+const BUILT_IN = new Set(['/', '/produits', '/produits?favoris=1', '/panier', '/blog', '/avis']);
 
 export default function MenuDrawer({ open, onClose }) {
   const { count, favorites } = useCart();
@@ -55,6 +55,8 @@ export default function MenuDrawer({ open, onClose }) {
           ))}
           <li><NavLink to="/produits?favoris=1"><Heart size={18} /> {t('nav.favorites', { count: favorites.length })}</NavLink></li>
           <li><NavLink to="/panier"><ShoppingCart size={18} /> {t('nav.cart', { count })}</NavLink></li>
+          <li><NavLink to="/blog"><BookOpen size={18} /> {t('nav.blog')}</NavLink></li>
+          <li><NavLink to="/avis"><Star size={18} /> {t('nav.reviews')}</NavLink></li>
         </ul>
         <LanguageSwitcher full className="drawer__lang" />
         {ORDERS_ARE_SIMULATED && <p className="drawer__note">{t('demo.drawer')}</p>}

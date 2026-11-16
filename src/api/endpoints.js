@@ -12,4 +12,7 @@ export const ENDPOINTS = {
   orders: '/orders',
   theme: '/theme',
   newsletter: '/newsletter',
+  blog: '/blog',
+  blogArticle: (slug) => `/blog/${encodeURIComponent(slug)}`,
+  reviews: '/reviews',
 };

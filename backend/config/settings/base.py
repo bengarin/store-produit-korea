@@ -47,6 +47,8 @@ INSTALLED_APPS = [
     "apps.analytics",
     "apps.themes",
     "apps.newsletter",
+    "apps.blog",
+    "apps.reviews",
     "apps.seo",
     "apps.notifications",
 ]
@@ -170,6 +172,8 @@ REST_FRAMEWORK = {
         "orders": env.str("THROTTLE_ORDERS", default="10/hour"),
         "promo": env.str("THROTTLE_PROMO", default="30/hour"),
         "newsletter": env.str("THROTTLE_NEWSLETTER", default="10/hour"),
+        # Avis sur la boutique : par adresse IP (chaque avis attend de toute façon une validation).
+        "reviews": env.str("THROTTLE_REVIEWS", default="5/hour"),
     },
     "UNAUTHENTICATED_USER": "django.contrib.auth.models.AnonymousUser",
     # 0 = les limites de débit utilisent REMOTE_ADDR (IP réelle fixée par TrustedProxyMiddleware).

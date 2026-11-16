@@ -23,6 +23,8 @@ export default function SiteFooter() {
       )}
       <p>© {new Date().getFullYear()} {STORE_CONFIG.brandName}{ORDERS_ARE_SIMULATED && t('demo.footer')}</p>
       <p className="site-footer__legal">
+        <Link to="/avis">{t('nav.reviews')}</Link>
+        <Link to="/blog">{t('nav.blog')}</Link>
         <Link to="/confidentialite">{t('privacy.title')}</Link>
       </p>
     </footer>

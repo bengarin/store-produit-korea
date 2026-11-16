@@ -28,7 +28,7 @@ export function CategoryChips({ value, onChange, extra = null }) {
 }
 
 /** Grille produits filtrée + ajout au panier avec toast. */
-export default function ProductGrid({ category = 'all', onlyFavorites = false, ids = null, query = '', emptyText }) {
+export default function ProductGrid({ category = 'all', onlyFavorites = false, ids = null, query = '', price = null, emptyText, emptyAction = null }) {
   const { products, inCategory, searchProducts } = useCatalog();
   const { favorites, toggleFavorite } = useCart();
   const handleAdd = useQuickAdd();
@@ -40,9 +40,10 @@ export default function ProductGrid({ category = 'all', onlyFavorites = false, i
         (p) =>
           (category === 'all' || inCategory(p, category)) &&
           (!onlyFavorites || favorites.includes(p.id)) &&
-          (!ids || ids.includes(p.id)),
+          (!ids || ids.includes(p.id)) &&
+          (!price || (p.price >= price.min && p.price <= price.max)),
       ),
-    [products, category, onlyFavorites, ids, query, favorites, inCategory, searchProducts],
+    [products, category, onlyFavorites, ids, query, price, favorites, inCategory, searchProducts],
   );
 
   return (
@@ -64,7 +65,10 @@ export default function ProductGrid({ category = 'all', onlyFavorites = false, i
           ))}
         </div>
       ) : (
-        <p className="empty-inline">{emptyText || t('grid.empty')}</p>
+        <div className="empty-inline">
+          <p>{emptyText || t('grid.empty')}</p>
+          {emptyAction}
+        </div>
       )}
     </>
   );

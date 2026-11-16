@@ -29,6 +29,8 @@ function activeLink(links, pathname, search) {
 }
 
 const CATALOG_LINK = '/produits';
+// Pages ajoutées par la boutique elle-même (pas par le thème) : affichées après les liens du thème.
+export const BLOG_LINK = '/blog';
 
 export default function Header() {
   const { count } = useCart();
@@ -61,6 +63,11 @@ export default function Header() {
                 ? <CategoriesMenu key={`${i}-${link}`} active={link === active} />
                 : <Link key={`${i}-${link}`} to={link} aria-current={link === active ? 'page' : undefined} className={link === active ? 'active' : ''}>{tc(label)}</Link>
             ))}
+            {!links.some((l) => l.link === BLOG_LINK) && (
+              <Link to={BLOG_LINK} aria-current={pathname.startsWith(BLOG_LINK) ? 'page' : undefined} className={pathname.startsWith(BLOG_LINK) ? 'active' : ''}>
+                {t('nav.blog')}
+              </Link>
+            )}
           </nav>
           <div className="site-header__actions">
             <HeaderSearch placement="end" />

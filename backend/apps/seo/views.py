@@ -20,6 +20,7 @@ from django.conf import settings
 from django.http import Http404, HttpResponse
 from django.utils.html import escape
 
+from apps.blog.public import article_payload, published_articles
 from apps.catalog import public
 from apps.catalog.models import Category, Product
 
@@ -215,6 +216,65 @@ def product(request, slug):
     )
 
 
+def blog(request):
+    base = site_url(request)
+    return render(
+        request,
+        title=f"Blog — {settings.SITE_NAME}",
+        description="Conseils de soin, routines et ingrédients coréens : le blog de Ma Petite Corée.",
+        canonical=f"{base}/blog",
+    )
+
+
+def blog_article(request, slug):
+    base = site_url(request)
+    article = published_articles().filter(slug=slug).first()
+    if article is None:
+        return render(
+            request,
+            title=f"Article introuvable — {settings.SITE_NAME}",
+            description=DEFAULT_DESCRIPTION,
+            noindex=True,
+            status=404,
+        )
+    data = article_payload(article)
+    url = f"{base}/blog/{article.slug}"
+    image = absolute(base, data["cover"]["src"]) if data["cover"] else None
+    description = (data["excerpt"] or DEFAULT_DESCRIPTION)[:300]
+    ld = {
+        "@context": "https://schema.org",
+        "@type": "BlogPosting",
+        "headline": article.title,
+        "description": description,
+        "datePublished": data["publishedAt"],
+        "dateModified": article.updated_at.isoformat(),
+        "url": url,
+        "publisher": {"@type": "Organization", "name": settings.SITE_NAME},
+    }
+    if image:
+        ld["image"] = [image]
+    return render(
+        request,
+        title=f"{article.title} — {settings.SITE_NAME}",
+        description=description,
+        canonical=url,
+        image=image,
+        og_type="article",
+        extra_head="    " + json_ld(ld) + "\n",
+        noscript=f"<h1>{escape(article.title)}</h1><p>{escape(article.excerpt)}</p>",
+    )
+
+
+def reviews(request):
+    base = site_url(request)
+    return render(
+        request,
+        title=f"Avis clients — {settings.SITE_NAME}",
+        description="Les avis de nos clientes et clients sur la boutique Ma Petite Corée.",
+        canonical=f"{base}/avis",
+    )
+
+
 def private_page(request, *args, **kwargs):
     """Panier, commande, confirmation, administration : jamais indexés."""
     return render(request, title=settings.SITE_NAME, description=DEFAULT_DESCRIPTION, noindex=True)
@@ -254,7 +314,10 @@ def robots_txt(request):
 
 def sitemap_xml(request):
     base = site_url(request)
-    urls = [(f"{base}/", None, []), (f"{base}/produits", None, [])]
+    urls = [(f"{base}{path}", None, []) for path in ("/", "/produits", "/blog", "/avis")]
+    for a in published_articles():
+        cover = [absolute(base, a.cover.url)] if a.cover_id else []
+        urls.append((f"{base}/blog/{a.slug}", a.updated_at.date().isoformat(), cover))
     for c in Category.objects.filter(
         public.VISIBLE_CATEGORY, product_links__product__status=Product.Status.ACTIVE
     ).distinct():

@@ -29,6 +29,14 @@ const RULES = {
   editTheme: [OWNER, ADMIN, EDITOR],
   publishTheme: [OWNER, ADMIN],
   viewNewsletter: [OWNER, ADMIN],
+  // Blog : toute l'équipe lit ; écriture : + Éditeur ; suppression : Propriétaire, Admin.
+  viewBlog: [OWNER, ADMIN, ORDERS, EDITOR, ANALYST],
+  editBlog: [OWNER, ADMIN, EDITOR],
+  deleteBlog: [OWNER, ADMIN],
+  // Avis sur la boutique : modération (approuver, corriger, dépublier) : + Éditeur ; suppression : Propriétaire, Admin.
+  viewReviews: [OWNER, ADMIN, ORDERS, EDITOR, ANALYST],
+  moderateReviews: [OWNER, ADMIN, EDITOR],
+  deleteReviews: [OWNER, ADMIN],
 };
 
 export function can(user, action) {
