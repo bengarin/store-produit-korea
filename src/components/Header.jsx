@@ -29,6 +29,7 @@ function activeLink(links, pathname, search) {
 }
 
 const CATALOG_LINK = '/produits';
+const CART_LINK = '/panier';
 // Pages ajoutées par la boutique elle-même (pas par le thème) : affichées après les liens du thème.
 export const BLOG_LINK = '/blog';
 
@@ -38,7 +39,8 @@ export default function Header() {
   const { t, tc } = useI18n();
   const [menuOpen, setMenuOpen] = useState(false);
   const { pathname, search } = useLocation();
-  const links = theme.header.items;
+  // « Mon panier » n'apparaît pas en texte dans la barre : l'icône panier (à droite) y mène déjà.
+  const links = theme.header.items.filter((l) => l.link !== CART_LINK);
   const { categoryTree } = useCatalog();
   const hasCategories = categoryTree.length > 0;
   const active = activeLink(links.map((l) => l.link), pathname, search);

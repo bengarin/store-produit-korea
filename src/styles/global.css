@@ -1221,7 +1221,7 @@ html[lang="ar"] .filter-drawer__head h2 { font-family: var(--font-sans); font-si
 /* Ordinateur : colonne de filtres (carte, hauteur naturelle, sans barre de défilement) à côté de la grille */
 @media (min-width: 1000px) {
   .products-page .section-head { margin-bottom: var(--s-8); }
-  .collection { grid-template-columns: 264px minmax(0, 1fr); gap: var(--s-8); }
+  .collection { grid-template-columns: 248px minmax(0, 1fr); gap: var(--s-8); }
   .collection__sidebar { display: block; padding: var(--s-2) var(--s-5) var(--s-3); background: var(--surface); border: 1px solid var(--border); border-radius: 20px; box-shadow: var(--shadow-sm); }
   .collection__sidebar-head { display: flex; align-items: center; justify-content: space-between; gap: var(--s-2); min-height: 56px; border-bottom: 1px solid var(--border); }
   .collection__sidebar-title { font-family: var(--font-serif); font-size: 26px; font-weight: 600; color: var(--green-deep); }
@@ -1229,7 +1229,8 @@ html[lang="ar"] .filter-drawer__head h2 { font-family: var(--font-sans); font-si
   .collection__sidebar .filter-section:last-child { border-bottom: 0; }
   .collection__filter-btn { display: none; }
   .collection__toolbar { min-height: 58px; margin-bottom: var(--s-5); padding: 0 0 var(--s-3); border-bottom: 1px solid var(--border); }
-  .collection .product-grid { grid-template-columns: repeat(auto-fill, minmax(236px, 1fr)); gap: var(--s-6); }
+  /* Petits ordinateurs : 2 grandes cartes ; à partir de 1280 px : 3 colonnes confortables. */
+  .collection .product-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 28px; }
 }
 @media (max-width: 420px) {
   .collection__sort span { display: none; }
@@ -1246,3 +1247,15 @@ html[lang="ar"] .filter-drawer__head h2 { font-family: var(--font-sans); font-si
 .favorites-empty p { max-width: 340px; }
 .favorites-empty .btn { min-height: 48px; padding-inline: 26px; }
 .collection .empty-inline { padding: var(--s-10) var(--s-4); border: 1px dashed var(--border); border-radius: 20px; background: var(--surface); }
+
+/* Page produits : plus de largeur utile sur ordinateur (marges réduites), cartes plus grandes. */
+@media (min-width: 1000px) {
+  .container.products-page { max-width: 1480px; padding-inline: clamp(24px, 2.6vw, 40px); padding-top: var(--s-10); }
+  .products-page .section-head { margin-bottom: var(--s-6); }
+  .collection .product-card__media .product-image { aspect-ratio: 1 / 0.92; }
+  .collection .product-card__body { padding: 20px 22px 22px; }
+  .collection .product-card__name { font-size: 20px; }
+}
+@media (min-width: 1280px) {
+  .collection .product-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 28px; }
+}
