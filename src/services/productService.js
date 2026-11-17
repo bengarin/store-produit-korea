@@ -52,6 +52,9 @@ export function normalizeProduct(raw, images = {}) {
     skinTypes: raw.skinTypes || '',
     // Valeurs de filtre (« groupe:valeur », Admin → Filtres) et première mise en ligne (tri « Nouveautés »).
     filters: Array.isArray(raw.filters) ? raw.filters : [],
+    // Collections (Admin → Collections) et pays de fabrication (code ISO, absent = non renseigné).
+    collections: Array.isArray(raw.collections) ? raw.collections : [],
+    origin: raw.origin || '',
     publishedAt: raw.publishedAt || null,
     stock: raw.stock ?? null, // inconnu en local
     // Variantes et prix barré (mode API). Mode démo : aucune variante, produit disponible, pas de prix barré.
@@ -94,6 +97,13 @@ export function localizeProduct(product, lang) {
 export const localizeCategory = (category, lang) => {
   const label = category.translations?.[lang]?.label;
   return lang !== 'fr' && label ? { ...category, label } : category;
+};
+
+/** Collection dans la langue demandée (nom et description traduits s'ils existent). */
+export const localizeCollection = (collection, lang) => {
+  const tr = collection.translations?.[lang];
+  if (lang === 'fr' || !tr) return collection;
+  return { ...collection, label: tr.label || collection.label, description: tr.description || collection.description };
 };
 
 /** Catalogue local normalisé, disponible immédiatement (sans réseau). */

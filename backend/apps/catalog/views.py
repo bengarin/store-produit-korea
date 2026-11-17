@@ -46,6 +46,13 @@ class PublicCategoryListView(PublicView):
         return Response({"items": [public.category_payload(c) for c in public.visible_categories()]})
 
 
+class PublicCollectionListView(PublicView):
+    """GET /api/v1/store/collections — collections visibles contenant au moins un produit en ligne."""
+
+    def get(self, request):
+        return Response({"items": public.collections_payload()})
+
+
 class PublicFilterListView(PublicView):
     """GET /api/v1/store/filters — groupes de filtres de la page produits (Admin → Filtres)."""
 
@@ -200,7 +207,10 @@ def admin_products_queryset():
 
 
 class ProductListCreateView(generics.ListCreateAPIView):
-    """Filtres : ?status=active|draft|archived · ?category=<slug> · ?search=texte · ?ordering=position|-updated_at"""
+    """
+    Filtres : ?status=active|draft|archived · ?category=<slug> · ?collection=<slug> · ?search=texte
+    · ?ordering=position|-updated_at
+    """
 
     permission_classes = [CATALOG_PERMISSION]
     ORDERINGS = {"position", "-position", "updated_at", "-updated_at", "name", "-name"}
@@ -215,6 +225,8 @@ class ProductListCreateView(generics.ListCreateAPIView):
             qs = qs.filter(status=params["status"])
         if params.get("category"):
             qs = qs.filter(category_links__category__slug=params["category"])
+        if params.get("collection"):
+            qs = qs.filter(collections__slug=params["collection"])
         term = params.get("search", "").strip()
         if term:
             qs = qs.filter(

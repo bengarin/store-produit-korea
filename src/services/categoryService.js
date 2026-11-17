@@ -16,3 +16,10 @@ export async function fetchFilters({ signal } = {}) {
   const data = await api.get(ENDPOINTS.filters, { signal });
   return data?.items || [];
 }
+
+/** Collections de la boutique (Admin → Collections), avec au moins un produit en ligne. Mode démo : aucune. */
+export async function fetchCollections({ signal } = {}) {
+  if (DATA_SOURCE === 'local') return [];
+  const data = await api.get(ENDPOINTS.collections, { signal });
+  return data?.items || [];
+}

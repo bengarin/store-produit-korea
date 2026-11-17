@@ -1,9 +1,10 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { Link, useSearchParams } from 'react-router-dom';
+import { Link, useParams, useSearchParams } from 'react-router-dom';
 import { Heart, SlidersHorizontal, X } from 'lucide-react';
 import Header from '../components/Header.jsx';
 import SiteFooter from '../components/SiteFooter.jsx';
 import ProductGrid from '../components/ProductGrid.jsx';
+import ProductImage from '../components/ProductImage.jsx';
 import FilterPanel from '../components/FilterPanel.jsx';
 import FilterDrawer from '../components/FilterDrawer.jsx';
 import { useCatalog } from '../context/CatalogContext.jsx';
@@ -17,13 +18,21 @@ import { activeCount, matches, optionCounts, readFilters, sortProducts, writeFil
 const EMPTY = { category: 'all', price: null, options: {}, sort: 'recommandes' };
 
 /**
- * Page produits (catalogue, catégorie, résultats de recherche, favoris, ingrédient).
+ * Page produits (catalogue, catégorie, résultats de recherche, favoris, ingrédient) et page d'une collection
+ * (/collections/:slug — mêmes filtres, tri et tiroir mobile, limités aux produits de la collection).
  * Ordinateur : filtres dans une colonne à côté des produits. Mobile : bouton « Filtre » → tiroir.
  * La recherche se fait avec la loupe de l'en-tête (pas de 2e barre ici) ; ses résultats se filtrent comme le reste.
  */
 export default function ProductsPage() {
   const [params, setParams] = useSearchParams();
-  const { products, filterGroups, allCategories, inCategory, searchProducts } = useCatalog();
+  const { slug } = useParams();
+  const { products: allProducts, filterGroups, allCategories, inCategory, searchProducts, getCollection, status } = useCatalog();
+  const collection = slug ? getCollection(slug) : null;
+  // Page collection : seuls ses produits (un produit peut être dans plusieurs collections, une seule fiche).
+  const products = useMemo(
+    () => (slug ? allProducts.filter((p) => p.collections.includes(slug)) : allProducts),
+    [slug, allProducts],
+  );
   const { favorites } = useCart();
   const { t, tc } = useI18n();
   const [drawerOpen, setDrawerOpen] = useState(false);
@@ -46,10 +55,10 @@ export default function ProductsPage() {
 
   // Produits avant filtres : recherche (ordre de pertinence), favoris, ingrédient.
   const pool = useMemo(
-    () => (query ? searchProducts(query) : products).filter(
+    () => (query ? searchProducts(query).filter((p) => !slug || p.collections.includes(slug)) : products).filter(
       (p) => (!onlyFavorites || favorites.includes(p.id)) && (!ingredient || ingredient.productIds.includes(p.id)),
     ),
-    [query, products, searchProducts, onlyFavorites, favorites, ingredient],
+    [query, slug, products, searchProducts, onlyFavorites, favorites, ingredient],
   );
   // Bornes du curseur : prix réels du catalogue (arrondis à l'unité).
   const bounds = useMemo(() => {
@@ -117,10 +126,27 @@ export default function ProductsPage() {
   if (!chips.length && onlyFavorites) empty = t('products.emptyFavorites');
   else if (query && chips.length === 1) empty = t('search.empty', { query });
 
+  // Collection inconnue, masquée ou sans produit en ligne : message clair plutôt qu'une page vide.
+  if (slug && !collection) {
+    return (
+      <>
+        <Header />
+        <main className="container section products-page">
+          <div className="empty-state">
+            <h1>{status === 'loading' ? t('common.loading') : t('collections.notFound')}</h1>
+            {status !== 'loading' && <Link className="btn btn--primary" to="/produits">{t('products.all')}</Link>}
+          </div>
+        </main>
+        <SiteFooter />
+      </>
+    );
+  }
+
   return (
     <>
       <Header />
       <main className="container section products-page">
+        {collection ? <CollectionHero collection={collection} /> : (
         <header className="section-head">
           <p className="eyebrow">{query ? t('search.eyebrow') : onlyFavorites ? t('products.eyebrowFavorites') : ingredient ? t('products.eyebrowIngredient') : t('products.eyebrow')}</p>
           <h1 className="section-title">{query ? t('search.title', { query }) : onlyFavorites ? t('products.titleFavorites') : ingredient ? tc(ingredient.productsTitle) : t('products.title')}</h1>
@@ -131,6 +157,7 @@ export default function ProductsPage() {
               : t('products.intro', { count: products.length })}
           </p>
         </header>
+        )}
 
         {curated ? (
           <CuratedList items={pool} onlyFavorites={onlyFavorites} />
@@ -209,5 +236,27 @@ function CuratedList({ items, onlyFavorites }) {
       <ProductGrid items={items} showCount={false} />
       {!onlyFavorites && <p className="curated__more"><Link className="btn btn--outline" to="/produits">{t('products.all')}</Link></p>}
     </div>
+  );
+}
+
+/** En-tête d'une collection : nom, description (FR / AR) et image, dans le style des pages de la boutique. */
+function CollectionHero({ collection }) {
+  const { t } = useI18n();
+  return (
+    <header className="collection-hero">
+      <div className="collection-hero__text">
+        <p className="eyebrow">
+          <Link to="/produits" className="collection-hero__crumb">{t('collections.shop')}</Link>
+          <span aria-hidden="true"> · </span>{t('collections.eyebrow')}
+        </p>
+        <h1 className="section-title">{collection.label}</h1>
+        {collection.description && <p className="section-intro">{collection.description}</p>}
+      </div>
+      {collection.image && (
+        <div className="collection-hero__media">
+          <ProductImage image={collection.image} sizes="(min-width: 900px) 40vw, 100vw" className="collection-hero__img" eager />
+        </div>
+      )}
+    </header>
   );
 }

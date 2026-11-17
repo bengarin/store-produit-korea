@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { Link, NavLink } from 'react-router-dom';
-import { X, Home, Store, Heart, ShoppingCart, ChevronDown, BookOpen, Star } from 'lucide-react';
+import { X, Home, Store, Heart, ShoppingCart, ChevronDown, BookOpen, Star, ShoppingBag } from 'lucide-react';
 import Logo from './Logo.jsx';
 import { useCatalog } from '../context/CatalogContext.jsx';
 import { ORDERS_ARE_SIMULATED } from '../services/orderService.js';
@@ -15,7 +15,7 @@ const BUILT_IN = new Set(['/', '/produits', '/produits?favoris=1', '/panier', '/
 
 export default function MenuDrawer({ open, onClose }) {
   const { count, favorites } = useCart();
-  const { categoryTree } = useCatalog();
+  const { categoryTree, collections } = useCatalog();
   const { theme } = useTheme();
   const { t, tc } = useI18n();
   const extra = theme.header.items.filter((l) => !BUILT_IN.has(l.link));
@@ -45,6 +45,7 @@ export default function MenuDrawer({ open, onClose }) {
         </div>
         <ul className="drawer__links" onClick={onClose}>
           <li><NavLink to="/" end><Home size={18} /> {t('nav.home')}</NavLink></li>
+          {collections.length > 0 && <ShopAccordion collections={collections} />}
           {categoryTree.length ? (
             <CategoryAccordion tree={categoryTree} />
           ) : (
@@ -112,6 +113,31 @@ function CategoryAccordion({ tree }) {
               </li>
             );
           })}
+        </ul>
+      )}
+    </li>
+  );
+}
+
+/** « Boutique » (mobile) : tous les produits et les collections (Admin → Collections). */
+function ShopAccordion({ collections }) {
+  const { t } = useI18n();
+  const [open, setOpen] = useState(false);
+  return (
+    <li className="drawer__group">
+      <button type="button" className={`drawer__toggle ${open ? 'is-open' : ''}`} aria-expanded={open}
+        onClick={(e) => { e.stopPropagation(); setOpen((v) => !v); }}>
+        <ShoppingBag size={18} /> <span>{t('nav.shop')}</span>
+        <ChevronDown size={18} aria-hidden="true" className="drawer__chevron" />
+      </button>
+      {open && (
+        <ul className="drawer__cats">
+          <li><Link to="/produits">{t('nav.allProducts')}</Link></li>
+          {collections.map((c) => (
+            <li key={c.id} className="drawer__cat">
+              <div className="drawer__cat-row"><Link to={`/collections/${encodeURIComponent(c.id)}`}>{c.label}</Link></div>
+            </li>
+          ))}
         </ul>
       )}
     </li>

@@ -25,6 +25,7 @@ const CategoriesPage = lazy(() => import('./pages/CategoriesPage.jsx'));
 const ProductMarketingPage = lazy(() => import('./pages/ProductMarketingPage.jsx'));
 const ThemeEditorPage = lazy(() => import('./pages/ThemeEditorPage.jsx'));
 const FiltersPage = lazy(() => import('./pages/FiltersPage.jsx'));
+const CollectionsPage = lazy(() => import('./pages/CollectionsPage.jsx'));
 const BlogPage = lazy(() => import('./pages/BlogPage.jsx'));
 const BlogEditPage = lazy(() => import('./pages/BlogEditPage.jsx'));
 const ReviewsPage = lazy(() => import('./pages/ReviewsPage.jsx'));
@@ -90,6 +91,7 @@ function AdminShellRoutes() {
         <Route path="marketing" element={<Allow perm="viewProducts"><MarketingPage /></Allow>} />
         <Route path="categories" element={<Allow perm="manageCategories"><CategoriesPage /></Allow>} />
         <Route path="filters" element={<Allow perm="manageFilters"><FiltersPage /></Allow>} />
+        <Route path="collections" element={<Allow perm="viewProducts"><CollectionsPage /></Allow>} />
         <Route path="blog" element={<Allow perm="viewBlog"><BlogPage /></Allow>} />
         <Route path="blog/:id" element={<Allow perm="viewBlog"><BlogEditPage /></Allow>} />
         <Route path="reviews" element={<Allow perm="viewReviews"><ReviewsPage /></Allow>} />

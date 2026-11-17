@@ -103,6 +103,7 @@ export default function ProductView({
             <p className="pdp__cat">{categories}</p>
             <h1 className="pdp__title">{product.displayName}</h1>
             <ReviewSummary reviews={reviews} />
+            {product.origin && <p className="pdp__origin">{t('pdp.madeIn', { country: t(`country.${product.origin}`) })}</p>}
             <p className="pdp__price">
               {formatPrice(price)}
               {compare && <s className="pdp__compare"><span className="sr-only">{t('common.compareAt')}</span>{formatPrice(compare)}</s>}

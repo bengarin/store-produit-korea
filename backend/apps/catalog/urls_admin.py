@@ -2,13 +2,21 @@ from django.urls import path
 
 from apps.media_library import views as media_views
 
-from . import filters_admin, views
+from . import collections_admin, filters_admin, views
 
 urlpatterns = [
     path("categories", views.CategoryListCreateView.as_view(), name="admin-categories"),
     path("categories/reorder", views.CategoryReorderView.as_view(), name="admin-categories-reorder"),
     path("categories/<int:pk>", views.CategoryDetailView.as_view(), name="admin-category"),
     path("categories/<int:pk>/products", views.CategoryProductsView.as_view(), name="admin-category-products"),
+    path("collections", collections_admin.CollectionListCreateView.as_view(), name="admin-collections"),
+    path("collections/reorder", collections_admin.CollectionReorderView.as_view(), name="admin-collections-reorder"),
+    path("collections/<int:pk>", collections_admin.CollectionDetailView.as_view(), name="admin-collection"),
+    path(
+        "collections/<int:pk>/products",
+        collections_admin.CollectionProductsView.as_view(),
+        name="admin-collection-products",
+    ),
     path("filters", filters_admin.FilterGroupListCreateView.as_view(), name="admin-filters"),
     path("filters/reorder", filters_admin.FilterGroupReorderView.as_view(), name="admin-filters-reorder"),
     path("filters/<int:pk>", filters_admin.FilterGroupDetailView.as_view(), name="admin-filter-group"),

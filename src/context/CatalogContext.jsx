@@ -1,9 +1,9 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 import { DATA_SOURCE } from '../config/env.js';
-import { fetchProducts, LOCAL_CATALOG, localizeCategory, localizeProduct, normalizeProducts } from '../services/productService.js';
+import { fetchProducts, LOCAL_CATALOG, localizeCategory, localizeCollection, localizeProduct, normalizeProducts } from '../services/productService.js';
 import { bootstrapData } from '../services/bootstrap.js';
 import { useI18n } from '../i18n/I18nContext.jsx';
-import { fetchCategories, fetchFilters } from '../services/categoryService.js';
+import { fetchCategories, fetchCollections, fetchFilters } from '../services/categoryService.js';
 import { fetchStoreConfig, mergeStoreConfig } from '../services/configService.js';
 import { indexProduct, searchEntries } from '../utils/search.js';
 import { LOCAL_CATEGORIES } from '../data/local/categories.js';
@@ -26,6 +26,7 @@ function bootState() {
     products: normalizeProducts(boot.products),
     categories: boot.categories,
     filters: boot.filters || [],
+    collections: boot.collections || [],
     config: mergeStoreConfig(boot.config),
     error: null,
   };
@@ -33,8 +34,8 @@ function bootState() {
 
 export function CatalogProvider({ children }) {
   const [state, setState] = useState(() => {
-    if (isLocal) return { status: 'ready', products: LOCAL_CATALOG, categories: LOCAL_CATEGORIES, filters: [], config: STORE_CONFIG, error: null };
-    return bootState() || { status: 'loading', products: [], categories: [], filters: [], config: STORE_CONFIG, error: null };
+    if (isLocal) return { status: 'ready', products: LOCAL_CATALOG, categories: LOCAL_CATEGORIES, filters: [], collections: [], config: STORE_CONFIG, error: null };
+    return bootState() || { status: 'loading', products: [], categories: [], filters: [], collections: [], config: STORE_CONFIG, error: null };
   });
   const [attempt, setAttempt] = useState(0);
 
@@ -46,8 +47,11 @@ export function CatalogProvider({ children }) {
     const { signal } = controller;
     // Filtres : facultatifs (un échec n'empêche pas la boutique de s'afficher, la page produits garde le prix).
     const filters = fetchFilters({ signal }).catch(() => []);
-    Promise.all([fetchProducts({ signal }), fetchCategories({ signal }), fetchStoreConfig({ signal }), filters])
-      .then(([products, categories, config, filterGroups]) => setState({ status: 'ready', products, categories, filters: filterGroups, config, error: null }))
+    const collections = fetchCollections({ signal }).catch(() => []); // facultatives, comme les filtres
+    Promise.all([fetchProducts({ signal }), fetchCategories({ signal }), fetchStoreConfig({ signal }), filters, collections])
+      .then(([products, categories, config, filterGroups, collectionList]) => setState({
+        status: 'ready', products, categories, filters: filterGroups, collections: collectionList, config, error: null,
+      }))
       .catch((error) => {
         if (!controller.signal.aborted) setState((s) => ({ ...s, status: 'error', error }));
       });
@@ -66,6 +70,9 @@ export function CatalogProvider({ children }) {
     () => state.filters.map((g) => ({ ...localizeCategory(g, lang), options: g.options.map((o) => localizeCategory(o, lang)) })),
     [state.filters, lang],
   );
+
+  // Collections (Admin → Collections) dans la langue active.
+  const collections = useMemo(() => state.collections.map((c) => localizeCollection(c, lang)), [state.collections, lang]);
 
   // Index de recherche : textes français et arabes du produit + libellés de ses catégories (toutes langues).
   const searchIndex = useMemo(() => {
@@ -92,6 +99,8 @@ export function CatalogProvider({ children }) {
       categoryTree: tree,
       allCategories: categories,
       filterGroups,
+      collections,
+      getCollection: (id) => collections.find((c) => c.id === id),
       retry,
       getProductById: (id) => byId.get(id),
       /** Produits correspondant à une recherche (FR ou AR), les plus pertinents d'abord. */
@@ -105,7 +114,7 @@ export function CatalogProvider({ children }) {
         return product.categories.some((c) => family.has(c));
       },
     };
-  }, [state, products, categories, filterGroups, searchIndex, retry]);
+  }, [state, products, categories, filterGroups, collections, searchIndex, retry]);
 
   return <CatalogContext.Provider value={value}>{children}</CatalogContext.Provider>;
 }

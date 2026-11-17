@@ -9,6 +9,7 @@ import MediaCard from '../components/product/MediaCard.jsx';
 import PreviewModal from '../components/product/PreviewModal.jsx';
 import { CategoriesCard, StatusCard } from '../components/product/SidePanels.jsx';
 import FiltersCard from '../components/product/FiltersCard.jsx';
+import CollectionsCard from '../components/product/CollectionsCard.jsx';
 import VariantsCard from '../components/product/VariantsCard.jsx';
 import ArabicCard from '../components/product/ArabicCard.jsx';
 import RichTextEditor from '../components/RichTextEditor.jsx';
@@ -24,7 +25,8 @@ function toForm(p) {
     brand: p.brand, name: p.name, displayName: p.displayName, cardLine: p.cardLine, summary: p.summary,
     descriptionHtml: sanitizeRichText(p.descriptionHtml || ''), ingredients: listToLines(p.ingredients), benefits: listToLines(p.benefits),
     usage: listToLines(p.usage), skinTypes: p.skinTypes, highlights: p.highlights.map((h) => ({ ...h })),
-    categoryIds: p.categories.map((c) => c.id), hoverImageId: p.hoverImageId, hoverImagePosition: p.hoverImagePosition,
+    categoryIds: p.categories.map((c) => c.id), originCountry: p.originCountry || '',
+    collectionIds: (p.collections || []).map((c) => c.id), hoverImageId: p.hoverImageId, hoverImagePosition: p.hoverImagePosition,
     sceneImageId: p.sceneImageId, slug: p.slug, seoTitle: p.seoTitle, seoDescription: p.seoDescription, ogImageId: p.ogImageId,
     // Version arabe (facultative)
     displayNameAr: p.displayNameAr || '', cardLineAr: p.cardLineAr || '', summaryAr: p.summaryAr || '',
@@ -216,6 +218,7 @@ export default function ProductEditPage() {
           <StatusCard product={product} editable={editable} dirty={dirty} onChanged={refresh} onPreview={() => setPreview(true)} toast={toast} />
           <CategoriesCard categories={categories || []} value={form.categoryIds} editable={editable} toast={toast}
             onChange={(ids) => setForm((f) => ({ ...f, categoryIds: ids }))} onCreated={(c) => setCategories([...(categories || []), c])} />
+          <CollectionsCard form={form} setForm={setForm} editable={editable} errors={errors} />
           <FiltersCard productId={product.id} editable={editable} toast={toast} />
           <Card title="Visuels de l’accueil">
             <Field label="Image au survol (carrousel « produits du moment »)" htmlFor="pe-hover" error={errors.hoverImageId}>

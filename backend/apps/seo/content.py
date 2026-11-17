@@ -42,6 +42,9 @@ TEXTS = {
         "nav": "Navigation principale",
         "breadcrumb": "Fil d'Ariane",
         "verified": "Achat vérifié",
+        "collections": "Nos collections",
+        "discover": "Découvrir la collection",
+        "origin": "Pays de fabrication",
     },
     "ar": {
         "home": "الرئيسية",
@@ -71,8 +74,26 @@ TEXTS = {
         "nav": "التنقل الرئيسي",
         "breadcrumb": "مسار التنقل",
         "verified": "شراء مؤكَّد",
+        "collections": "تشكيلاتنا",
+        "discover": "اكتشفوا التشكيلة",
+        "origin": "بلد الصنع",
     },
 }
+
+
+# Pays de fabrication (mêmes codes que apps.catalog.models.ORIGIN_COUNTRIES).
+COUNTRIES = {
+    "fr": {
+        "KR": "Corée du Sud", "CN": "Chine", "JP": "Japon", "TW": "Taïwan", "TH": "Thaïlande", "FR": "France",
+        "ES": "Espagne", "IT": "Italie", "DE": "Allemagne", "GB": "Royaume-Uni", "CH": "Suisse",
+        "US": "États-Unis", "MA": "Maroc",
+    },
+    "ar": {
+        "KR": "كوريا الجنوبية", "CN": "الصين", "JP": "اليابان", "TW": "تايوان", "TH": "تايلاند", "FR": "فرنسا",
+        "ES": "إسبانيا", "IT": "إيطاليا", "DE": "ألمانيا", "GB": "المملكة المتحدة", "CH": "سويسرا",
+        "US": "الولايات المتحدة", "MA": "المغرب",
+    },
+}  # fmt: skip
 
 
 def t(lang: str, key: str) -> str:
@@ -148,9 +169,17 @@ def product_list(products: list, lang: str) -> str:
     return f'<ul class="ssr-products">{"".join(items)}</ul>'
 
 
-def home(products: list, categories: list, articles: list, lang: str) -> str:
+def home(products: list, categories: list, articles: list, lang: str, collections: list | None = None) -> str:
     p = prefix(lang)
     body = f"<h1>{escape(settings.SITE_NAME)} — {escape(t(lang, 'tagline'))}</h1><p>{escape(t(lang, 'intro'))}</p>"
+    if collections:
+        cards = "".join(
+            f"<li><h3>{escape(localized(c, lang, 'label'))}</h3>"
+            f"<p>{escape(localized(c, lang, 'description') or '')}</p>"
+            f"{_link(p + '/collections/' + c['id'], t(lang, 'discover'))}</li>"
+            for c in collections
+        )
+        body += f'<h2>{escape(t(lang, "collections"))}</h2><ul class="ssr-collections">{cards}</ul>'
     body += f"<h2>{escape(t(lang, 'products'))}</h2>" + product_list(products, lang)
     if articles:
         links = (_link(p + "/blog/" + a["slug"], localized(a, lang, "title")) for a in articles[:3])
@@ -200,6 +229,9 @@ def product_page(prod: dict, categories: list, lang: str, reviews: dict | None =
     body = f'<nav class="ssr-crumbs" aria-label="{escape(t(lang, "breadcrumb"))}">{" › ".join(crumbs)}</nav>'
     body += f"<article><h1>{escape(name)}</h1>"
     body += f"<p>{escape(t(lang, 'brand'))} : {escape(prod.get('brand') or '')}</p>"
+    origin = COUNTRIES.get(lang, COUNTRIES["fr"]).get(prod.get("origin") or "")
+    if origin:
+        body += f"<p>{escape(t(lang, 'origin'))} : {escape(origin)}</p>"
     body += f"<p>{escape(t(lang, 'price'))} : {escape(price(prod.get('price'), lang))} · {escape(stock)}</p>"
     summary = localized(prod, lang, "summary")
     if summary:

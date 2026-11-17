@@ -76,6 +76,7 @@ function StorefrontRoutes() {
           <Route path="/" element={<HomePage />} />
           <Route path="/produits" element={<ProductsPage />} />
           <Route path="/produits/:id" element={<ProductPage />} />
+          <Route path="/collections/:slug" element={<ProductsPage />} />
           <Route path="/panier" element={<CartPage />} />
           <Route path="/commande" element={<CheckoutPage />} />
           <Route path="/confirmation" element={<ConfirmationPage />} />

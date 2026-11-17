@@ -1,9 +1,9 @@
-import { useEffect, useRef, useState } from 'react';
+import { Fragment, useEffect, useRef, useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { Menu, ShoppingCart } from 'lucide-react';
 import Logo from './Logo.jsx';
 import MenuDrawer from './MenuDrawer.jsx';
-import CategoriesMenu from './CategoriesMenu.jsx';
+import CategoriesMenu, { ShopMenu } from './CategoriesMenu.jsx';
 import HeaderSearch from './HeaderSearch.jsx';
 import AnnouncementBar from './AnnouncementBar.jsx';
 import { useCart } from '../context/CartContext.jsx';
@@ -41,8 +41,9 @@ export default function Header() {
   const { pathname, search } = useLocation();
   // « Mon panier » n'apparaît pas en texte dans la barre : l'icône panier (à droite) y mène déjà.
   const links = theme.header.items.filter((l) => l.link !== CART_LINK);
-  const { categoryTree } = useCatalog();
+  const { categoryTree, collections } = useCatalog();
   const hasCategories = categoryTree.length > 0;
+  const onCollection = pathname.startsWith('/collections/');
   const active = activeLink(links.map((l) => l.link), pathname, search);
 
   return (
@@ -60,9 +61,17 @@ export default function Header() {
           <Logo />
           <nav className="site-nav" aria-label={t('header.mainNav')}>
             {links.map(({ label, link }, i) => (
-              // Le lien du catalogue (« Nos produits ») devient le menu « Catégories » (Admin → Catégories).
-              link === CATALOG_LINK && hasCategories
-                ? <CategoriesMenu key={`${i}-${link}`} active={link === active} />
+              // Le lien du catalogue (« Nos produits ») devient « Boutique » (collections, s'il y en a)
+              // puis « Catégories » (Admin → Catégories).
+              link === CATALOG_LINK && (hasCategories || collections.length > 0)
+                ? (
+                  <Fragment key={`${i}-${link}`}>
+                    <ShopMenu active={onCollection} />
+                    {hasCategories
+                      ? <CategoriesMenu active={link === active} />
+                      : <Link to={link} aria-current={link === active ? 'page' : undefined} className={link === active ? 'active' : ''}>{tc(label)}</Link>}
+                  </Fragment>
+                )
                 : <Link key={`${i}-${link}`} to={link} aria-current={link === active ? 'page' : undefined} className={link === active ? 'active' : ''}>{tc(label)}</Link>
             ))}
             {!links.some((l) => l.link === BLOG_LINK) && (

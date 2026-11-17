@@ -72,6 +72,7 @@ PAGE_TEXTS = {
         "products": "Nos produits",
         "favorites": "Mes favoris",
         "category_404": "Catégorie introuvable",
+        "collection_404": "Collection introuvable",
         "category_description": "Nos soins coréens {name} : livraison partout au Maroc, paiement à la livraison.",
         "product_404": "Produit introuvable",
         "product_410": "Produit retiré",
@@ -94,6 +95,7 @@ PAGE_TEXTS = {
         "products": "منتجاتنا",
         "favorites": "مفضلاتي",
         "category_404": "الفئة غير موجودة",
+        "collection_404": "التشكيلة غير موجودة",
         "category_description": "منتجات العناية الكورية — {name}: التوصيل إلى جميع أنحاء المغرب، والدفع عند الاستلام.",
         "product_404": "المنتج غير موجود",
         "product_410": "المنتج لم يعد متوفرًا",
@@ -226,7 +228,7 @@ def home(request, lang="fr"):
         title=pt(lang, "home"),
         description=pt(lang, "description"),
         extra_head="    " + json_ld(org) + "\n",
-        body=content.home(data["products"], data["categories"], articles, lang),
+        body=content.home(data["products"], data["categories"], articles, lang, data["collections"]),
         data=data,
     )
 
@@ -235,6 +237,28 @@ def _in_category(products: list, categories: list, slug: str) -> list:
     """Produits d'une catégorie ET de ses sous-catégories (même règle que la boutique)."""
     family = {slug, *(c["id"] for c in categories if c.get("parent") == slug)}
     return [p for p in products if family.intersection(p.get("categories", []))]
+
+
+def collection(request, slug, lang="fr"):
+    """Page d'une collection (Admin → Collections) : visible seulement si elle contient un produit en ligne."""
+    data = store_data()
+    found = next((c for c in data["collections"] if c["id"] == slug), None)
+    if not found:
+        return _missing(request, lang, "collection_404")
+    name = content.localized(found, lang, "label")
+    description = content.localized(found, lang, "description") or pt(lang, "description")
+    items = [p for p in data["products"] if slug in p.get("collections", [])]
+    image = (found.get("image") or {}).get("src")
+    return _page(
+        request,
+        lang,
+        f"/collections/{slug}",
+        title=f"{name} — {settings.SITE_NAME}",
+        description=description,
+        image=absolute(site_url(request), image),
+        body=content.products_page(items, data["categories"], lang, name, description),
+        data=data,
+    )
 
 
 def products(request, lang="fr"):
@@ -460,6 +484,8 @@ def sitemap_xml(request):
         public.VISIBLE_CATEGORY, product_links__product__status=Product.Status.ACTIVE
     ).distinct():
         pages.append((f"/produits?categorie={c.slug}", None, []))
+    for c in public.visible_collections():
+        pages.append((f"/collections/{c.slug}", c.updated_at.date().isoformat(), []))
     for p in public.public_products_queryset():
         payload = public.product_payload(p)
         images = [absolute(base, i["src"]) for i in payload["galleryImages"]]

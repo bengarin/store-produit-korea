@@ -8,10 +8,11 @@ Format PUBLIC d'un produit : identique à celui du catalogue local du front
 
 from decimal import Decimal
 
-from django.db.models import Prefetch, Q
+from django.db.models import Count, Prefetch, Q
 
 from .models import (
     Category,
+    Collection,
     FilterGroup,
     FilterOption,
     Product,
@@ -85,6 +86,7 @@ def public_products_queryset(statuses=(Product.Status.ACTIVE,)):
             Prefetch(
                 "filter_options", queryset=FilterOption.objects.filter(VISIBLE_FILTER_OPTION).select_related("group")
             ),
+            Prefetch("collections", queryset=Collection.objects.filter(is_active=True)),
         )
     )
 
@@ -152,6 +154,8 @@ def product_payload(product: Product) -> dict:
         "skinTypes": product.skin_types,
         # Filtres de la page produits (Admin → Filtres) : « groupe:valeur », valeurs visibles uniquement.
         "filters": [f"{o.group.slug}:{o.slug}" for o in product.filter_options.all()],
+        # Collections visibles (Admin → Collections) : un produit peut être dans plusieurs, une seule fiche.
+        "collections": [c.slug for c in product.collections.all()],
         # Première mise en ligne : tri « Nouveautés ».
         "publishedAt": product.published_at.isoformat() if product.published_at else None,
         "stock": None,  # quantité exacte volontairement non publiée
@@ -185,6 +189,9 @@ def product_payload(product: Product) -> dict:
             "image": product.og_image.url if product.og_image_id else (main["src"] if main else None),
         },
     }
+    # Pays de fabrication : seulement s'il a été renseigné (jamais supposé à partir de la marque).
+    if product.origin_country:
+        payload["origin"] = product.origin_country
     # Visuels marketing (colonne de droite de la fiche) : présents seulement s'il y en a.
     marketing = marketing_payload(product)
     if marketing:
@@ -242,3 +249,55 @@ def filter_groups_payload() -> list:
         if options:
             out.append({**_label(g), "options": options})
     return out
+
+
+ACTIVE_PRODUCTS = Q(products__status=Product.Status.ACTIVE)
+
+
+def visible_collections():
+    """Collections affichées dans la boutique : visibles ET contenant au moins un produit en ligne (dans l'ordre)."""
+    return (
+        Collection.objects.filter(is_active=True)
+        .select_related("image")
+        .annotate(product_count=Count("products", filter=ACTIVE_PRODUCTS, distinct=True))
+        .filter(product_count__gt=0)
+        .order_by("position", "id")  # l'ordre du modèle est ignoré par Django dans une requête avec Count
+    )
+
+
+def _fallback_image(collection: Collection):
+    """Sans image choisie : photo principale du premier produit en ligne de la collection."""
+    first = (
+        collection.products.filter(status=Product.Status.ACTIVE)
+        .order_by("position", "id")
+        .prefetch_related(
+            Prefetch("images", queryset=ProductImage.objects.filter(in_gallery=True).select_related("media"))
+        )
+        .first()
+    )
+    images = list(first.images.all()) if first else []
+    return image_payload(images[0]) if images else None
+
+
+def collection_payload(collection: Collection) -> dict:
+    if collection.image_id:
+        image = {"src": collection.image.url, "alt": collection.image_alt or collection.image.alt, "fit": "cover"}
+        if collection.image.file_640:
+            image["src640"] = collection.image.url_640
+    else:
+        image = _fallback_image(collection)
+    payload = {
+        "id": collection.slug,
+        "label": collection.name,
+        "description": collection.description,
+        "image": image,
+        "productCount": getattr(collection, "product_count", None),
+    }
+    arabic = {k: v for k, v in {"label": collection.name_ar, "description": collection.description_ar}.items() if v}
+    if arabic:
+        payload["translations"] = {"ar": arabic}
+    return payload
+
+
+def collections_payload() -> list:
+    return [collection_payload(c) for c in visible_collections()]

@@ -13,7 +13,9 @@ from apps.media_library.models import MediaAsset
 from . import services
 from .models import (
     FOCAL_POSITION,
+    ORIGIN_COUNTRIES,
     Category,
+    Collection,
     Product,
     ProductCategory,
     ProductHighlight,
@@ -325,6 +327,13 @@ class ProductSerializer(serializers.ModelSerializer):
         queryset=Category.objects.all(), many=True, required=False, write_only=True
     )
     categories = serializers.SerializerMethodField()
+    originCountry = serializers.ChoiceField(
+        source="origin_country", choices=ORIGIN_COUNTRIES, required=False, allow_blank=True
+    )
+    collectionIds = serializers.PrimaryKeyRelatedField(
+        queryset=Collection.objects.all(), many=True, required=False, write_only=True
+    )
+    collections = serializers.SerializerMethodField()
     highlights = HighlightSerializer(many=True, required=False)
     hoverImageId = serializers.PrimaryKeyRelatedField(
         source="hover_image", queryset=ProductImage.objects.all(), allow_null=True, required=False
@@ -377,6 +386,9 @@ class ProductSerializer(serializers.ModelSerializer):
             "skinTypesAr",
             "categoryIds",
             "categories",
+            "originCountry",
+            "collectionIds",
+            "collections",
             "highlights",
             "images",
             "hoverImageId",
@@ -401,6 +413,9 @@ class ProductSerializer(serializers.ModelSerializer):
             {"id": link.category_id, "slug": link.category.slug, "name": link.category.name}
             for link in product.category_links.select_related("category")
         ]
+
+    def get_collections(self, product):
+        return [{"id": c.pk, "slug": c.slug, "name": c.name} for c in product.collections.all()]
 
     def get_variants(self, product):
         qs = product.variants.prefetch_related("option_values__option")
@@ -444,10 +459,33 @@ class ProductSerializer(serializers.ModelSerializer):
                 raise serializers.ValidationError({field: ["Cette image n'appartient pas à ce produit."]})
         if self.instance is not None and "variant" in attrs:
             raise serializers.ValidationError({"variant": ["Utilisez l'API des variantes pour modifier les prix."]})
+        self._check_collections(attrs)
         return attrs
 
+    def _check_collections(self, attrs):
+        """
+        Règles des collections (pays de fabrication, ingrédients) vérifiées avec les valeurs FINALES du produit :
+        à l'ajout dans une collection, mais aussi si l'origine ou les ingrédients changent ensuite.
+        """
+        current = self.instance
+        if "collectionIds" in attrs:
+            collections = attrs["collectionIds"]
+            if len({c.pk for c in collections}) != len(collections):
+                raise serializers.ValidationError({"collectionIds": ["Collection en double."]})
+        elif current is not None and ("origin_country" in attrs or "ingredients" in attrs):
+            collections = list(current.collections.all())
+        else:
+            return
+        origin = attrs.get("origin_country", getattr(current, "origin_country", ""))
+        ingredients = attrs.get("ingredients", getattr(current, "ingredients", []))
+        errors = [e for c in collections for e in c.entry_errors(origin=origin, ingredients=ingredients)]
+        if errors:
+            raise serializers.ValidationError({"collectionIds": errors})
+
     # Écriture ---------------------------------------------------------
-    def _write_relations(self, product, categories, highlights):
+    def _write_relations(self, product, categories, highlights, collections=None):
+        if collections is not None:
+            product.collections.set(collections)
         if categories is not None:
             ProductCategory.objects.filter(product=product).delete()
             ProductCategory.objects.bulk_create(
@@ -462,6 +500,7 @@ class ProductSerializer(serializers.ModelSerializer):
     @transaction.atomic
     def create(self, validated_data):
         categories = validated_data.pop("categoryIds", None)
+        collections = validated_data.pop("collectionIds", None)
         highlights = validated_data.pop("highlights", None)
         variant_data = validated_data.pop("variant", None) or {"price": 0}
         if not validated_data.get("slug"):
@@ -469,7 +508,7 @@ class ProductSerializer(serializers.ModelSerializer):
                 validated_data.get("display_name") or f"{validated_data['brand']} {validated_data['name']}", Product
             )
         product = Product.objects.create(status=Product.Status.DRAFT, **validated_data)
-        self._write_relations(product, categories, highlights)
+        self._write_relations(product, categories, highlights, collections)
         Variant.objects.create(product=product, is_default=True, title=services.DEFAULT_VARIANT_TITLE, **variant_data)
         request = self.context.get("request")
         log_action(
@@ -484,12 +523,13 @@ class ProductSerializer(serializers.ModelSerializer):
     @transaction.atomic
     def update(self, product, validated_data):
         categories = validated_data.pop("categoryIds", None)
+        collections = validated_data.pop("collectionIds", None)
         highlights = validated_data.pop("highlights", None)
         before = {k: getattr(product, k) for k in validated_data}
         for key, value in validated_data.items():
             setattr(product, key, value)
         product.save()
-        self._write_relations(product, categories, highlights)
+        self._write_relations(product, categories, highlights, collections)
         changes = {
             k: [_plain(before[k]), _plain(getattr(product, k))]
             for k in validated_data
@@ -497,6 +537,8 @@ class ProductSerializer(serializers.ModelSerializer):
         }
         if categories is not None:
             changes["categories"] = [c.slug for c in categories]
+        if collections is not None:
+            changes["collections"] = [c.slug for c in collections]
         if highlights is not None:
             changes["highlights"] = highlights
         request = self.context.get("request")

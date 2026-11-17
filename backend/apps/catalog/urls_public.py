@@ -8,5 +8,6 @@ urlpatterns = [
     path("products", views.PublicProductListView.as_view(), name="store-products"),
     path("products/<slug:slug>", views.PublicProductDetailView.as_view(), name="store-product"),
     path("categories", views.PublicCategoryListView.as_view(), name="store-categories"),
+    path("collections", views.PublicCollectionListView.as_view(), name="store-collections"),
     path("filters", views.PublicFilterListView.as_view(), name="store-filters"),
 ]

@@ -831,3 +831,33 @@ textarea.adm-input { resize: vertical; min-height: 80px; }
 .adm-foption__name > * { justify-self: start; }
 .adm-review__product { margin: 0; font-size: 13px; color: var(--adm-ink-2); }
 .adm-check.has-error span { color: #b0412f; }
+
+/* Collections (Admin → Collections + carte « Origine et collections » de la fiche produit) */
+.adm-colls { list-style: none; margin: 0; padding: 0; display: grid; gap: 14px; }
+.adm-coll { display: grid; grid-template-columns: 96px minmax(0, 1fr); gap: 16px; padding: 16px; background: var(--adm-surface, #fffdf9); border: 1px solid var(--adm-line); border-radius: 14px; }
+.adm-coll.is-hidden { opacity: 0.75; }
+.adm-coll__thumb { display: grid; place-items: center; width: 96px; height: 72px; overflow: hidden; border-radius: 10px; background: #f3ede3; color: var(--adm-ink-2); }
+.adm-coll__thumb img { width: 100%; height: 100%; object-fit: cover; color: transparent; }
+.adm-coll__thumb--lg { width: 160px; height: 110px; }
+.adm-coll__main { display: grid; gap: 6px; min-width: 0; }
+.adm-coll__title { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 10px; margin: 0; font-size: 15px; }
+.adm-coll__desc { margin: 0; color: var(--adm-ink-2); line-height: 1.5; }
+.adm-coll__meta { margin: 0; font-size: 13px; }
+.adm-coll__hint { margin: 0; font-size: 13px; color: #8a5a12; }
+.adm-coll__actions { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 6px; margin-top: 4px; }
+.adm-coll-image { display: flex; flex-wrap: wrap; gap: 16px; margin: 6px 0 14px; }
+.adm-coll-image__side { display: grid; gap: 6px; flex: 1; min-width: 220px; }
+.adm-coll-image__side .adm-muted { margin: 0; }
+.adm-coll-rules { margin: 4px 0 8px; padding: 14px; border: 1px solid var(--adm-line); border-radius: 12px; }
+.adm-coll-rules .adm-muted { margin: 4px 0 10px; }
+.adm-coll-products { list-style: none; margin: 8px 0 0; padding: 0; display: grid; gap: 2px; }
+.adm-coll-products .adm-check { margin: 0; padding: 10px 4px; border-top: 1px solid var(--adm-line); }
+.adm-coll-products li:first-child .adm-check { border-top: 0; }
+.adm-coll-products__meta, .adm-collection-option__why { display: block; margin-top: 2px; font-size: 12.5px; font-weight: 400; color: var(--adm-ink-2); }
+.adm-collection-option__why { color: #8a5a12; }
+.adm-collections { margin: 6px 0 10px; padding: 0; border: 0; }
+.adm-collection-option { margin: 8px 0; }
+@media (max-width: 600px) {
+  .adm-coll { grid-template-columns: 64px minmax(0, 1fr); padding: 12px; }
+  .adm-coll__thumb { width: 64px; height: 52px; }
+}

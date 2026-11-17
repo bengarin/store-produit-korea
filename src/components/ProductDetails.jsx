@@ -38,7 +38,19 @@ function useSections(product) {
         </div>
       ),
     },
-    { id: 'ingredients', title: t('pdp.tab.ingredients'), body: <ul className="pdp-list">{product.ingredients.map((x) => <li key={x} dir={autoDir}>{x}</li>)}</ul> },
+    {
+      id: 'ingredients',
+      title: t('pdp.tab.ingredients'),
+      body: (
+        <>
+          {/* Pays de fabrication et ingrédients : seulement ce qui est renseigné, rien n'est supposé. */}
+          {product.origin && <p className="pdp-desc__meta"><strong>{t('pdp.origin')}</strong> {t(`country.${product.origin}`)}</p>}
+          {product.ingredients.length
+            ? <ul className="pdp-list">{product.ingredients.map((x) => <li key={x} dir={autoDir}>{x}</li>)}</ul>
+            : <p className="pdp-desc__missing">{t('pdp.ingredientsMissing')}</p>}
+        </>
+      ),
+    },
     { id: 'usage', title: t('pdp.tab.usage'), body: <ol className="pdp-list">{product.usage.map((x) => <li key={x} dir={autoDir}>{x}</li>)}</ol> },
     {
       id: 'benefits',

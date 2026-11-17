@@ -20,6 +20,24 @@ class Timestamped(models.Model):
         abstract = True
 
 
+# Pays de fabrication (codes ISO 3166-1). Vide = non renseigné : rien n'est affiché, rien n'est supposé.
+ORIGIN_COUNTRIES = [
+    ("KR", "Corée du Sud"),
+    ("CN", "Chine"),
+    ("JP", "Japon"),
+    ("TW", "Taïwan"),
+    ("TH", "Thaïlande"),
+    ("FR", "France"),
+    ("ES", "Espagne"),
+    ("IT", "Italie"),
+    ("DE", "Allemagne"),
+    ("GB", "Royaume-Uni"),
+    ("CH", "Suisse"),
+    ("US", "États-Unis"),
+    ("MA", "Maroc"),
+]
+
+
 class Category(Timestamped):
     slug = models.SlugField("identifiant URL", max_length=80, unique=True)
     name = models.CharField("nom", max_length=100)
@@ -70,6 +88,10 @@ class Product(Timestamped):
     benefits_ar = models.JSONField("bienfaits (arabe)", default=list, blank=True)
     usage_steps_ar = models.JSONField("conseils d'utilisation (arabe)", default=list, blank=True)
     skin_types_ar = models.CharField("types de peau (arabe)", max_length=255, blank=True)
+    origin_country = models.CharField(
+        "pays de fabrication", max_length=2, choices=ORIGIN_COUNTRIES, blank=True,
+        help_text="Tel qu'indiqué sur l'emballage (« Made in … »). Vide si non vérifié.",
+    )  # fmt: skip
     status = models.CharField("statut", max_length=10, choices=Status.choices, default=Status.DRAFT)
     categories = models.ManyToManyField(Category, through="ProductCategory", related_name="products", blank=True)
     hover_image = models.ForeignKey(
@@ -389,3 +411,47 @@ class FilterOption(Timestamped):
 
     def __str__(self):
         return f"{self.group_id} · {self.name}"
+
+
+class Collection(Timestamped):
+    """
+    Collection de la boutique (ex. « Soins naturels », « Beauté chinoise ») : un regroupement de produits EXISTANTS.
+    Un produit peut être dans plusieurs collections ; il garde une seule fiche, un seul stock, un seul prix.
+
+    Règles d'entrée (contrôlées par le serveur, pour ne rien affirmer sans preuve) :
+    - `required_origin` : seuls les produits dont le pays de fabrication est celui-ci peuvent y entrer ;
+    - `require_ingredients` : seuls les produits dont la liste d'ingrédients est renseignée peuvent y entrer.
+    """
+
+    slug = models.SlugField("identifiant URL", max_length=80, unique=True)
+    name = models.CharField("nom", max_length=80)
+    name_ar = models.CharField("nom (arabe)", max_length=80, blank=True)
+    description = models.CharField("description", max_length=300, blank=True)
+    description_ar = models.CharField("description (arabe)", max_length=300, blank=True)
+    image = models.ForeignKey(
+        MediaAsset, verbose_name="image", null=True, blank=True, on_delete=models.SET_NULL, related_name="+"
+    )
+    image_alt = models.CharField("texte alternatif", max_length=255, blank=True)
+    position = models.PositiveIntegerField("ordre", default=0)
+    is_active = models.BooleanField("visible", default=True)
+    required_origin = models.CharField("pays de fabrication exigé", max_length=2, choices=ORIGIN_COUNTRIES, blank=True)
+    require_ingredients = models.BooleanField("liste d'ingrédients exigée", default=False)
+    products = models.ManyToManyField(Product, related_name="collections", blank=True)
+
+    class Meta:
+        verbose_name = "collection"
+        verbose_name_plural = "collections"
+        ordering = ["position", "id"]
+
+    def __str__(self):
+        return self.name
+
+    def entry_errors(self, *, origin: str, ingredients) -> list[str]:
+        """Raisons pour lesquelles un produit (origine, ingrédients donnés) ne peut pas entrer dans la collection."""
+        errors = []
+        if self.required_origin and origin != self.required_origin:
+            country = dict(ORIGIN_COUNTRIES)[self.required_origin]
+            errors.append(f"« {self.name} » : pays de fabrication « {country} » requis.")
+        if self.require_ingredients and not [i for i in (ingredients or []) if str(i).strip()]:
+            errors.append(f"« {self.name} » : la liste des ingrédients doit être renseignée.")
+        return errors

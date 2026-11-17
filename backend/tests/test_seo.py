@@ -197,7 +197,7 @@ def test_contenu_html_et_donnees_de_demarrage(client, sellable, category):
     assert '<a href="/produits/creme-test">' in root and "129 DH" in root and "<h1>" in root
     assert '<a href="/produits?categorie=hydratation">Hydratation</a>' in root  # liens vers les catégories
     data = json.loads(re.search(r'<script id="mpc-data" type="application/json">(.*?)</script>', html, re.S).group(1))
-    assert set(data) == {"products", "categories", "filters", "config", "theme"}
+    assert set(data) == {"products", "categories", "filters", "collections", "config", "theme"}
     assert data["products"] == client.get("/api/v1/store/products").json()["items"]
     assert data["categories"] == client.get("/api/v1/store/categories").json()["items"]
     assert data["config"] == client.get("/api/v1/store/config").json()
