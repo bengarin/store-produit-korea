@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { ChevronRight, Heart, ShoppingCart, Zap, Info, Leaf } from 'lucide-react';
 import ProductGallery from './ProductGallery.jsx';
 import ProductDetails from './ProductDetails.jsx';
+import { ReviewSummary } from './ProductReviews.jsx';
 import NamedIcon from './NamedIcon.jsx';
 import QuantitySelector from './QuantitySelector.jsx';
 import { reassuranceItems } from './Reassurance.jsx';
@@ -48,6 +49,7 @@ function initialVariant(product) {
  */
 export default function ProductView({
   product, categoryLabel, qty, onQtyChange, maxQty, isFav, onToggleFavorite, onAdd, onBuyNow, showDemoNotices, desktop, deliveryFee = null,
+  reviews = null,
 }) {
   const { t, tc, autoDir } = useI18n();
   const mainCat = product.categories[0];
@@ -100,6 +102,7 @@ export default function ProductView({
           <div className="pdp__info">
             <p className="pdp__cat">{categories}</p>
             <h1 className="pdp__title">{product.displayName}</h1>
+            <ReviewSummary reviews={reviews} />
             <p className="pdp__price">
               {formatPrice(price)}
               {compare && <s className="pdp__compare"><span className="sr-only">{t('common.compareAt')}</span>{formatPrice(compare)}</s>}

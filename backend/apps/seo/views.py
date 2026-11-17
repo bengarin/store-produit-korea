@@ -24,6 +24,7 @@ from django.utils.html import escape
 from apps.blog.public import article_payload, published_articles
 from apps.catalog import public
 from apps.catalog.models import Category, Product
+from apps.reviews.product_reviews import product_reviews_summary
 from apps.reviews.views import public_reviews
 
 from . import content
@@ -314,6 +315,26 @@ def product(request, slug, lang="fr"):
     sku = next((v["sku"] for v in data["variants"] if v["isDefault"] and v["sku"]), None)
     if sku:
         ld["sku"] = sku
+    # Avis PRODUIT approuvés (vrais avis clients modérés) : note moyenne + derniers avis.
+    reviews = product_reviews_summary(p)
+    if reviews["count"]:
+        ld["aggregateRating"] = {
+            "@type": "AggregateRating",
+            "ratingValue": reviews["average"],
+            "reviewCount": reviews["count"],
+            "bestRating": 5,
+            "worstRating": 1,
+        }
+        ld["review"] = [
+            {
+                "@type": "Review",
+                "author": {"@type": "Person", "name": r["name"]},
+                "datePublished": r["date"][:10],
+                "reviewBody": r["text"],
+                "reviewRating": {"@type": "Rating", "ratingValue": r["rating"], "bestRating": 5, "worstRating": 1},
+            }
+            for r in reviews["items"][:5]
+        ]
     head = (
         "    " + json_ld(ld) + "\n" + f'    <meta property="product:price:amount" content="{data["price"]:.2f}" />\n'
         '    <meta property="product:price:currency" content="MAD" />\n'
@@ -327,7 +348,7 @@ def product(request, slug, lang="fr"):
         image=image,
         og_type="product",
         extra_head=head,
-        body=content.product_page(data, store["categories"], lang),
+        body=content.product_page(data, store["categories"], lang, reviews),
         data=store,
     )
 

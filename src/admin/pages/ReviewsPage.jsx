@@ -50,7 +50,7 @@ export default function ReviewsPage() {
   const tabs = [['pending', 'En attente', counts.pending], ['approved', 'Publiés', counts.approved], ['', 'Tous', null]];
 
   return (
-    <>
+    <div className="adm-page">
       <PageHeader title="Avis clients" subtitle="Avis sur la boutique déposés par les clients. Ils n’apparaissent sur le site qu’après votre validation." />
       {message && <Notice tone={message.tone}>{message.text}</Notice>}
       <div className="adm-filters">
@@ -116,7 +116,7 @@ export default function ReviewsPage() {
           <p>L’avis de {removing.name} sera supprimé définitivement.</p>
         </ConfirmDialog>
       )}
-    </>
+    </div>
   );
 }
 

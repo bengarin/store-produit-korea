@@ -2,6 +2,8 @@ import { useEffect, useState } from 'react';
 import useMediaQuery from '../hooks/useMediaQuery.js';
 import { useLocation, useNavigate, useParams, Link } from 'react-router-dom';
 import ProductView from '../components/ProductView.jsx';
+import ProductReviews from '../components/ProductReviews.jsx';
+import useProductReviews from '../hooks/useProductReviews.js';
 import RelatedProducts from '../components/RelatedProducts.jsx';
 import Header from '../components/Header.jsx';
 import SiteFooter from '../components/SiteFooter.jsx';
@@ -21,6 +23,8 @@ export default function ProductPage() {
   const { id } = useParams();
   const { getProductById, categoryLabel, config } = useCatalog();
   const product = getProductById(id);
+  // Avis de CE produit (approuvés) : résumé près du titre + section dédiée.
+  const reviews = useProductReviews(product?.slug || id);
   const navigate = useNavigate();
   const { addItem, favorites, toggleFavorite, maxQty } = useCart();
   const showToast = useToast();
@@ -83,7 +87,9 @@ export default function ProductPage() {
         onBuyNow={handleBuyNow}
         showDemoNotices={STORE_CONFIG.showDemoNotices}
         desktop={desktop}
+        reviews={reviews}
       />
+      <ProductReviews product={product} reviews={reviews} />
       <RelatedProducts product={product} />
       <SiteFooter />
     </>

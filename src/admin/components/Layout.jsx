@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { NavLink, Outlet, useLocation } from 'react-router-dom';
-import { BookOpen, Boxes, SlidersHorizontal, ExternalLink, FolderTree, MessageSquareHeart, LayoutDashboard, Leaf, LogOut, Menu, Package, Images, Palette, Settings, ShoppingBag, Users, X } from 'lucide-react';
+import { BookOpen, Boxes, SlidersHorizontal, Star, ExternalLink, FolderTree, MessageSquareHeart, LayoutDashboard, Leaf, LogOut, Menu, Package, Images, Palette, Settings, ShoppingBag, Users, X } from 'lucide-react';
 import { useAuth } from '../auth.jsx';
 import { can } from '../permissions.js';
 import { ROLE_LABELS } from '../format.js';
@@ -15,6 +15,7 @@ const NAV = [
   { to: '/admin/marketing', label: 'Visuels marketing', icon: Images, perm: 'viewProducts' },
   { to: '/admin/blog', label: 'Blog', icon: BookOpen, perm: 'viewBlog' },
   { to: '/admin/reviews', label: 'Avis clients', icon: MessageSquareHeart, perm: 'viewReviews', badge: 'reviews' },
+  { to: '/admin/product-reviews', label: 'Avis produits', icon: Star, perm: 'viewReviews', badge: 'productReviews' },
   { to: '/admin/customers', label: 'Clients', icon: Users, perm: 'viewCustomers' },
   { to: '/admin/inventory', label: 'Stock', icon: Boxes, perm: 'viewInventory' },
   { to: '/admin/theme', label: 'Thème', icon: Palette, perm: 'viewTheme' },
@@ -40,6 +41,7 @@ export default function Layout() {
   const pending = useApi('/orders', { status: 'pending', page_size: 1 }, { enabled: can(user, 'viewOrders') });
   // Avis clients en attente de validation (pastille dans le menu).
   const reviews = useApi('/reviews', { status: 'pending', page_size: 1 }, { enabled: can(user, 'moderateReviews') });
+  const productReviews = useApi('/product-reviews', { status: 'pending', page_size: 1 }, { enabled: can(user, 'moderateReviews') });
 
   useEffect(() => setOpen(false), [location.pathname]);
   useEffect(() => {
@@ -51,6 +53,7 @@ export default function Layout() {
 
   const pendingCount = pending.data?.total || 0;
   const reviewsCount = reviews.data?.counts?.pending || 0;
+  const productReviewsCount = productReviews.data?.counts?.pending || 0;
 
   return (
     <div className={`adm-shell ${open ? 'is-nav-open' : ''}`}>
@@ -79,6 +82,9 @@ export default function Layout() {
               )}
               {badge === 'reviews' && reviewsCount > 0 && (
                 <span className="adm-nav__count" aria-label={`${reviewsCount} avis à valider`}>{reviewsCount}</span>
+              )}
+              {badge === 'productReviews' && productReviewsCount > 0 && (
+                <span className="adm-nav__count" aria-label={`${productReviewsCount} avis produits à valider`}>{productReviewsCount}</span>
               )}
             </NavLink>
           ))}

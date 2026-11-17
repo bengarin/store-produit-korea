@@ -33,3 +33,14 @@ export async function fetchReviews({ signal } = {}) {
 export function submitReview(payload) {
   return api.post(ENDPOINTS.reviews, payload);
 }
+
+/** Avis PRODUIT approuvés (moyenne, nombre, avis). Mode démo : aucun avis. */
+export async function fetchProductReviews(slug, { signal } = {}) {
+  if (!CONTENT_AVAILABLE) return { count: 0, average: null, items: [] };
+  return api.get(ENDPOINTS.productReviews(slug), { signal });
+}
+
+/** Dépôt d'un avis produit (en attente de validation par l'équipe). */
+export function submitProductReview(slug, payload) {
+  return api.post(ENDPOINTS.productReviews(slug), payload);
+}

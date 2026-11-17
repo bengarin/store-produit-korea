@@ -38,7 +38,7 @@ export default function BlogPage() {
   };
 
   return (
-    <>
+    <div className="adm-page">
       <PageHeader title="Blog" subtitle="Articles affichés sur la page « Blog » de la boutique (français et arabe)."
         actions={editable && <ButtonLink variant="primary" icon={Plus} to="/admin/blog/new">Nouvel article</ButtonLink>} />
       {message && <Notice tone={message.tone}>{message.text}</Notice>}
@@ -104,6 +104,6 @@ export default function BlogPage() {
           <p>« {removing.title} » sera supprimé définitivement. L’image de couverture reste dans la médiathèque.</p>
         </ConfirmDialog>
       )}
-    </>
+    </div>
   );
 }

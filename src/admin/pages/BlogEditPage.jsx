@@ -79,7 +79,7 @@ export default function BlogEditPage() {
   const scheduled = published && form.publishedAt && new Date(form.publishedAt) > new Date();
 
   return (
-    <>
+    <div className="adm-page">
       <PageHeader title={isNew ? 'Nouvel article' : form.title || 'Article'} back={{ to: '/admin/blog', label: 'Blog' }}
         badge={!isNew && <Badge tone={ARTICLE_STATUS[form.status].tone}>{scheduled ? 'Programmé' : ARTICLE_STATUS[form.status].label}</Badge>}
         actions={editable && (
@@ -104,7 +104,8 @@ export default function BlogEditPage() {
               <textarea id="be-excerpt" className="adm-input" rows={3} value={form.excerpt} onChange={set('excerpt')} maxLength={300} disabled={!editable} />
             </Field>
             <Field label="Texte" htmlFor="be-body" required={published} error={err('bodyHtml')}>
-              <RichTextEditor id="be-body" value={form.bodyHtml} resetKey={`fr-${version}`} onChange={set('bodyHtml')} disabled={!editable} />
+              <RichTextEditor id="be-body" value={form.bodyHtml} resetKey={`fr-${version}`} onChange={set('bodyHtml')} disabled={!editable}
+                placeholder="Rédigez le texte de l’article…" />
             </Field>
           </Card>
           <Card title="Arabe (facultatif)">
@@ -117,7 +118,8 @@ export default function BlogEditPage() {
                 <textarea id="be-excerpt-ar" className="adm-input" rows={3} value={form.excerptAr} onChange={set('excerptAr')} maxLength={300} disabled={!editable} />
               </Field>
               <Field label="النص" htmlFor="be-body-ar" error={err('bodyHtmlAr')}>
-                <RichTextEditor id="be-body-ar" value={form.bodyHtmlAr} resetKey={`ar-${version}`} onChange={set('bodyHtmlAr')} disabled={!editable} />
+                <RichTextEditor id="be-body-ar" value={form.bodyHtmlAr} resetKey={`ar-${version}`} onChange={set('bodyHtmlAr')} disabled={!editable}
+                  placeholder="اكتبوا نص المقال…" />
               </Field>
             </div>
           </Card>
@@ -134,7 +136,11 @@ export default function BlogEditPage() {
             ) : (
               <p className="adm-muted">Aucune image : un motif neutre est affiché.</p>
             )}
-            {editable && <Button variant="secondary" icon={ImagePlus} onClick={() => setPicking(true)}>{form.cover ? 'Changer l’image' : 'Choisir une image'}</Button>}
+            {editable && (
+              <div className="adm-blog-cover__pick">
+                <Button variant="secondary" icon={ImagePlus} onClick={() => setPicking(true)}>{form.cover ? 'Changer l’image' : 'Choisir une image'}</Button>
+              </div>
+            )}
             <Field label="Texte alternatif" htmlFor="be-cover-alt" hint="Décrit l’image (accessibilité, Google)." error={err('coverAlt')}>
               <input id="be-cover-alt" className="adm-input" value={form.coverAlt} onChange={set('coverAlt')} maxLength={255} disabled={!editable} />
             </Field>
@@ -161,6 +167,6 @@ export default function BlogEditPage() {
             setPicking(false);
           }} />
       )}
-    </>
+    </div>
   );
 }

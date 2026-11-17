@@ -36,7 +36,9 @@ def test_categories_creees_par_migrate():
     call_command("migrate", "catalog", "0005", verbosity=0)
     assert not Category.objects.filter(slug__in=BASE_CATEGORIES).exists()
     call_command("migrate", "catalog", "0006", verbosity=0)
-    call_command("migrate", "catalog", fake=True, verbosity=0)
+    # Toutes les applis en « fake » : les migrations d'autres applis qui dépendent du catalogue (ex. reviews 0002)
+    # ont été reculées avec lui et créent aussi des tables.
+    call_command("migrate", fake=True, verbosity=0)
     call_command("migrate", verbosity=0)
     rows = list(Category.objects.filter(slug__in=BASE_CATEGORIES).values_list("slug", "name"))
     assert dict(rows) == BASE_CATEGORIES

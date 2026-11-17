@@ -52,7 +52,7 @@ export default function FiltersPage() {
   );
 
   return (
-    <>
+    <div className="adm-page">
       <PageHeader title="Filtres" subtitle="Groupes de filtres de la page produits. Cochez ensuite les valeurs sur chaque fiche produit (carte « Filtres de la boutique »)."
         actions={editable && <Button icon={Plus} onClick={() => setEditing({ kind: 'group' })}>Nouveau groupe</Button>} />
       {message && <Notice tone={message.tone}>{message.text}</Notice>}
@@ -129,7 +129,7 @@ export default function FiltersPage() {
           <p className="adm-muted">Pour la cacher temporairement, utilisez plutôt « Masquer ».</p>
         </ConfirmDialog>
       )}
-    </>
+    </div>
   );
 }
 

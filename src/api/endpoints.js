@@ -16,4 +16,5 @@ export const ENDPOINTS = {
   blog: '/blog',
   blogArticle: (slug) => `/blog/${encodeURIComponent(slug)}`,
   reviews: '/reviews',
+  productReviews: (slug) => `/products/${encodeURIComponent(slug)}/reviews`,
 };

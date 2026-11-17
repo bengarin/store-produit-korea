@@ -28,6 +28,7 @@ const FiltersPage = lazy(() => import('./pages/FiltersPage.jsx'));
 const BlogPage = lazy(() => import('./pages/BlogPage.jsx'));
 const BlogEditPage = lazy(() => import('./pages/BlogEditPage.jsx'));
 const ReviewsPage = lazy(() => import('./pages/ReviewsPage.jsx'));
+const ProductReviewsPage = lazy(() => import('./pages/ProductReviewsPage.jsx'));
 
 /** Page réservée à certains rôles (le serveur refuse de toute façon). */
 function Allow({ perm, children }) {
@@ -92,6 +93,7 @@ function AdminShellRoutes() {
         <Route path="blog" element={<Allow perm="viewBlog"><BlogPage /></Allow>} />
         <Route path="blog/:id" element={<Allow perm="viewBlog"><BlogEditPage /></Allow>} />
         <Route path="reviews" element={<Allow perm="viewReviews"><ReviewsPage /></Allow>} />
+        <Route path="product-reviews" element={<Allow perm="viewReviews"><ProductReviewsPage /></Allow>} />
         <Route path="*" element={<Home />} />
       </Route>
     </Routes>

@@ -41,6 +41,7 @@ TEXTS = {
         "currency": "DH",
         "nav": "Navigation principale",
         "breadcrumb": "Fil d'Ariane",
+        "verified": "Achat vérifié",
     },
     "ar": {
         "home": "الرئيسية",
@@ -69,6 +70,7 @@ TEXTS = {
         "currency": "درهم",
         "nav": "التنقل الرئيسي",
         "breadcrumb": "مسار التنقل",
+        "verified": "شراء مؤكَّد",
     },
 }
 
@@ -170,7 +172,23 @@ def _list(title: str, values) -> str:
     return f"<h2>{escape(title)}</h2><ul>{items}</ul>"
 
 
-def product_page(prod: dict, categories: list, lang: str) -> str:
+def _product_reviews(reviews: dict | None, lang: str) -> str:
+    if not reviews or not reviews["count"]:
+        return ""
+    head = (
+        f"<h2>{escape(t(lang, 'reviews'))}</h2><p>{escape(t(lang, 'average'))} : {reviews['average']}"
+        f" {escape(t(lang, 'out_of'))} · {reviews['count']} {escape(t(lang, 'reviews_count'))}</p>"
+    )
+    items = "".join(
+        f"<li><p><strong>{escape(r['name'])}</strong> · {r['rating']}/5"
+        + (f" · {escape(t(lang, 'verified'))}" if r["verifiedPurchase"] else "")
+        + f"</p><p>{escape(r['text'])}</p></li>"
+        for r in reviews["items"][:10]
+    )
+    return head + f'<ul class="ssr-reviews">{items}</ul>'
+
+
+def product_page(prod: dict, categories: list, lang: str, reviews: dict | None = None) -> str:
     p = prefix(lang)
     name = localized(prod, lang, "displayName")
     by_id = {c["id"]: c for c in categories}
@@ -195,6 +213,7 @@ def product_page(prod: dict, categories: list, lang: str) -> str:
     skin = localized(prod, lang, "skinTypes")
     if skin:
         body += f"<h2>{escape(t(lang, 'skin_types'))}</h2><p>{escape(skin)}</p>"
+    body += _product_reviews(reviews, lang)
     return page(body + "</article>", categories, lang)
 
 

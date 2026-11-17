@@ -18,7 +18,7 @@ const TOOLS = [
  * Texte mis en forme SANS HTML libre : seuls gras, italique, titres, listes et liens https sont possibles.
  * Ce qui est collé arrive en texte brut. Le contenu est filtré ici puis nettoyé à nouveau par le serveur.
  */
-export default function RichTextEditor({ id, value, onChange, disabled, resetKey }) {
+export default function RichTextEditor({ id, value, onChange, disabled, resetKey, placeholder = 'Rédigez la description complète…' }) {
   const ref = useRef(null);
   useEffect(() => {
     if (ref.current) ref.current.innerHTML = sanitizeRichText(value || '');
@@ -58,6 +58,7 @@ export default function RichTextEditor({ id, value, onChange, disabled, resetKey
         id={id}
         ref={ref}
         className="adm-rte__area"
+        data-placeholder={placeholder}
         role="textbox"
         aria-multiline="true"
         contentEditable={!disabled}

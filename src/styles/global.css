@@ -1275,3 +1275,25 @@ html[lang="ar"] .filter-drawer__head h2 { font-family: var(--font-sans); font-si
 .ssr-products a { font-weight: 600; font-size: 17px; }
 .ssr-crumbs { font-size: 14px; margin-bottom: 14px; }
 .ssr-footer { padding-top: 18px; border-top: 1px solid var(--border); font-size: 14px; color: var(--text-2); }
+
+/* ---------- Avis sur un produit (fiche produit) ---------- */
+.pdp-rating { display: inline-flex; flex-wrap: wrap; align-items: center; gap: 6px; margin: 2px 0 8px; font-size: 14px; color: var(--text-2); }
+.pdp-rating strong { color: var(--green-deep); }
+.pdp-rating span { text-decoration: underline; text-underline-offset: 3px; }
+.pdp-reviews { padding: var(--s-10) 0; border-top: 1px solid var(--border); }
+.pdp-reviews__head { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: var(--s-4); margin-bottom: var(--s-6); }
+.pdp-reviews__title { font-family: var(--font-serif); font-weight: 600; font-size: clamp(30px, 6vw, 42px); line-height: 1.1; color: var(--green-deep); margin-bottom: 6px; }
+html[lang="ar"] .pdp-reviews__title { font-family: var(--font-sans); font-weight: 700; font-size: clamp(24px, 5vw, 32px); }
+.pdp-reviews__head .reviews-summary { justify-content: flex-start; }
+.pdp-reviews__empty { color: var(--text-2); max-width: 520px; }
+.pdp-reviews__head .btn { gap: 8px; min-height: 46px; }
+.pdp-reviews__body { display: grid; gap: var(--s-6); align-items: start; }
+.review-card__meta { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 12px; }
+.verified-badge { display: inline-flex; align-items: center; gap: 4px; padding: 2px 9px; border-radius: var(--r-pill); background: var(--sage-soft); color: var(--green-deep); font-size: 12.5px; font-weight: 600; }
+.review-form__product { margin-top: -8px; font-size: 14px; color: var(--text-2); }
+.review-form__actions { display: flex; flex-wrap: wrap; gap: var(--s-3); }
+.review-form__actions .btn { flex: 1; min-height: 48px; }
+@media (min-width: 1000px) {
+  .pdp-reviews__body.is-writing { grid-template-columns: minmax(0, 1fr) 400px; }
+  .pdp-reviews__body.is-writing:not(:has(.review-cards)) { grid-template-columns: minmax(0, 560px); }
+}
