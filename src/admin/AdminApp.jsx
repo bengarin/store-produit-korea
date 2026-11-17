@@ -20,6 +20,7 @@ const ProductsPage = lazy(() => import('./pages/ProductsPage.jsx'));
 const ProductNewPage = lazy(() => import('./pages/ProductNewPage.jsx'));
 const ProductEditPage = lazy(() => import('./pages/ProductEditPage.jsx'));
 const ProductPreviewPage = lazy(() => import('./pages/ProductPreviewPage.jsx'));
+const CollectionPreviewPage = lazy(() => import('./pages/CollectionPreviewPage.jsx'));
 const MarketingPage = lazy(() => import('./pages/MarketingPage.jsx'));
 const CategoriesPage = lazy(() => import('./pages/CategoriesPage.jsx'));
 const ProductMarketingPage = lazy(() => import('./pages/ProductMarketingPage.jsx'));
@@ -64,6 +65,8 @@ function AdminRoutes() {
     <Routes>
       {/* Aperçu : hors du cadre de l'admin, avec les styles de la boutique uniquement (fidélité). */}
       <Route path="preview/products/:id" element={<RequireAuth><ProductPreviewPage /></RequireAuth>} />
+      {/* Aperçu de démonstration d'une collection : produits FICTIFS en mémoire, rien n'est enregistré. */}
+      <Route path="preview/collections/:slug" element={<RequireAuth><CollectionPreviewPage /></RequireAuth>} />
       {/* Éditeur de thème : plein écran (hors barre latérale) */}
       <Route path="theme" element={<RequireAuth><div className="adm-root adm-theme-root"><ThemeEditorPage /></div></RequireAuth>} />
       <Route path="*" element={<div className="adm-root"><AdminShellRoutes /></div>} />

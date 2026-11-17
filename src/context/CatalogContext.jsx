@@ -32,8 +32,13 @@ function bootState() {
   };
 }
 
-export function CatalogProvider({ children }) {
+/**
+ * `preset` : catalogue fourni d'avance, sans aucun appel réseau. Réservé à l'aperçu de démonstration de
+ * l'administration (données fictives) ; la boutique ne le passe jamais.
+ */
+export function CatalogProvider({ children, preset = null }) {
   const [state, setState] = useState(() => {
+    if (preset) return { status: 'ready', filters: [], collections: [], config: STORE_CONFIG, error: null, ...preset };
     if (isLocal) return { status: 'ready', products: LOCAL_CATALOG, categories: LOCAL_CATEGORIES, filters: [], collections: [], config: STORE_CONFIG, error: null };
     return bootState() || { status: 'loading', products: [], categories: [], filters: [], collections: [], config: STORE_CONFIG, error: null };
   });
@@ -41,7 +46,7 @@ export function CatalogProvider({ children }) {
 
   useEffect(() => {
     // Mode démo, ou catalogue déjà fourni par la page (1er chargement) : rien à télécharger.
-    if (isLocal || (attempt === 0 && state.status === 'ready')) return undefined;
+    if (preset || isLocal || (attempt === 0 && state.status === 'ready')) return undefined;
     const controller = new AbortController();
     setState((s) => ({ ...s, status: 'loading', error: null }));
     const { signal } = controller;

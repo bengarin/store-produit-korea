@@ -1,7 +1,8 @@
 import { useState } from 'react';
-import { ArrowDown, ArrowUp, Eye, EyeOff, ImagePlus, Layers, ListChecks, Pencil, Plus, Trash2, X } from 'lucide-react';
+import { ArrowDown, ArrowUp, Eye, EyeOff, FlaskConical, ImagePlus, Layers, ListChecks, Pencil, Plus, Trash2, X } from 'lucide-react';
 import { admin } from '../api.js';
 import { useAuth } from '../auth.jsx';
+import CollectionPreviewModal from '../components/CollectionPreviewModal.jsx';
 import ConfirmDialog from '../components/ConfirmDialog.jsx';
 import MediaPicker from '../components/theme/MediaPicker.jsx';
 import { Badge, Button, Card, EmptyState, ErrorState, Field, Modal, Notice, PageHeader, SkeletonRows } from '../components/ui.jsx';
@@ -25,6 +26,7 @@ export default function CollectionsPage() {
   const { data, error, reload, setData } = useApi('/collections');
   const [editing, setEditing] = useState(null); // { item? }
   const [assigning, setAssigning] = useState(null);
+  const [previewing, setPreviewing] = useState(null); // aperçu TEST (produits fictifs)
   const [removing, setRemoving] = useState(null);
   const [message, setMessage] = useState(null);
 
@@ -84,6 +86,8 @@ export default function CollectionsPage() {
                   )}
                   <div className="adm-coll__actions">
                     {canAssign && <Button variant="secondary" size="sm" icon={ListChecks} onClick={() => setAssigning(c)}>Produits</Button>}
+                    <Button variant="secondary" size="sm" icon={FlaskConical} onClick={() => setPreviewing(c)}
+                      title="Voir la mise en page avec des produits fictifs (rien n’est enregistré)">Aperçu TEST</Button>
                     {editable && (
                       <>
                         <Button variant="ghost" size="sm" icon={Pencil} onClick={() => setEditing({ item: c })}>Modifier</Button>
@@ -104,6 +108,7 @@ export default function CollectionsPage() {
         <CollectionDialog item={editing.item} onClose={() => setEditing(null)}
           onSaved={(text) => { setEditing(null); setMessage({ tone: 'success', text }); reload(); }} />
       )}
+      {previewing && <CollectionPreviewModal collection={previewing} onClose={() => setPreviewing(null)} />}
       {assigning && (
         <ProductsDialog collection={assigning} onClose={() => setAssigning(null)}
           onSaved={(text) => { setAssigning(null); setMessage({ tone: 'success', text }); reload(); }} />

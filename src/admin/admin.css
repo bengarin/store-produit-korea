@@ -548,6 +548,12 @@ textarea.adm-input { resize: vertical; min-height: 80px; }
 .adm-preview-bar { position: sticky; top: 0; z-index: 50; padding: 9px 16px; text-align: center; font: 600 13px/1.4 var(--font-sans); background: #17382d; color: #f4ede2; }
 .adm-preview-bar--draft { background: #6b5a3c; }
 .adm-preview-bar--archived { background: #5f5a50; }
+.adm-demo-bar { position: sticky; top: 0; z-index: 60; padding: 9px 16px; text-align: center; font: 500 13px/1.45 var(--font-sans); color: #fff8ec;
+  background: repeating-linear-gradient(135deg, #8a2f1f 0 18px, #7a2a1b 18px 36px); }
+.adm-demo-bar p { margin: 0; }
+.adm-demo-bar strong { font-weight: 700; letter-spacing: .02em; }
+.adm-demo-modal { flex: 1; min-width: 0; min-height: 0; display: flex; flex-direction: column; }
+.adm-demo-modal > .adm-notice { flex: none; margin: 12px 16px 0; }
 .adm-preview-msg { padding: 48px 16px; text-align: center; font-family: var(--font-sans); color: #4a4d46; }
 
 @media (max-width: 1023px) {

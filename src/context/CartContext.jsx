@@ -12,6 +12,8 @@ import { useI18n } from '../i18n/I18nContext.jsx';
 const isLocal = DATA_SOURCE === 'local';
 
 const CartContext = createContext(null);
+/** Aperçu de démonstration (administration) : panier fictif en mémoire, jamais enregistré (voir admin/demo). */
+export const CartPreviewProvider = CartContext.Provider;
 
 export function CartProvider({ children }) {
   const { status, getProductById, config } = useCatalog();

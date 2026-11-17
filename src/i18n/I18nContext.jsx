@@ -32,8 +32,13 @@ const I18nContext = createContext({
   lang: 'fr', dir: 'ltr', setLang: () => {}, t: (k, p) => translate('fr', k, p), tx: (k) => k, tc: (s) => s, autoDir: undefined,
 });
 
-export function I18nProvider({ children }) {
-  const [lang] = useState(() => urlLang());
+/**
+ * `lang` / `onLangChange` : réservés à l'aperçu de l'administration (langue imposée, sans changer d'adresse).
+ * La boutique ne les passe jamais : la langue y vient de l'adresse.
+ */
+export function I18nProvider({ children, lang: forcedLang, onLangChange }) {
+  const [urlLanguage] = useState(() => urlLang());
+  const lang = forcedLang === 'ar' || forcedLang === 'fr' ? forcedLang : urlLanguage;
   current = lang; // lu par formatPrice pendant ce rendu
 
   useLayoutEffect(() => {
@@ -61,9 +66,13 @@ export function I18nProvider({ children }) {
   // Changer de langue = aller à la même page dans l'autre langue (adresse /ar/… ou sans préfixe).
   const setLang = useCallback((next) => {
     const value = next === 'ar' ? 'ar' : 'fr';
+    if (onLangChange) {
+      onLangChange(value); // aperçu : ni mémorisation ni changement d'adresse
+      return;
+    }
     storeLang(value);
     if (value !== urlLang()) window.location.assign(urlFor(value));
-  }, []);
+  }, [onLangChange]);
 
   const value = useMemo(() => {
     const t = (key, params) => translate(lang, key, params);

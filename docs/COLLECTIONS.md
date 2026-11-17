@@ -43,3 +43,15 @@ Sinon : rien dans le menu ni sur l'accueil, et sa page renvoie 404 (pas de page 
    table des collections) et `catalog 0009` (crée les 2 collections, **sans aucun produit**).
 4. `npm run build`
 5. Pour chaque produit : renseigner le pays de fabrication **lu sur l'emballage**, puis ranger les produits.
+
+## Aperçu TEST (produits fictifs)
+
+**Admin → Collections → « Aperçu TEST »** : voir la page d'une collection avant d'avoir de vrais produits.
+
+- Bandeau « TEST — données fictives », 6 produits inventés (« TEST · … », images dessinées, prix fictifs).
+- Mobile / ordinateur, français / arabe (droite à gauche), filtres et tri utilisables.
+- **Rien n'est enregistré** : aucun appel d'écriture au serveur, aucun vrai produit touché, aucun pays de fabrication.
+  Panier et favoris fictifs en mémoire (le vrai panier du navigateur n'est pas modifié). Liens et recherche bloqués.
+- Réservé aux comptes connectés à l'administration (`/admin/preview/collections/<slug>`). Les clients ne le voient pas :
+  la vraie page `/collections/<slug>` reste cachée tant qu'aucun vrai produit n'est rangé.
+- Les données fictives sont dans `src/admin/demo/collectionDemo.js` (chargé seulement par cet aperçu).
