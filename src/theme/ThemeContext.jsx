@@ -7,7 +7,7 @@ import DEFAULT_THEME from './defaultTheme.js';
 import { validateTheme } from './validate.js';
 import { fontStylesheets, themeCssVars } from './cssVars.js';
 
-const ThemeContext = createContext({ theme: DEFAULT_THEME, media: {}, preview: false, status: 'ready' });
+const ThemeContext = createContext({ theme: DEFAULT_THEME, media: {}, heroSlides: null, preview: false, status: 'ready' });
 
 /**
  * Mode aperçu (éditeur de thème) : URL « ?apercu-theme=1 » à l'ouverture, dans une iframe ou un onglet de l'équipe.
@@ -34,7 +34,7 @@ async function loadDraft() {
 
 async function loadPublished() {
   const data = await api.get(ENDPOINTS.theme);
-  return { theme: data.theme, media: data.media || {}, version: data.version };
+  return { theme: data.theme, media: data.media || {}, version: data.version, heroSlides: data.heroSlides ?? null };
 }
 
 export function ThemeProvider({ children }) {
@@ -42,8 +42,8 @@ export function ThemeProvider({ children }) {
   // Thème publié joint par le serveur à la page : prêt dès le premier rendu (pas en aperçu du brouillon).
   const boot = !isLocal && !PREVIEW ? bootstrapData()?.theme : null;
   const [state, setState] = useState(() => (boot
-    ? { status: 'ready', theme: safeTheme(boot.theme), media: boot.media || {}, version: boot.version ?? null }
-    : { status: isLocal && !PREVIEW ? 'ready' : 'loading', theme: DEFAULT_THEME, media: {}, version: null }));
+    ? { status: 'ready', theme: safeTheme(boot.theme), media: boot.media || {}, version: boot.version ?? null, heroSlides: boot.heroSlides ?? null }
+    : { status: isLocal && !PREVIEW ? 'ready' : 'loading', theme: DEFAULT_THEME, media: {}, version: null, heroSlides: null }));
 
   useEffect(() => {
     if ((isLocal && !PREVIEW) || boot) return undefined;
@@ -52,9 +52,9 @@ export function ThemeProvider({ children }) {
       ? loadDraft().catch(() => (isLocal ? { theme: null, media: {} } : loadPublished()))
       : loadPublished();
     attempt
-      .then((r) => alive && setState({ status: 'ready', theme: safeTheme(r.theme), media: r.media, version: r.version ?? null }))
+      .then((r) => alive && setState({ status: 'ready', theme: safeTheme(r.theme), media: r.media, version: r.version ?? null, heroSlides: r.heroSlides ?? null }))
       // L'API du thème ne répond pas : la boutique reste ouverte avec le thème par défaut.
-      .catch(() => alive && setState({ status: 'ready', theme: DEFAULT_THEME, media: {}, version: null }));
+      .catch(() => alive && setState({ status: 'ready', theme: DEFAULT_THEME, media: {}, version: null, heroSlides: null }));
     return () => { alive = false; };
     // eslint-disable-next-line react-hooks/exhaustive-deps -- `boot` ne change pas après le 1er rendu
   }, [isLocal]);

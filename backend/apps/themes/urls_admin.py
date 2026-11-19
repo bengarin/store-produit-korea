@@ -10,4 +10,7 @@ urlpatterns = [
     path("theme/versions/<int:number>", views.VersionDetailView.as_view(), name="admin-theme-version"),
     path("theme/versions/<int:number>/restore", views.RestoreView.as_view(), name="admin-theme-restore"),
     path("theme/versions/<int:number>/load", views.LoadView.as_view(), name="admin-theme-load"),
+    path("hero-slides", views.HeroSlideListCreateView.as_view(), name="admin-hero-slides"),
+    path("hero-slides/reorder", views.HeroSlideReorderView.as_view(), name="admin-hero-slides-reorder"),
+    path("hero-slides/<int:pk>", views.HeroSlideDetailView.as_view(), name="admin-hero-slide"),
 ]

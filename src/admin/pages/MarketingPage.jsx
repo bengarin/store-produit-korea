@@ -1,20 +1,50 @@
-import { Link } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import { Images } from 'lucide-react';
 import { Badge, Card, EmptyState, ErrorState, Notice, PageHeader, SkeletonRows } from '../components/ui.jsx';
 import { PRODUCT_STATUS } from '../format.js';
 import { useApi, useTitle } from '../hooks.js';
+import { useAuth } from '../auth.jsx';
+import { can } from '../permissions.js';
+import HeroSlidesManager from '../components/HeroSlidesManager.jsx';
 
 const LANGS = [['fr', 'FR'], ['ar', 'AR'], ['any', 'Sans texte']];
 
-/** Liste des produits et de leurs visuels marketing (par langue). Les photos du produit se gèrent dans la fiche. */
+const TABS = [['accueil', 'Bannière de l’accueil'], ['produits', 'Fiches produits']];
+
+/**
+ * Visuels marketing : bannière de l'accueil (diapositives) et visuels des fiches produits (par langue).
+ * Les photos du produit se gèrent dans la fiche.
+ */
 export default function MarketingPage() {
   useTitle('Visuels marketing');
-  const { data, error, reload } = useApi('/products', { page_size: 100, ordering: 'position' });
+  const { user } = useAuth();
+  const [params, setParams] = useSearchParams();
+  const tab = params.get('onglet') === 'produits' ? 'produits' : 'accueil';
 
   return (
     <div className="adm-page">
       <PageHeader title="Visuels marketing"
-        subtitle="Images de présentation affichées dans la colonne de droite de chaque fiche produit (bannière, bienfaits, utilisation…). Elles ne remplacent jamais les photos du produit." />
+        subtitle="Bannière principale de l’accueil et images de présentation des fiches produits (bannière, bienfaits, utilisation…). Elles ne remplacent jamais les photos du produit." />
+      <div className="adm-tabs" role="tablist" aria-label="Type de visuels">
+        {TABS.map(([id, label]) => (
+          <button key={id} type="button" role="tab" aria-selected={tab === id} className={tab === id ? 'is-active' : ''}
+            onClick={() => setParams(id === 'accueil' ? {} : { onglet: id }, { replace: true })}>
+            {label}
+          </button>
+        ))}
+      </div>
+      {tab === 'accueil'
+        ? <HeroSlidesManager editable={can(user, 'editProducts')} canDelete={can(user, 'deleteProducts')} />
+        : <ProductMarketingList />}
+    </div>
+  );
+}
+
+function ProductMarketingList() {
+  const { data, error, reload } = useApi('/products', { page_size: 100, ordering: 'position' });
+
+  return (
+    <>
       <Notice tone="info">
         Avant / Après : uniquement des photos authentiques, sans retouche ni montage. Un tel visuel ne s’affiche qu’après confirmation explicite.
       </Notice>
@@ -51,6 +81,6 @@ export default function MarketingPage() {
           </ul>
         )}
       </Card>
-    </div>
+    </>
   );
 }

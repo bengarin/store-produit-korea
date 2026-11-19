@@ -13,7 +13,7 @@ import { hasChoice, productStatus } from '../utils/variants.js';
 const MAX_CARDS = 4;
 
 /**
- * Accueil — « Nos essentiels » : un onglet par collection visible (Admin → Collections, dans leur ordre),
+ * Accueil — « Nos collections » : un onglet par collection visible (Admin → Collections, dans leur ordre),
  * puis jusqu'à 4 produits EN LIGNE de la collection choisie (4 par ligne sur ordinateur, 2 sur mobile).
  * - Données réelles uniquement : photo, nom, prix, état du stock, panier et favoris existants.
  * - Étoiles seulement s'il existe des avis produits APPROUVÉS (fournis par le serveur) ; sinon rien.
@@ -52,7 +52,6 @@ export default function HomeEssentials() {
     <section className="section essentials" aria-labelledby={`${uid}-title`}>
       <div className="container">
         <header className="section-head essentials__head">
-          <p className="eyebrow">{t('essentials.eyebrow')}</p>
           <h2 id={`${uid}-title`} className="essentials__title">{t('essentials.title')}</h2>
         </header>
 

@@ -142,7 +142,7 @@ export default function ProductMarketingPage() {
   const name = product?.displayName || product?.name || '';
   useTitle(name ? `Visuels — ${name}` : 'Visuels marketing');
 
-  if (productError || error) return <div className="adm-page"><PageHeader title="Visuels marketing" back={{ to: '/admin/marketing', label: 'Visuels marketing' }} /><ErrorState error={productError || error} onRetry={reload} /></div>;
+  if (productError || error) return <div className="adm-page"><PageHeader title="Visuels marketing" back={{ to: '/admin/marketing?onglet=produits', label: 'Visuels marketing' }} /><ErrorState error={productError || error} onRetry={reload} /></div>;
   if (!product || !data) return <div className="adm-page"><SkeletonRows rows={6} /></div>;
 
   const all = data.items;
@@ -195,7 +195,7 @@ export default function ProductMarketingPage() {
 
   return (
     <div className="adm-page">
-      <PageHeader title={`Visuels marketing — ${name}`} back={{ to: '/admin/marketing', label: 'Visuels marketing' }}
+      <PageHeader title={`Visuels marketing — ${name}`} back={{ to: '/admin/marketing?onglet=produits', label: 'Visuels marketing' }}
         subtitle="Affichés dans la colonne de droite de la fiche, sous les boutons de commande. Les photos du produit (galerie) se gèrent dans la fiche produit."
         actions={product.status === 'active' && <ButtonLink icon={ExternalLink} href={`/produits/${product.slug}`} target="_blank" rel="noopener noreferrer">Voir la fiche</ButtonLink>} />
 

@@ -51,3 +51,46 @@ class ThemeVersion(models.Model):
 
     def __str__(self):
         return f"Version {self.number}"
+
+
+class HeroSlide(models.Model):
+    """
+    Diapositive de la bannière principale de l'accueil (Admin → Visuels marketing → Bannière d'accueil).
+    1 diapositive publiée = bannière fixe ; plusieurs = carrousel. Les textes restent du TEXTE (FR/AR) posé
+    sur l'image, jamais incrusté dedans. Image : un média de la médiathèque OU un visuel intégré au site
+    (`*_asset`, ex. la bannière d'origine). Arabe vide = la boutique arabe utilise la traduction du texte français.
+    """
+
+    BUILTIN_DESKTOP = ("hero-wide", "hero-portrait")
+    BUILTIN_MOBILE = ("hero-portrait", "hero-wide")
+
+    position = models.PositiveIntegerField("ordre", default=0, db_index=True)
+    is_active = models.BooleanField("publiée", default=True)
+    desktop_media = models.ForeignKey(
+        "media_library.MediaAsset", null=True, blank=True, on_delete=models.PROTECT, related_name="+"
+    )
+    desktop_asset = models.CharField("visuel intégré (ordinateur)", max_length=40, blank=True)
+    mobile_media = models.ForeignKey(
+        "media_library.MediaAsset", null=True, blank=True, on_delete=models.PROTECT, related_name="+"
+    )
+    mobile_asset = models.CharField("visuel intégré (mobile)", max_length=40, blank=True)
+    eyebrow_fr = models.CharField("sur-titre (FR)", max_length=80, blank=True)
+    eyebrow_ar = models.CharField("sur-titre (AR)", max_length=80, blank=True)
+    title_fr = models.CharField("titre (FR)", max_length=120)
+    title_ar = models.CharField("titre (AR)", max_length=120, blank=True)
+    text_fr = models.CharField("description (FR)", max_length=300, blank=True)
+    text_ar = models.CharField("description (AR)", max_length=300, blank=True)
+    button_label_fr = models.CharField("texte du bouton (FR)", max_length=40, blank=True)
+    button_label_ar = models.CharField("texte du bouton (AR)", max_length=40, blank=True)
+    button_link = models.CharField("lien du bouton", max_length=300, blank=True)
+    alt_fr = models.CharField("texte alternatif (FR)", max_length=255, blank=True)
+    alt_ar = models.CharField("texte alternatif (AR)", max_length=255, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name = "diapositive de la bannière d'accueil"
+        ordering = ["position", "id"]
+
+    def __str__(self):
+        return self.title_fr

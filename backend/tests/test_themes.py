@@ -83,7 +83,9 @@ def test_brouillon_enregistre_et_persistant(staff, client):
     )
     assert again["dirty"] is True
     # La boutique publique ne voit JAMAIS le brouillon
-    assert client.get(STORE).json() == {"version": None, "theme": None, "media": {}}
+    public = client.get(STORE).json()
+    assert {k: public[k] for k in ("version", "theme")} == {"version": None, "theme": None}
+    assert "heroSlides" in public  # bannière d'accueil : diapositives publiées (Visuels marketing)
     assert AuditLog.objects.filter(action="theme.draft_save").exists()
 
 

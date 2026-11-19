@@ -14,12 +14,12 @@ html[lang="ar"] {
 html[lang="ar"] body * { letter-spacing: 0 !important; }
 html[lang="ar"] .eyebrow, html[lang="ar"] .ingredients__eyebrow, html[lang="ar"] .beauty-banner__eyebrow, html[lang="ar"] .pdp__cat { text-transform: none; font-size: 13px; }
 /* Titres : interligne plus généreux (signes au-dessus et au-dessous des lettres), taille un peu réduite. */
-html[lang="ar"] :is(.hero h1, .section-title, .ingredients__title, .beauty-banner__title, .iwt__title, .pdp__title, .confirmation__title, .ritual-card__title, .ingredient__name, .empty-state h1, .empty-state h2, .newsletter__title) {
+html[lang="ar"] :is(.hero .hero__title, .section-title, .ingredients__title, .beauty-banner__title, .iwt__title, .pdp__title, .confirmation__title, .ritual-card__title, .ingredient__name, .empty-state h1, .empty-state h2, .newsletter__title) {
   line-height: 1.45;
   font-weight: 700;
 }
 html[lang="ar"] :is(.section-title, .ingredients__title) { font-size: calc(clamp(30px, 8.4vw, 46px) * var(--heading-scale, 1)); }
-html[lang="ar"] .hero h1 { font-size: calc(clamp(28px, 8vw, 36px) * var(--heading-scale, 1)); }
+html[lang="ar"] .hero .hero__title { font-size: calc(clamp(28px, 8vw, 36px) * var(--heading-scale, 1)); }
 html[lang="ar"] .beauty-banner__title { font-size: calc(clamp(28px, 8vw, 38px) * var(--heading-scale, 1)); }
 html[lang="ar"] :is(.pdp__title, .confirmation__title) { font-size: calc(clamp(26px, 7vw, 32px) * var(--heading-scale, 1)); }
 html[lang="ar"] .ingredient__name { font-size: clamp(22px, 6vw, 28px); }

@@ -158,9 +158,12 @@ def load_into_draft(version: ThemeVersion, *, revision, user=None, request=None)
 
 def media_payload(theme: dict) -> dict:
     """{id: {src, src640, width, height, alt}} pour les images du thème (URL publiques uniquement)."""
-    ids = list(references(theme)["media"])
+    return media_by_ids(references(theme)["media"])
+
+
+def media_by_ids(ids) -> dict:
     out = {}
-    for m in MediaAsset.objects.filter(pk__in=ids):
+    for m in MediaAsset.objects.filter(pk__in=list(ids)):
         out[str(m.pk)] = {
             "src": m.url,
             "src640": m.url_640 if m.file_640 else None,
@@ -189,3 +192,18 @@ def is_dirty(draft: ThemeDraft) -> bool:
     """Le brouillon diffère-t-il de ce que voient les visiteurs (version publiée, sinon thème par défaut) ?"""
     current = latest_version()
     return checksum(draft.data) != (current.checksum if current else checksum(default_theme()))
+
+
+def public_theme_payload() -> dict:
+    """
+    Thème PUBLIÉ (null = thème par défaut du site) + diapositives publiées de la bannière d'accueil.
+    `heroSlides` remplace la section « hero » du thème à l'accueil ; leurs images sont jointes à `media`.
+    """
+    from .hero import hero_payload
+
+    current = latest_version()
+    slides = hero_payload(media_by_ids)
+    if current is None:
+        return {"version": None, "theme": None, "media": slides["media"], "heroSlides": slides["slides"]}
+    media = {**media_payload(current.data), **slides["media"]}
+    return {"version": current.number, "theme": current.data, "media": media, "heroSlides": slides["slides"]}

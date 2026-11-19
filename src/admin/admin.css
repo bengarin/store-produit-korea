@@ -873,3 +873,27 @@ textarea.adm-input { resize: vertical; min-height: 80px; }
   .adm-coll { grid-template-columns: 64px minmax(0, 1fr); padding: 12px; }
   .adm-coll__thumb { width: 64px; height: 52px; }
 }
+
+/* ---------- Visuels marketing → bannière de l'accueil (diapositives) ---------- */
+.adm-hero-summary { margin: 10px 0 0; }
+.adm-hero-list { display: grid; gap: 16px; margin: 0; padding: 0; list-style: none; }
+.adm-hero-slide { display: grid; gap: 16px; padding: 18px; border: 1px solid var(--adm-line); border-radius: 14px; background: var(--adm-panel, #fff); }
+.adm-hero-slide.is-hidden { background: #faf9f6; }
+.adm-hero-slide.is-hidden .adm-hero-img__box img { opacity: 0.6; }
+.adm-hero-slide__head { display: flex; align-items: center; gap: 10px; }
+.adm-hero-slide__order { display: flex; gap: 4px; margin-inline-start: auto; }
+.adm-hero-slide__images { display: grid; grid-template-columns: minmax(0, 2.2fr) minmax(0, 1fr); gap: 16px; }
+.adm-hero-img__label { margin: 0 0 6px; font-weight: 600; font-size: 14px; }
+.adm-hero-img__box { display: grid; place-items: center; overflow: hidden; aspect-ratio: 1672 / 800; border: 1px solid var(--adm-line); border-radius: 10px; background: #f4f1ea; }
+.adm-hero-slide__images > :last-child .adm-hero-img__box { aspect-ratio: 941 / 1388; max-height: 260px; }
+.adm-hero-img__box img { width: 100%; height: 100%; object-fit: cover; }
+.adm-hero-img__box.is-empty { padding: 12px; border-style: dashed; color: var(--adm-muted); font-size: 13px; text-align: center; }
+.adm-hero-img__actions { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+.adm-hero-slide__langs { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
+.adm-hero-slide__lang { display: grid; gap: 10px; margin: 0; padding: 12px 14px 14px; border: 1px solid var(--adm-line); border-radius: 10px; }
+.adm-hero-slide__lang legend { padding: 0 6px; font-weight: 700; }
+.adm-hero-slide__lang legend small { font-weight: 400; color: var(--adm-muted); }
+.adm-hero-slide__actions { display: flex; flex-wrap: wrap; gap: 8px; }
+@media (max-width: 760px) {
+  .adm-hero-slide__images, .adm-hero-slide__langs { grid-template-columns: 1fr; }
+}

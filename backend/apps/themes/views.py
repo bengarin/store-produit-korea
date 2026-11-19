@@ -1,3 +1,4 @@
+from django.db import transaction
 from django.shortcuts import get_object_or_404
 from rest_framework import serializers, status
 from rest_framework.exceptions import PermissionDenied
@@ -5,10 +6,12 @@ from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from apps.catalog.permissions import THEME_PERMISSION, THEME_PUBLISH
+from apps.audit.services import log_action
+from apps.catalog.permissions import CATALOG_PERMISSION, THEME_PERMISSION, THEME_PUBLISH
 
 from . import services
-from .models import ThemeVersion
+from .hero_serializers import HeroSlideSerializer
+from .models import HeroSlide, ThemeVersion
 
 
 def _user(u):
@@ -149,12 +152,89 @@ class PublicThemeView(APIView):
     authentication_classes = []
 
     def get(self, request):
-        current = services.latest_version()
-        if current is None:
-            response = Response({"version": None, "theme": None, "media": {}})
-        else:
-            response = Response(
-                {"version": current.number, "theme": current.data, "media": services.media_payload(current.data)}
-            )
+        response = Response(services.public_theme_payload())
         response["Cache-Control"] = "no-cache"
         return response
+
+
+# --- Bannière d'accueil : diapositives (Admin → Visuels marketing) ----------------------------------------
+class HeroSlideListCreateView(APIView):
+    """GET : toutes les diapositives (publiées ou non) · POST : nouvelle diapositive (ajoutée à la fin)."""
+
+    permission_classes = [CATALOG_PERMISSION]
+
+    def get(self, request):
+        qs = HeroSlide.objects.select_related("desktop_media", "mobile_media")
+        return Response({"items": HeroSlideSerializer(qs, many=True).data})
+
+    @transaction.atomic
+    def post(self, request):
+        serializer = HeroSlideSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        last = HeroSlide.objects.select_for_update().order_by("-position").values_list("position", flat=True).first()
+        slide = serializer.save(position=0 if last is None else last + 1)
+        log_action(
+            "hero.slide_add", actor=request.user, target=slide, changes={"title": slide.title_fr}, request=request
+        )
+        return Response(HeroSlideSerializer(slide).data, status=status.HTTP_201_CREATED)
+
+
+class HeroSlideReorderSerializer(serializers.Serializer):
+    ids = serializers.ListField(child=serializers.IntegerField(min_value=1), allow_empty=False, max_length=50)
+
+
+class HeroSlideReorderView(APIView):
+    """POST {ids} : nouvel ordre (TOUTES les diapositives, chacune une fois)."""
+
+    permission_classes = [CATALOG_PERMISSION]
+
+    @transaction.atomic
+    def post(self, request):
+        data = HeroSlideReorderSerializer(data=request.data)
+        data.is_valid(raise_exception=True)
+        ids = data.validated_data["ids"]
+        existing = set(HeroSlide.objects.select_for_update().values_list("pk", flat=True))
+        if len(set(ids)) != len(ids) or set(ids) != existing:
+            raise serializers.ValidationError({"ids": ["Liste invalide : rechargez la page et réessayez."]})
+        for position, slide_id in enumerate(ids):
+            HeroSlide.objects.filter(pk=slide_id).update(position=position)
+        log_action(
+            "hero.slide_reorder",
+            actor=request.user,
+            target_type="themes.heroslide",
+            changes={"order": ids},
+            request=request,
+        )
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+class HeroSlideDetailView(APIView):
+    """PATCH : modifier / publier / dépublier · DELETE : supprimer (les images restent dans la médiathèque)."""
+
+    permission_classes = [CATALOG_PERMISSION]
+
+    def patch(self, request, pk):
+        slide = get_object_or_404(HeroSlide, pk=pk)
+        serializer = HeroSlideSerializer(slide, data=request.data, partial=True)
+        serializer.is_valid(raise_exception=True)
+        before = slide.is_active
+        slide = serializer.save()
+        changes = {"fields": sorted(request.data.keys())[:30]}
+        if before != slide.is_active:
+            changes["isActive"] = [before, slide.is_active]
+        log_action("hero.slide_update", actor=request.user, target=slide, changes=changes, request=request)
+        return Response(HeroSlideSerializer(slide).data)
+
+    def delete(self, request, pk):
+        slide = get_object_or_404(HeroSlide, pk=pk)
+        slide_id, title = slide.pk, slide.title_fr
+        slide.delete()
+        log_action(
+            "hero.slide_delete",
+            actor=request.user,
+            target_type="themes.heroslide",
+            target_id=slide_id,
+            changes={"title": title},
+            request=request,
+        )
+        return Response(status=status.HTTP_204_NO_CONTENT)

@@ -13,12 +13,7 @@ from apps.themes import services as themes
 
 
 def store_data(products: list | None = None) -> dict:
-    current = themes.latest_version()
-    theme = (
-        {"version": None, "theme": None, "media": {}}
-        if current is None
-        else {"version": current.number, "theme": current.data, "media": themes.media_payload(current.data)}
-    )
+    theme = themes.public_theme_payload()
     if products is None:
         products = [catalog.product_payload(p) for p in catalog.public_products_queryset()]
     return {
