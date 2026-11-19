@@ -22,7 +22,7 @@ import { can } from '../permissions.js';
 /** Champs du produit enregistrés par le bouton « Enregistrer » (les images, variantes et options ont leurs propres actions). */
 function toForm(p) {
   return {
-    brand: p.brand, name: p.name, displayName: p.displayName, cardLine: p.cardLine, summary: p.summary,
+    brand: p.brand, supplier: p.supplier || '', name: p.name, displayName: p.displayName, cardLine: p.cardLine, summary: p.summary,
     descriptionHtml: sanitizeRichText(p.descriptionHtml || ''), ingredients: listToLines(p.ingredients), benefits: listToLines(p.benefits),
     usage: listToLines(p.usage), skinTypes: p.skinTypes, highlights: p.highlights.map((h) => ({ ...h })),
     categoryIds: p.categories.map((c) => c.id), originCountry: p.originCountry || '', quickOrder: p.quickOrder || 'inherit',
@@ -121,6 +121,10 @@ export default function ProductEditPage() {
             <div className="adm-form-grid">
               <Field label="Marque" htmlFor="pe-brand" error={errors.brand} required>
                 <input id="pe-brand" className="adm-input" maxLength={100} value={form.brand} onChange={set('brand')} disabled={!editable} />
+              </Field>
+              <Field label="Fournisseur" htmlFor="pe-supplier" error={errors.supplier}
+                hint={product.shopifyId ? 'Importé de Shopify (champ « Vendor »). Visible seulement dans l’administration.' : 'Visible seulement dans l’administration.'}>
+                <input id="pe-supplier" className="adm-input" maxLength={150} value={form.supplier} onChange={set('supplier')} disabled={!editable} />
               </Field>
               <Field label="Nom" htmlFor="pe-name" error={errors.name} required>
                 <input id="pe-name" className="adm-input" maxLength={200} value={form.name} onChange={set('name')} disabled={!editable} />

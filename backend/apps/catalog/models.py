@@ -70,6 +70,12 @@ class Product(Timestamped):
     slug = models.SlugField("identifiant URL", max_length=120, unique=True)
     position = models.PositiveIntegerField("ordre d'affichage", default=0)
     brand = models.CharField("marque", max_length=100)
+    # Fournisseur (ex. « Vendor » de Shopify) : visible dans l'administration uniquement, jamais sur la boutique.
+    supplier = models.CharField("fournisseur", max_length=150, blank=True, db_index=True)
+    # Identifiant du produit dans Shopify (import) : un produit Shopify n'est jamais importé deux fois.
+    shopify_id = models.CharField(
+        "identifiant Shopify", max_length=64, null=True, blank=True, unique=True, editable=False
+    )
     name = models.CharField("nom", max_length=200)
     display_name = models.CharField("nom affiché", max_length=255, blank=True)
     short_description = models.CharField("phrase courte (cartes)", max_length=160, blank=True)
@@ -316,6 +322,9 @@ class Variant(Timestamped):
     product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name="variants")
     title = models.CharField("titre", max_length=160, blank=True)
     sku = models.CharField("SKU", max_length=64, null=True, blank=True, unique=True)
+    shopify_id = models.CharField(
+        "identifiant Shopify", max_length=64, null=True, blank=True, unique=True, editable=False
+    )
     barcode = models.CharField("code-barres", max_length=64, null=True, blank=True, unique=True)
     price = models.DecimalField("prix (DH)", max_digits=10, decimal_places=2)
     compare_at_price = models.DecimalField("prix barré (DH)", max_digits=10, decimal_places=2, null=True, blank=True)

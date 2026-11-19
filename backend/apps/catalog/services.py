@@ -328,13 +328,14 @@ def duplicate_product(product: Product, *, user=None, request=None) -> Product:
     """
     Copie en BROUILLON : textes, catégories, pictos, options, variantes (prix, prix barré, coût),
     images (mêmes fichiers). Jamais copiés : stock (non renseigné), SKU et code-barres (uniques),
-    statut et date de publication.
+    statut, date de publication et identifiant Shopify.
     """
     source = Product.objects.get(pk=product.pk)
     copy = Product.objects.get(pk=product.pk)
     copy.pk = None
     copy.id = None
     copy.slug = unique_slug(f"{source.slug}-copie", Product)
+    copy.shopify_id = None  # la copie n'est pas le produit Shopify d'origine (identifiant unique)
     copy.display_name = f"{source.public_name} (copie)"[:255]
     copy.status = Product.Status.DRAFT
     copy.published_at = None

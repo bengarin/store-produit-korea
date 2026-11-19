@@ -101,7 +101,7 @@ export default function ProductsPage() {
         actions={edit && <ButtonLink to="/admin/products/new" variant="primary" icon={Plus}>Nouveau produit</ButtonLink>} />
 
       <div className="adm-filters">
-        <SearchBox value={f.search} onChange={(search) => setF({ search })} placeholder="Nom, SKU, code-barres ou référence" />
+        <SearchBox value={f.search} onChange={(search) => setF({ search })} placeholder="Nom, fournisseur, SKU, code-barres ou référence" />
         <div className="adm-segmented" role="group" aria-label="Statut">
           {[['', 'Tous'], ['active', 'Actifs'], ['draft', 'Brouillons'], ['archived', 'Archivés']].map(([value, label]) => (
             <button key={value || 'all'} type="button" className={(f.status || '') === value ? 'is-active' : ''}
@@ -158,7 +158,7 @@ export default function ProductsPage() {
                     </td>
                     <td data-label="Produit">
                       <Link to={`/admin/products/${p.id}`} className="adm-strong-link" onClick={(e) => e.stopPropagation()}>{p.displayName}</Link>
-                      <span className="adm-muted adm-cell-sub">{p.sku ? `SKU ${p.sku}` : p.slug}</span>
+                      <span className="adm-muted adm-cell-sub">{p.sku ? `SKU ${p.sku}` : p.slug}{p.supplier ? ` · Fournisseur : ${p.supplier}` : ''}</span>
                     </td>
                     <td data-label="Statut"><Badge tone={PRODUCT_STATUS[p.status].tone}>{PRODUCT_STATUS[p.status].label}</Badge></td>
                     <td data-label="Prix" className="num adm-num">{formatMoney(p.price)}</td>

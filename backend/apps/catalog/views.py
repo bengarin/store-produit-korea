@@ -233,6 +233,7 @@ class ProductListCreateView(generics.ListCreateAPIView):
             qs = qs.filter(
                 Q(name__icontains=term)
                 | Q(brand__icontains=term)
+                | Q(supplier__icontains=term)
                 | Q(display_name__icontains=term)
                 | Q(slug__icontains=term)
                 | Q(variants__sku__icontains=term)

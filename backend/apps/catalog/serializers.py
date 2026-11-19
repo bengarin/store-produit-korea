@@ -249,6 +249,7 @@ class ProductListSerializer(serializers.ModelSerializer):
             "slug",
             "displayName",
             "brand",
+            "supplier",
             "sku",
             "stockUnknown",
             "status",
@@ -359,6 +360,7 @@ class ProductSerializer(serializers.ModelSerializer):
     options = serializers.SerializerMethodField()
     activationErrors = serializers.SerializerMethodField()
     publishedAt = serializers.DateTimeField(source="published_at", read_only=True)
+    shopifyId = serializers.CharField(source="shopify_id", read_only=True)
     createdAt = serializers.DateTimeField(source="created_at", read_only=True)
     updatedAt = serializers.DateTimeField(source="updated_at", read_only=True)
 
@@ -370,6 +372,8 @@ class ProductSerializer(serializers.ModelSerializer):
             "position",
             "status",
             "brand",
+            "supplier",
+            "shopifyId",
             "name",
             "displayName",
             "cardLine",
