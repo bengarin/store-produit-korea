@@ -160,6 +160,9 @@ def build_quote(items, *, promo_code=None, city=None, phone=None, lock=False) ->
 
 
 # ============================ Création =====================================
+QUICK_ORDER_NOTE = "Commande rapide (formulaire de la fiche produit)"
+
+
 def request_hash(payload: dict) -> str:
     return hashlib.sha256(json.dumps(payload, sort_keys=True, ensure_ascii=False).encode()).hexdigest()
 
@@ -273,6 +276,7 @@ def _create(data, idempotency_key, fingerprint, request) -> Order:
         total=quote.total,
         coupon_code=quote.coupon_result.coupon.code if quote.coupon_result else "",
         customer_note=data.get("note", "")[:500],
+        internal_note=QUICK_ORDER_NOTE if data.get("source") == "quick" else "",
         idempotency_key=idempotency_key,
         request_hash=fingerprint,
         ip_address=(request.META.get("REMOTE_ADDR") if request else None),
@@ -297,7 +301,11 @@ def _create(data, idempotency_key, fingerprint, request) -> Order:
         CouponRedemption.objects.create(
             coupon=quote.coupon_result.coupon, order=order, customer=customer, amount=quote.discount
         )
-    OrderStatusHistory.objects.create(order=order, to_status=Order.Status.PENDING, note="Commande passée en ligne")
+    OrderStatusHistory.objects.create(
+        order=order,
+        to_status=Order.Status.PENDING,
+        note=QUICK_ORDER_NOTE if data.get("source") == "quick" else "Commande passée en ligne",
+    )
     customers.save_address(
         customer,
         full_name=order.ship_full_name,

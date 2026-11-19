@@ -39,7 +39,7 @@ function Field({ id, label, error, children }) {
 /** Frais égaux à 0 (nombre ou texte « 0 », « 0.00 ») ; une valeur absente n'est jamais considérée comme gratuite. */
 const isZeroFee = (fee) => fee !== null && fee !== undefined && fee !== '' && Number(fee) === 0;
 
-export default function CheckoutForm({ deliveryFee, submitting, onSubmit, alert = null, children }) {
+export default function CheckoutForm({ deliveryFee, submitting, onSubmit, alert = null, children, submitLabel = null }) {
   const { config } = useCatalog();
   const { t, lang } = useI18n();
   const cities = useMemo(() => cityOptions(config.cities || [], lang), [config.cities, lang]);
@@ -152,7 +152,7 @@ export default function CheckoutForm({ deliveryFee, submitting, onSubmit, alert 
 
       <div className="sticky-actions">
         <button type="submit" className="btn btn--primary btn--lg btn--block" disabled={submitting} aria-busy={submitting}>
-          {submitting ? (<><Loader2 size={18} className="spin" /> {t('form.sending')}</>) : t('form.submit')}
+          {submitting ? (<><Loader2 size={18} className="spin" /> {t('form.sending')}</>) : submitLabel || t('form.submit')}
         </button>
         <p className="secure-note">
           <Lock size={13} />{' '}

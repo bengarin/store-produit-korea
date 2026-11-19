@@ -239,6 +239,7 @@ class ProductListSerializer(serializers.ModelSerializer):
     sku = serializers.SerializerMethodField()
     stockUnknown = serializers.SerializerMethodField()
     marketingCounts = serializers.SerializerMethodField()
+    quickOrder = serializers.CharField(source="quick_order", read_only=True)
     updatedAt = serializers.DateTimeField(source="updated_at")
 
     class Meta:
@@ -258,6 +259,7 @@ class ProductListSerializer(serializers.ModelSerializer):
             "image",
             "categories",
             "marketingCounts",
+            "quickOrder",
             "updatedAt",
         ]
 
@@ -330,6 +332,7 @@ class ProductSerializer(serializers.ModelSerializer):
     originCountry = serializers.ChoiceField(
         source="origin_country", choices=ORIGIN_COUNTRIES, required=False, allow_blank=True
     )
+    quickOrder = serializers.ChoiceField(source="quick_order", choices=Product.QuickOrder.choices, required=False)
     collectionIds = serializers.PrimaryKeyRelatedField(
         queryset=Collection.objects.all(), many=True, required=False, write_only=True
     )
@@ -387,6 +390,7 @@ class ProductSerializer(serializers.ModelSerializer):
             "categoryIds",
             "categories",
             "originCountry",
+            "quickOrder",
             "collectionIds",
             "collections",
             "highlights",

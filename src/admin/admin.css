@@ -426,6 +426,12 @@ textarea.adm-input { resize: vertical; min-height: 80px; }
 .adm-products__thumb { width: 64px; }
 .adm-products__thumb img, .adm-products__thumb .adm-thumb { display: block; width: 48px; height: 48px; border-radius: 10px; object-fit: contain; background: #f6f0e7; border: 1px solid var(--adm-line-soft); }
 .adm-products__menu { width: 52px; text-align: right; }
+.adm-products__select { width: 40px; }
+.adm-products__select input { width: 18px; height: 18px; accent-color: var(--adm-green); cursor: pointer; }
+.adm-products tr.is-selected td { background: var(--adm-green-soft); }
+/* Actions groupées (produits sélectionnés) : barre au-dessus de la liste, reste visible en défilant. */
+.adm-bulkbar { position: sticky; top: 8px; z-index: 5; display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px 16px; margin-bottom: 12px; padding: 10px 14px; border: 1px solid var(--adm-green); border-radius: 12px; background: var(--adm-panel); box-shadow: 0 8px 20px rgba(70, 58, 38, .08); }
+.adm-bulkbar__actions { display: flex; flex-wrap: wrap; gap: 8px; }
 .adm-menu { position: relative; display: inline-block; }
 .adm-menu__list { position: absolute; right: 0; top: calc(100% + 4px); z-index: 20; min-width: 210px; padding: 6px; border: 1px solid var(--adm-line); border-radius: 12px; background: #fff; box-shadow: 0 12px 32px rgba(70, 58, 38, .16); }
 .adm-menu__list button { display: flex; align-items: center; gap: 9px; width: 100%; padding: 9px 10px; border: 0; border-radius: 8px; background: transparent; color: var(--adm-ink); font: inherit; text-align: left; cursor: pointer; }

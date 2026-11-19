@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Download, KeyRound, Lock, Mail, Save, Store, Truck } from 'lucide-react';
+import { Download, KeyRound, Lock, Mail, Save, Store, Timer, Truck } from 'lucide-react';
 import { admin, adminUrl } from '../api.js';
 import { useAuth } from '../auth.jsx';
 import { Button, ButtonLink, Card, ErrorState, Field, Notice, PageHeader, SkeletonRows } from '../components/ui.jsx';
@@ -152,6 +152,63 @@ function DeliveryConfigCard({ data, editable, onSaved }) {
           <p className="adm-footnote adm-form-grid__full">
             Appliqué immédiatement au panier et à la commande. Le montant est toujours recalculé par le serveur ;
             les commandes déjà passées gardent leurs frais d’origine.
+          </p>
+          <div className="adm-form-grid__full">
+            <Button type="submit" icon={Save} loading={busy} disabled={!dirty}>Enregistrer</Button>
+          </div>
+        </form>
+      )}
+    </Card>
+  );
+}
+
+/**
+ * Commande rapide : réglage de la boutique. Chaque produit peut l'hériter, l'activer ou la désactiver
+ * (fiche produit, ou action groupée dans la liste des produits).
+ */
+function QuickOrderCard({ data, editable, onSaved }) {
+  const showToast = useToast();
+  const [enabled, setEnabled] = useState(Boolean(data.quickOrderEnabled));
+  const [error, setError] = useState(null);
+  const [busy, setBusy] = useState(false);
+  const dirty = enabled !== Boolean(data.quickOrderEnabled);
+
+  const save = async (e) => {
+    e.preventDefault();
+    setError(null);
+    setBusy(true);
+    try {
+      onSaved(await admin.patch('/settings', { quickOrderEnabled: enabled }));
+      showToast(enabled ? 'Commande rapide activée' : 'Commande rapide désactivée');
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  return (
+    <Card title={<><Timer size={17} aria-hidden="true" /> Commande rapide</>}>
+      {!editable ? (
+        <p><strong>{data.quickOrderEnabled ? 'Activée' : 'Désactivée'}</strong> pour les produits qui suivent le réglage de la boutique.</p>
+      ) : (
+        <form onSubmit={save} className="adm-form-grid" noValidate>
+          <fieldset className="adm-radio-group adm-form-grid__full">
+            <legend>Bouton « Commander rapidement » sur la fiche produit</legend>
+            <label>
+              <input type="radio" name="quickOrderEnabled" checked={enabled} onChange={() => setEnabled(true)} />{' '}
+              <strong>Activée</strong> <span className="adm-muted">— pour tous les produits réglés sur « Réglage de la boutique »</span>
+            </label>
+            <label>
+              <input type="radio" name="quickOrderEnabled" checked={!enabled} onChange={() => setEnabled(false)} />{' '}
+              <strong>Désactivée</strong> <span className="adm-muted">— sauf pour les produits où elle est activée</span>
+            </label>
+          </fieldset>
+          {error && <div className="adm-form-grid__full"><Notice tone="danger">{error}</Notice></div>}
+          <p className="adm-footnote adm-form-grid__full">
+            Le client saisit nom, téléphone, ville, adresse et quantité : une commande normale est créée (Commandes),
+            avec les mêmes contrôles de stock que le panier. Le bouton n’apparaît que si le produit est en ligne et disponible.
+            Réglage par produit : fiche produit, ou action groupée dans la liste des produits.
           </p>
           <div className="adm-form-grid__full">
             <Button type="submit" icon={Save} loading={busy} disabled={!dirty}>Enregistrer</Button>
@@ -339,6 +396,7 @@ export default function SettingsPage() {
         <SettingsSection key={`${s.id}-${version}`} section={s} data={data} editable={editable} onSaved={setData} />
       ))}
       {viewStore && data && <DeliveryConfigCard key={`delivery-${version}`} data={data} editable={editable} onSaved={setData} />}
+      {viewStore && data && <QuickOrderCard key={`quick-${version}`} data={data} editable={editable} onSaved={setData} />}
       {viewStore && <ShippingCard editable={editable} mode={data?.deliveryMode || 'zones'} />}
       {can(user, 'viewNewsletter') && <EmailCard />}
       {can(user, 'viewNewsletter') && <NewsletterCard />}

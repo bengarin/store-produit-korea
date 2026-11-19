@@ -93,6 +93,15 @@ class Product(Timestamped):
         help_text="Tel qu'indiqué sur l'emballage (« Made in … »). Vide si non vérifié.",
     )  # fmt: skip
     status = models.CharField("statut", max_length=10, choices=Status.choices, default=Status.DRAFT)
+
+    class QuickOrder(models.TextChoices):
+        INHERIT = "inherit", "Réglage de la boutique"
+        ON = "on", "Activée"
+        OFF = "off", "Désactivée"
+
+    quick_order = models.CharField(
+        "commande rapide", max_length=10, choices=QuickOrder.choices, default=QuickOrder.INHERIT
+    )
     categories = models.ManyToManyField(Category, through="ProductCategory", related_name="products", blank=True)
     hover_image = models.ForeignKey(
         "ProductImage",
@@ -138,6 +147,12 @@ class Product(Timestamped):
     @property
     def public_name(self):
         return self.display_name or f"{self.brand} {self.name}".strip()
+
+    def quick_order_allowed(self, shop_enabled: bool) -> bool:
+        """Commande rapide proposée pour ce produit : son choix, sinon celui de la boutique (« hériter »)."""
+        if self.quick_order == self.QuickOrder.INHERIT:
+            return bool(shop_enabled)
+        return self.quick_order == self.QuickOrder.ON
 
 
 class ProductCategory(models.Model):

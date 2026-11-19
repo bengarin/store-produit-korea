@@ -72,6 +72,8 @@ export function normalizeProduct(raw, images = {}) {
     translations: raw.translations || {},
     // Visuels marketing (colonne de droite de la fiche), distincts des photos du produit.
     marketing: Array.isArray(raw.marketing) ? raw.marketing : [],
+    // Commande rapide : « on », « off » ou « inherit » (= réglage de la boutique, config.quickOrderEnabled).
+    quickOrder: ['on', 'off'].includes(raw.quickOrder) ? raw.quickOrder : 'inherit',
     // Note des avis APPROUVÉS (mode API, présente seulement s'il en existe) ; null = aucune étoile affichée.
     reviews: raw.reviews?.count > 0 && Number.isFinite(Number(raw.reviews.average))
       ? { count: Number(raw.reviews.count), average: Number(raw.reviews.average) } : null,
@@ -108,6 +110,11 @@ export const localizeCollection = (collection, lang) => {
   if (lang === 'fr' || !tr) return collection;
   return { ...collection, label: tr.label || collection.label, description: tr.description || collection.description };
 };
+
+/** Commande rapide proposée pour ce produit : son propre choix, sinon le réglage de la boutique. */
+export const quickOrderAllowed = (product, shopEnabled) => (
+  product.quickOrder === 'inherit' ? Boolean(shopEnabled) : product.quickOrder === 'on'
+);
 
 /** Catalogue local normalisé, disponible immédiatement (sans réseau). */
 export const LOCAL_CATALOG = LOCAL_PRODUCTS.map((p) => normalizeProduct(p, PRODUCT_IMAGES[p.id]));

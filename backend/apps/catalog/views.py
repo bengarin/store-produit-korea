@@ -8,6 +8,7 @@ from rest_framework.views import APIView
 
 from apps.audit.services import log_action
 from apps.core.http import Conflict
+from apps.store_settings.models import StoreSettings
 
 from . import public, services
 from .models import Category, Product, ProductCategory, ProductImage, ProductMarketingImage, Variant
@@ -278,6 +279,8 @@ class ProductPreviewView(APIView):
                 "categoryLabels": labels,
                 "status": product.status,
                 "activationErrors": services.activation_errors(product),
+                # Réglage « commande rapide » de la boutique (le produit peut l'hériter) : aperçu fidèle du bouton.
+                "quickOrderEnabled": StoreSettings.load().quick_order_enabled,
             }
         )
 
@@ -291,6 +294,39 @@ class ProductDuplicateView(APIView):
         product = get_object_or_404(Product, pk=pk)
         copy = services.duplicate_product(product, user=request.user, request=request)
         return Response(ProductSerializer(copy, context={"request": request}).data, status=status.HTTP_201_CREATED)
+
+
+class QuickOrderBulkSerializer(serializers.Serializer):
+    productIds = serializers.ListField(child=serializers.IntegerField(min_value=1), allow_empty=False, max_length=500)
+    quickOrder = serializers.ChoiceField(choices=Product.QuickOrder.choices)
+
+
+class ProductQuickOrderBulkView(APIView):
+    """
+    POST {"productIds": [..], "quickOrder": "on" | "off" | "inherit"} — action groupée de la liste des produits.
+    Seul le réglage « commande rapide » change : fiches, prix, stocks et statuts ne sont jamais touchés.
+    """
+
+    permission_classes = [CATALOG_PERMISSION]
+
+    @transaction.atomic
+    def post(self, request):
+        data = QuickOrderBulkSerializer(data=request.data)
+        data.is_valid(raise_exception=True)
+        ids = set(data.validated_data["productIds"])
+        mode = data.validated_data["quickOrder"]
+        found = set(Product.objects.filter(pk__in=ids).values_list("pk", flat=True))
+        unknown = sorted(ids - found)
+        if unknown:
+            raise serializers.ValidationError({"productIds": [f"Produit introuvable : {unknown}."]})
+        changed = sorted(Product.objects.filter(pk__in=ids).exclude(quick_order=mode).values_list("pk", flat=True))
+        Product.objects.filter(pk__in=changed).update(quick_order=mode)
+        if changed:
+            log_action(
+                "product.quick_order_bulk", actor=request.user, request=request,
+                changes={"quickOrder": mode, "products": changed},
+            )  # fmt: skip
+        return Response({"updated": len(changed), "productIds": sorted(ids), "quickOrder": mode})
 
 
 class StatusSerializer(serializers.Serializer):

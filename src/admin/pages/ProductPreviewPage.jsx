@@ -4,7 +4,7 @@ import ProductView from '../../components/ProductView.jsx';
 import SiteFooter from '../../components/SiteFooter.jsx';
 import useMediaQuery from '../../hooks/useMediaQuery.js';
 import { STORE_CONFIG } from '../../config/store.js';
-import { normalizeProduct } from '../../services/productService.js';
+import { normalizeProduct, quickOrderAllowed } from '../../services/productService.js';
 import { PRODUCT_STATUS } from '../format.js';
 import { useApi, useTitle } from '../hooks.js';
 
@@ -47,6 +47,10 @@ export default function ProductPreviewPage() {
           onToggleFavorite={() => {}}
           onAdd={() => {}}
           onBuyNow={() => {}}
+          quickOrder={quickOrderAllowed(product, data.quickOrderEnabled)}
+          renderQuickOrder={() => (
+            <p className="pdp__note">Aperçu : le formulaire « Commander rapidement » s’affiche ici pour les clients (désactivé dans l’aperçu).</p>
+          )}
           showDemoNotices={STORE_CONFIG.showDemoNotices}
           desktop={desktop}
         />

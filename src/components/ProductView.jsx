@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { ChevronRight, Heart, ShoppingCart, Zap, Info, Leaf } from 'lucide-react';
+import { ChevronRight, Heart, ShoppingCart, Zap, Info, Leaf, Timer } from 'lucide-react';
 import ProductGallery from './ProductGallery.jsx';
 import ProductDetails from './ProductDetails.jsx';
 import { ReviewSummary } from './ProductReviews.jsx';
@@ -49,7 +49,7 @@ function initialVariant(product) {
  */
 export default function ProductView({
   product, categoryLabel, qty, onQtyChange, maxQty, isFav, onToggleFavorite, onAdd, onBuyNow, showDemoNotices, desktop, deliveryFee = null,
-  reviews = null,
+  reviews = null, quickOrder = false, renderQuickOrder = null,
 }) {
   const { t, tc, autoDir } = useI18n();
   const mainCat = product.categories[0];
@@ -66,6 +66,15 @@ export default function ProductView({
   const statusLabel = canBuy ? '' : t(`status.${status}`);
   const handleAdd = () => canBuy && onAdd(variant);
   const handleBuyNow = () => canBuy && onBuyNow(variant);
+  // « Commander rapidement » : seulement si activé (boutique ou produit) ET la variante choisie est disponible.
+  // Le formulaire s'ouvre DANS la fiche, sous les informations du produit (ni fenêtre, ni autre page).
+  const showQuick = Boolean(quickOrder && renderQuickOrder && canBuy);
+  const [quickOpen, setQuickOpen] = useState(false);
+  const [quickSignal, setQuickSignal] = useState(0); // nouveau clic = nouveau défilement jusqu'au formulaire
+  const openQuick = () => {
+    setQuickOpen(true);
+    setQuickSignal((n) => n + 1);
+  };
 
   return (
     <main className="pdp">
@@ -141,11 +150,25 @@ export default function ProductView({
                   <ShoppingCart size={18} aria-hidden="true" /> {canBuy ? t('common.addToCart') : statusLabel}
                 </button>
               </div>
-              <button className="btn btn--primary btn--block pdp__now" onClick={handleBuyNow} disabled={!canBuy}>
-                <Zap size={17} aria-hidden="true" /> {t('pdp.buyNow')}
-                {canBuy && <span className="pdp__now-total">· {formatPrice(price * qty)}</span>}
-              </button>
+              <div className={showQuick ? 'pdp__cta pdp__cta--quick' : 'pdp__cta'}>
+                <button className="btn btn--primary btn--block pdp__now" onClick={handleBuyNow} disabled={!canBuy}>
+                  <Zap size={17} aria-hidden="true" /> {t('pdp.buyNow')}
+                  {canBuy && <span className="pdp__now-total">· {formatPrice(price * qty)}</span>}
+                </button>
+                {showQuick && (
+                  <button type="button" className="btn btn--outline btn--block pdp__quick" onClick={openQuick}
+                    aria-expanded={quickOpen} aria-controls="quick-order">
+                    <Timer size={17} aria-hidden="true" /> {t('quick.open')}
+                  </button>
+                )}
+              </div>
             </div>
+
+            {quickOpen && renderQuickOrder && (
+              <div id="quick-order" className="pdp__quick-order">
+                {renderQuickOrder({ variant, signal: quickSignal, onClose: () => setQuickOpen(false) })}
+              </div>
+            )}
 
 
             {desktop ? (

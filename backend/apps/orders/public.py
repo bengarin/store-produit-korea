@@ -9,6 +9,7 @@ from rest_framework.throttling import ScopedRateThrottle
 from rest_framework.views import APIView
 
 from apps.audit.services import log_action
+from apps.catalog.models import Product
 from apps.core.money import number
 from apps.core.phone import normalize_moroccan_phone
 from apps.promotions import services as promotions
@@ -54,6 +55,24 @@ class OrderRequestSerializer(serializers.Serializer):
     paymentMethod = serializers.ChoiceField(choices=["cod"], default="cod")
     deliveryMethod = serializers.ChoiceField(choices=["home"], default="home")
     note = serializers.CharField(max_length=500, required=False, allow_blank=True)
+    # « quick » = formulaire « Commander rapidement » de la fiche produit (un seul produit). Même commande normale.
+    source = serializers.ChoiceField(choices=["cart", "quick"], default="cart")
+
+    def validate(self, attrs):
+        if attrs.get("source") == "quick":
+            check_quick_order(attrs["items"])
+        return attrs
+
+
+def check_quick_order(items: list) -> None:
+    """Commande rapide : un seul produit, actif, pour lequel la commande rapide est proposée (sinon refus)."""
+    if len(items) != 1:
+        raise serializers.ValidationError({"items": ["La commande rapide concerne un seul produit."]})
+    product = Product.objects.filter(slug=items[0]["productId"], status=Product.Status.ACTIVE).first()
+    if product is None or not product.quick_order_allowed(StoreSettings.load().quick_order_enabled):
+        raise serializers.ValidationError(
+            {"items": ["La commande rapide n'est pas disponible pour ce produit."]}, code="quick_order_disabled"
+        )
 
 
 class PublicView(APIView):
@@ -76,6 +95,8 @@ def store_config_payload() -> dict:
         "cities": list(City.objects.filter(is_active=True, zone__is_active=True).values_list("name", flat=True)),
         "allowOtherCity": default_zone is not None or settings.delivery_mode != StoreSettings.DeliveryMode.ZONES,
         "maxQtyPerLine": settings.max_qty_per_line,
+        # Commande rapide (fiche produit) : réglage de la boutique ; chaque produit peut l'activer ou la désactiver.
+        "quickOrderEnabled": settings.quick_order_enabled,
         # Identité et contact du responsable du traitement (page Politique de confidentialité).
         # Vides tant que le propriétaire ne les a pas saisis : rien n'est inventé.
         "legal": {

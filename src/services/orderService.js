@@ -30,13 +30,15 @@ export async function validatePromo(code, items) {
 }
 
 /** Corps envoyé au backend : uniquement des identifiants et quantités (pas de prix de confiance). */
-export function buildOrderRequest({ customer, lines, promoCode }) {
+export function buildOrderRequest({ customer, lines, promoCode, source = 'cart' }) {
   return {
     customer,
     items: lines.map(({ product, variant, qty }) => requestItem(product.id, variant?.id, qty)),
     promoCode: promoCode || null,
     paymentMethod: 'cod',
     deliveryMethod: 'home',
+    // « quick » = « Commander rapidement » (fiche produit) : le serveur vérifie que c'est permis pour ce produit.
+    ...(source === 'quick' ? { source } : {}),
   };
 }
 
@@ -49,8 +51,8 @@ function localOrderNumber() {
  * Envoie la commande. Retourne l'objet affiché sur la page de confirmation.
  * `preview` = lignes et totaux calculés côté navigateur (affichage en mode local).
  */
-export async function submitOrder({ customer, lines, promoCode, totals, idempotencyKey, website = '' }) {
-  const request = buildOrderRequest({ customer, lines, promoCode });
+export async function submitOrder({ customer, lines, promoCode, totals, idempotencyKey, website = '', source = 'cart' }) {
+  const request = buildOrderRequest({ customer, lines, promoCode, source });
   const summary = {
     customer,
     lines: lines.map(({ product, qty, price, label }) => ({

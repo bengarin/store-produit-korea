@@ -39,6 +39,8 @@ class StoreSettings(models.Model):
     max_orders_per_phone_per_hour = models.PositiveSmallIntegerField(
         "commandes max. par téléphone et par heure", default=5
     )
+    # Commande rapide (formulaire court sur la fiche produit) : désactivée tant que l'admin ne l'active pas.
+    quick_order_enabled = models.BooleanField("commande rapide activée", default=False)
     updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:

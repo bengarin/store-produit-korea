@@ -12,6 +12,8 @@ import { STORE_CONFIG } from '../config/store.js';
 import { useCart } from '../context/CartContext.jsx';
 import { useToast } from '../context/ToastContext.jsx';
 import { saveDirectOrder } from '../services/orderService.js';
+import { quickOrderAllowed } from '../services/productService.js';
+import QuickOrderForm from '../components/QuickOrderForm.jsx';
 import { defaultVariant, unitPrice, variantLabel } from '../utils/variants.js';
 import { productParams, track } from '../analytics/metaPixel.js';
 
@@ -64,6 +66,8 @@ export default function ProductPage() {
     const label = variantLabel(product, variant);
     showToast(t('toast.addedQty', { qty, name: `${product.displayName}${label ? ` (${label})` : ''}` }));
   };
+  // Commande rapide : formulaire court sur la fiche (même commande que la page de commande, panier intact).
+  const quickOrder = quickOrderAllowed(product, config?.quickOrderEnabled);
   const handleBuyNow = (variant) => {
     // Achat direct : n'utilise PAS le panier.
     saveDirectOrder(variant ? { id: product.id, variantId: variant.id, qty } : { id: product.id, qty });
@@ -88,6 +92,10 @@ export default function ProductPage() {
         showDemoNotices={STORE_CONFIG.showDemoNotices}
         desktop={desktop}
         reviews={reviews}
+        quickOrder={quickOrder}
+        renderQuickOrder={({ variant, signal, onClose }) => (
+          <QuickOrderForm product={product} variant={variant} initialQty={qty} maxQty={maxQty} signal={signal} onClose={onClose} />
+        )}
       />
       <ProductReviews product={product} reviews={reviews} />
       <RelatedProducts product={product} />

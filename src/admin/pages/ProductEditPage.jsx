@@ -25,7 +25,7 @@ function toForm(p) {
     brand: p.brand, name: p.name, displayName: p.displayName, cardLine: p.cardLine, summary: p.summary,
     descriptionHtml: sanitizeRichText(p.descriptionHtml || ''), ingredients: listToLines(p.ingredients), benefits: listToLines(p.benefits),
     usage: listToLines(p.usage), skinTypes: p.skinTypes, highlights: p.highlights.map((h) => ({ ...h })),
-    categoryIds: p.categories.map((c) => c.id), originCountry: p.originCountry || '',
+    categoryIds: p.categories.map((c) => c.id), originCountry: p.originCountry || '', quickOrder: p.quickOrder || 'inherit',
     collectionIds: (p.collections || []).map((c) => c.id), hoverImageId: p.hoverImageId, hoverImagePosition: p.hoverImagePosition,
     sceneImageId: p.sceneImageId, slug: p.slug, seoTitle: p.seoTitle, seoDescription: p.seoDescription, ogImageId: p.ogImageId,
     // Version arabe (facultative)
@@ -34,6 +34,7 @@ function toForm(p) {
     benefitsAr: listToLines(p.benefitsAr || []), usageAr: listToLines(p.usageAr || []), skinTypesAr: p.skinTypesAr || '',
   };
 }
+const QUICK_ORDER_CHOICES = [['inherit', 'Réglage de la boutique'], ['on', 'Activée pour ce produit'], ['off', 'Désactivée pour ce produit']];
 const LIST_FIELDS = ['ingredients', 'benefits', 'usage', 'ingredientsAr', 'benefitsAr', 'usageAr'];
 const same = (a, b) => JSON.stringify(a ?? null) === JSON.stringify(b ?? null);
 
@@ -220,6 +221,14 @@ export default function ProductEditPage() {
             onChange={(ids) => setForm((f) => ({ ...f, categoryIds: ids }))} onCreated={(c) => setCategories([...(categories || []), c])} />
           <CollectionsCard form={form} setForm={setForm} editable={editable} errors={errors} />
           <FiltersCard productId={product.id} editable={editable} toast={toast} />
+          <Card title="Commande rapide">
+            <Field label="Bouton « Commander rapidement »" htmlFor="pe-quick" error={errors.quickOrder}
+              hint="Affiché seulement si le produit est en ligne et disponible. Réglage de la boutique : Réglages → Commande rapide.">
+              <select id="pe-quick" className="adm-input" value={form.quickOrder} onChange={set('quickOrder')} disabled={!editable}>
+                {QUICK_ORDER_CHOICES.map(([value, label]) => <option key={value} value={value}>{label}</option>)}
+              </select>
+            </Field>
+          </Card>
           <Card title="Visuels de l’accueil">
             <Field label="Image au survol (carrousel « produits du moment »)" htmlFor="pe-hover" error={errors.hoverImageId}>
               <select id="pe-hover" className="adm-input" value={form.hoverImageId || ''} disabled={!editable}

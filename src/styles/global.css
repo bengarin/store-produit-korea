@@ -553,6 +553,16 @@ html[lang="ar"] .drawer__cat-row a { font-size: 17px; font-weight: 700; }
 .pdp__add:hover { background: var(--green-hover); }
 .pdp__now { min-height: 52px; background: var(--green-deep); font-size: 15.5px; }
 .pdp__now-total { font-weight: 400; opacity: 0.85; }
+/* « Commander maintenant » + « Commander rapidement » : côte à côte dans la barre mobile, l'un sous l'autre sur ordinateur. */
+.pdp__cta { display: grid; gap: 8px; min-width: 0; }
+.pdp__cta--quick { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.pdp__cta--quick .btn { min-height: 50px; padding: 6px 8px; gap: 6px; font-size: 14px; line-height: 1.2; text-align: center; white-space: normal; }
+.pdp__cta--quick .btn svg { flex: none; }
+@media (max-width: 380px) {
+  .pdp__cta--quick .btn { font-size: 13px; gap: 4px; padding-inline: 6px; }
+}
+.pdp__cta--quick .pdp__now-total { display: none; }
+.pdp__quick { border-width: 1.5px; }
 
 /* Réassurance */
 /* Garanties : liste compacte sur mobile (une ligne par élément) */
@@ -809,6 +819,11 @@ select { appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmln
   .pdp__add:hover { background: var(--sage-soft); }
   .pdp__add, .qty--buy button { min-height: 54px; height: 54px; }
   .pdp__now { min-height: 56px; font-size: 16.5px; }
+  .pdp__cta { gap: 12px; }
+  .pdp__cta--quick { grid-template-columns: minmax(0, 1fr); }
+  .pdp__cta--quick .btn { min-height: 54px; padding-inline: 16px; font-size: 16px; }
+  .pdp__cta--quick .pdp__now { min-height: 56px; font-size: 16.5px; }
+  .pdp__cta--quick .pdp__now-total { display: inline; }
   .pdp__trust { grid-template-columns: repeat(2, minmax(0, 1fr)); margin-top: 26px; max-width: 520px; gap: 18px 16px; padding: 18px 0 0; border: 0; border-top: 1px solid var(--border); border-radius: 0; background: none; }
   .pdp__trust-icon { width: 40px; height: 40px; border: 1px solid #c9d4c3; border-radius: 50%; }
   .pdp__trust strong { display: block; line-height: 1.25; }
@@ -1204,6 +1219,48 @@ html[lang="ar"] .filter-section__head button { font-family: var(--font-sans); fo
 .price-range-box__apply { min-height: 42px; font-size: 14px; }
 
 /* Tiroir mobile */
+/* Commande rapide : formulaire INTÉGRÉ à la fiche produit (sous les informations), sur mobile comme sur ordinateur. */
+.pdp__quick-order { margin-top: var(--s-6); }
+.quick-order { scroll-margin-top: calc(var(--header-h, 64px) + 12px); display: grid; gap: var(--s-4); padding: var(--s-5) var(--s-4) var(--s-4); background: var(--surface); border: 1.5px solid var(--green); border-radius: var(--r-lg); box-shadow: var(--shadow); outline: none; animation: fade 0.25s; }
+.quick-order:focus-visible { box-shadow: 0 0 0 3px rgba(33, 74, 59, 0.25); }
+.quick-order__head { display: flex; align-items: center; justify-content: space-between; gap: var(--s-3); }
+.quick-order__head h2 { font-family: var(--font-serif); font-size: 26px; font-weight: 600; line-height: 1.1; color: var(--green-deep); }
+html[lang="ar"] .quick-order__head h2 { font-family: var(--font-sans); font-size: 20px; font-weight: 700; }
+.quick-order__product { display: grid; grid-template-columns: 64px minmax(0, 1fr); gap: var(--s-3) var(--s-4); align-items: center; padding: var(--s-3); background: var(--bg); border: 1px solid var(--border); border-radius: var(--r); }
+.quick-order__thumb { width: 64px; height: 64px; border-radius: var(--r-sm); overflow: hidden; background: var(--surface-2); }
+.quick-order__thumb.product-image--contain img { padding: 6%; }
+.quick-order__info { display: grid; gap: 2px; min-width: 0; text-align: start; }
+.quick-order__name { font-weight: 600; line-height: 1.3; color: var(--green-deep); overflow-wrap: anywhere; }
+.quick-order__variant { font-size: 13px; color: var(--muted); }
+.quick-order__price { font-weight: 700; color: var(--text); }
+.quick-order__qty { grid-column: 1 / -1; display: flex; align-items: center; justify-content: space-between; gap: var(--s-3); padding-top: var(--s-3); border-top: 1px solid var(--border); }
+.quick-order__qty-label { font-size: var(--fs-sm); font-weight: 600; }
+/* Formulaire de commande réutilisé : une seule colonne, bouton dans le flux (la barre d'achat mobile reste en bas). */
+.quick-order .checkout-form { grid-template-columns: minmax(0, 1fr); }
+.quick-order .checkout-form > .checkout-section, .quick-order .checkout-form > .sticky-actions { grid-column: 1; }
+.quick-order .checkout-section { padding-block: var(--s-4); }
+.quick-order .checkout-section:first-child { padding-top: 0; }
+.quick-order__summary { border-bottom: 0; }
+.quick-order .sticky-actions { position: static; margin-inline: 0; padding: var(--s-2) 0 0; background: none; border: 0; }
+/* Confirmation affichée à la place du formulaire. */
+.quick-order--done { text-align: center; }
+.quick-order__success { display: grid; justify-items: center; gap: var(--s-2); }
+.quick-order__check { display: grid; place-items: center; width: 52px; height: 52px; border-radius: 50%; background: var(--green); color: #fff; }
+.quick-order__success h2 { font-family: var(--font-serif); font-size: 26px; font-weight: 600; color: var(--green-deep); }
+html[lang="ar"] .quick-order__success h2 { font-family: var(--font-sans); font-size: 21px; font-weight: 700; }
+.quick-order__success p { font-size: 15px; line-height: 1.6; color: var(--text-2); }
+.quick-order__recap { display: grid; gap: 8px; padding: var(--s-4); text-align: start; background: var(--bg); border: 1px solid var(--border); border-radius: var(--r); }
+.quick-order__recap div { display: flex; justify-content: space-between; gap: var(--s-3); font-size: 14.5px; }
+.quick-order__recap dt { color: var(--muted); }
+.quick-order__recap dd { text-align: end; overflow-wrap: anywhere; }
+@media (min-width: 860px) {
+  .pdp__quick-order { max-width: 520px; }
+  .quick-order { padding: var(--s-6); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .quick-order { animation: none; }
+}
+
 .filter-drawer { position: fixed; inset: 0; z-index: 60; }
 .filter-drawer__backdrop { position: absolute; inset: 0; background: rgba(23, 33, 27, 0.4); animation: fade 0.2s; }
 .filter-drawer__panel { position: absolute; inset-block: 0; inset-inline-start: 0; display: flex; flex-direction: column; width: min(400px, 92vw); background: var(--surface); box-shadow: var(--shadow-lg); animation: drawer-in 0.25s var(--ease); }

@@ -52,6 +52,7 @@ class SettingsSerializer(serializers.ModelSerializer):
     maxOrdersPerPhonePerHour = serializers.IntegerField(
         source="max_orders_per_phone_per_hour", min_value=1, max_value=100, required=False
     )
+    quickOrderEnabled = serializers.BooleanField(source="quick_order_enabled", required=False)
 
     class Meta:
         model = StoreSettings
@@ -73,6 +74,7 @@ class SettingsSerializer(serializers.ModelSerializer):
             "deliveryFee",
             "maxQtyPerLine",
             "maxOrdersPerPhonePerHour",
+            "quickOrderEnabled",
         ]
 
     def validate(self, attrs):

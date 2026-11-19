@@ -202,6 +202,8 @@ def product_payload(product: Product) -> dict:
     review_avg = getattr(product, "approved_review_avg", None)
     if review_count and review_avg is not None:
         payload["reviews"] = {"count": review_count, "average": round(float(review_avg), 1)}
+    # Commande rapide : choix du produit (« inherit » = réglage de la boutique, voir config.quickOrderEnabled).
+    payload["quickOrder"] = product.quick_order
     # Pays de fabrication : seulement s'il a été renseigné (jamais supposé à partir de la marque).
     if product.origin_country:
         payload["origin"] = product.origin_country

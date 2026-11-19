@@ -1,12 +1,12 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Archive, Copy, Eye, Package, Pencil, Plus, RotateCcw, Trash2, Zap } from 'lucide-react';
+import { Archive, Copy, Eye, Package, Pencil, Plus, RotateCcw, Timer, TimerOff, Trash2, Undo2, X, Zap } from 'lucide-react';
 import { admin } from '../api.js';
 import { useAuth } from '../auth.jsx';
 import ConfirmDialog from '../components/ConfirmDialog.jsx';
 import RowMenu from '../components/RowMenu.jsx';
 import SearchBox from '../components/SearchBox.jsx';
-import { Badge, ButtonLink, Card, EmptyState, ErrorState, PageHeader, Pagination, SkeletonRows } from '../components/ui.jsx';
+import { Badge, Button, ButtonLink, Card, EmptyState, ErrorState, PageHeader, Pagination, SkeletonRows } from '../components/ui.jsx';
 import { useToast } from '../../context/ToastContext.jsx';
 import { PRODUCT_STATUS, formatDate, formatMoney } from '../format.js';
 import { useApi, useTitle, useUrlFilters } from '../hooks.js';
@@ -19,6 +19,18 @@ function StockCell({ p }) {
   if (p.totalStock == null) return <span className="adm-muted">—</span>;
   return <span className={p.totalStock <= 0 ? 'adm-text-danger' : ''}>{p.totalStock} en stock</span>;
 }
+
+/** Commande rapide du produit : son propre choix, ou « auto » (réglage de la boutique). */
+const QUICK_ORDER = {
+  inherit: { label: 'Auto', tone: 'neutral', title: 'Suit le réglage de la boutique (Réglages → Commande rapide)' },
+  on: { label: 'Activée', tone: 'success', title: 'Commande rapide activée pour ce produit' },
+  off: { label: 'Désactivée', tone: 'neutral-dashed', title: 'Commande rapide désactivée pour ce produit' },
+};
+const BULK_ACTIONS = [
+  ['on', 'Activer la commande rapide', Timer],
+  ['off', 'Désactiver la commande rapide', TimerOff],
+  ['inherit', 'Suivre le réglage de la boutique', Undo2],
+];
 
 export default function ProductsPage() {
   useTitle('Produits');
@@ -33,6 +45,31 @@ export default function ProductsPage() {
   const [confirm, setConfirm] = useState(null); // { product, action }
   const edit = can(user, 'editProducts');
   const remove = can(user, 'deleteProducts');
+  // Sélection pour les actions groupées (page affichée seulement) ; vidée quand la liste change.
+  const [selected, setSelected] = useState(() => new Set());
+  const [bulkBusy, setBulkBusy] = useState(null);
+  useEffect(() => setSelected(new Set()), [f.search, f.status, page]);
+  const pageIds = data?.items.map((p) => p.id) || [];
+  const allSelected = pageIds.length > 0 && pageIds.every((id) => selected.has(id));
+  const toggleOne = (id) => setSelected((s) => {
+    const next = new Set(s);
+    if (next.has(id)) next.delete(id); else next.add(id);
+    return next;
+  });
+  const toggleAll = () => setSelected(allSelected ? new Set() : new Set(pageIds));
+  const bulkQuickOrder = async (mode, label) => {
+    setBulkBusy(mode);
+    try {
+      const res = await admin.post('/products/quick-order', { productIds: [...selected], quickOrder: mode });
+      showToast(`${label} : ${selected.size} produit${selected.size > 1 ? 's' : ''}${res.updated < selected.size ? ` (${res.updated} modifié${res.updated > 1 ? 's' : ''})` : ''}`);
+      setSelected(new Set());
+      reload();
+    } catch (err) {
+      showToast(err.message, 'info');
+    } finally {
+      setBulkBusy(null);
+    }
+  };
 
   const setStatus = async (p, status) => {
     await admin.post(`/products/${p.id}/status`, { status });
@@ -73,6 +110,19 @@ export default function ProductsPage() {
         </div>
       </div>
 
+      {edit && selected.size > 0 && (
+        <div className="adm-bulkbar" role="region" aria-label="Actions groupées">
+          <strong>{selected.size} produit{selected.size > 1 ? 's' : ''} sélectionné{selected.size > 1 ? 's' : ''}</strong>
+          <div className="adm-bulkbar__actions">
+            {BULK_ACTIONS.map(([mode, label, Icon]) => (
+              <Button key={mode} size="sm" variant={mode === 'on' ? 'primary' : 'secondary'} icon={Icon}
+                loading={bulkBusy === mode} disabled={bulkBusy !== null} onClick={() => bulkQuickOrder(mode, label)}>{label}</Button>
+            ))}
+            <Button size="sm" variant="ghost" icon={X} disabled={bulkBusy !== null} onClick={() => setSelected(new Set())}>Désélectionner</Button>
+          </div>
+        </div>
+      )}
+
       <Card padded={false}>
         {error && <ErrorState error={error} onRetry={reload} />}
         {!data && loading && <SkeletonRows rows={6} />}
@@ -85,11 +135,24 @@ export default function ProductsPage() {
           <div className={`adm-table-wrap ${loading ? 'is-loading' : ''}`}>
             <table className="adm-table adm-table--rows adm-products">
               <thead>
-                <tr><th aria-label="Image" /><th>Produit</th><th>Statut</th><th className="num">Prix</th><th>Stock</th><th className="num">Variantes</th><th>Modifié</th><th aria-label="Actions" /></tr>
+                <tr>
+                  {edit && (
+                    <th className="adm-products__select">
+                      <input type="checkbox" checked={allSelected} onChange={toggleAll} aria-label="Sélectionner tous les produits de la page" />
+                    </th>
+                  )}
+                  <th aria-label="Image" /><th>Produit</th><th>Statut</th><th className="num">Prix</th><th>Stock</th><th className="num">Variantes</th><th>Commande rapide</th><th>Modifié</th><th aria-label="Actions" />
+                </tr>
               </thead>
               <tbody>
                 {data.items.map((p) => (
-                  <tr key={p.id} onClick={() => navigate(`/admin/products/${p.id}`)}>
+                  <tr key={p.id} onClick={() => navigate(`/admin/products/${p.id}`)} className={selected.has(p.id) ? 'is-selected' : undefined}>
+                    {edit && (
+                      <td className="adm-products__select" data-label="Sélection" onClick={(e) => e.stopPropagation()}>
+                        <input type="checkbox" checked={selected.has(p.id)} onChange={() => toggleOne(p.id)}
+                          aria-label={`Sélectionner ${p.displayName}`} />
+                      </td>
+                    )}
                     <td className="adm-products__thumb">
                       {p.image ? <img src={p.image} alt="" width="48" height="48" loading="lazy" /> : <span className="adm-thumb" />}
                     </td>
@@ -101,6 +164,11 @@ export default function ProductsPage() {
                     <td data-label="Prix" className="num adm-num">{formatMoney(p.price)}</td>
                     <td data-label="Stock"><StockCell p={p} /></td>
                     <td data-label="Variantes" className="num">{p.variantCount}</td>
+                    <td data-label="Commande rapide">
+                      <span title={QUICK_ORDER[p.quickOrder || 'inherit'].title}>
+                        <Badge tone={QUICK_ORDER[p.quickOrder || 'inherit'].tone}>{QUICK_ORDER[p.quickOrder || 'inherit'].label}</Badge>
+                      </span>
+                    </td>
                     <td data-label="Modifié">{formatDate(p.updatedAt, { time: false })}</td>
                     <td className="adm-products__menu">
                       <RowMenu label={`Actions pour ${p.displayName}`} items={[
