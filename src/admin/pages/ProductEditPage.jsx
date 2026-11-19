@@ -185,7 +185,7 @@ export default function ProductEditPage() {
 
           <Card title="Référencement (SEO)">
             <div className="adm-seo-preview" aria-label="Aperçu dans Google">
-              <span className="adm-seo-preview__url">mapetitecoree.ma › produits › {form.slug}</span>
+              <span className="adm-seo-preview__url">{window.location.host} › produits › {form.slug}</span>
               <span className="adm-seo-preview__title">{seoTitle}</span>
               <span className="adm-seo-preview__desc">{seoDesc}</span>
             </div>

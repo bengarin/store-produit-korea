@@ -1,10 +1,11 @@
 import { useEffect, useState } from 'react';
 import { NavLink, Outlet, useLocation } from 'react-router-dom';
-import { BookOpen, Boxes, Layers, SlidersHorizontal, Star, ExternalLink, FolderTree, MessageSquareHeart, LayoutDashboard, Leaf, LogOut, Menu, Package, Images, Palette, Settings, ShoppingBag, Users, X } from 'lucide-react';
+import { BookOpen, Boxes, Layers, SlidersHorizontal, Star, ExternalLink, FolderTree, MessageSquareHeart, LayoutDashboard, LogOut, Menu, Package, Images, Palette, Settings, ShoppingBag, Users, X } from 'lucide-react';
 import { useAuth } from '../auth.jsx';
 import { can } from '../permissions.js';
 import { ROLE_LABELS } from '../format.js';
 import { useApi } from '../hooks.js';
+import logo from '../../assets/brand/logo-jodhur-300.png';
 
 const NAV = [
   { to: '/admin/dashboard', label: 'Tableau de bord', icon: LayoutDashboard, perm: 'viewDashboard' },
@@ -26,11 +27,8 @@ const NAV = [
 function Brand() {
   return (
     <div className="adm-brand">
-      <span className="adm-brand__mark" aria-hidden="true"><Leaf size={20} strokeWidth={1.8} /></span>
-      <div>
-        <strong>Ma Petite Corée</strong>
-        <span>Administration</span>
-      </div>
+      <img className="adm-brand__logo" src={logo} alt="Jodhur" width="300" height="75" decoding="async" />
+      <span className="adm-brand__label">Administration</span>
     </div>
   );
 }

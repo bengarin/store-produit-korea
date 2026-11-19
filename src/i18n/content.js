@@ -70,6 +70,9 @@ const AR = {
   'Restez informée': 'ابقوا على اطّلاع',
   'Nouveautés et conseils de routine, sans excès.': 'جديدنا ونصائح للعناية، دون إزعاج.',
   "Je m'inscris": 'الاشتراك',
+  "J'accepte de recevoir les e-mails de Jodhur. Je peux me désinscrire à tout moment.":
+    'أوافق على تلقي الرسائل الإلكترونية من Jodhur، ويمكنني إلغاء الاشتراك في أي وقت.',
+  // Ancien texte : traduit tant qu'un thème déjà publié le contient encore (Admin → Thème).
   "J'accepte de recevoir les e-mails de Ma Petite Corée. Je peux me désinscrire à tout moment.":
     'أوافق على تلقي الرسائل الإلكترونية من Ma Petite Corée، ويمكنني إلغاء الاشتراك في أي وقت.',
   'Votre titre': 'العنوان',

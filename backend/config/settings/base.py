@@ -210,7 +210,7 @@ FILE_UPLOAD_PERMISSIONS = 0o644
 # Dossier du front construit (npm run build → dist/). SITE_URL : adresse publique (https://…), pour les URL canoniques.
 FRONTEND_DIST_DIR = Path(env.str("FRONTEND_DIST_DIR", default=str(BASE_DIR.parent / "dist")))
 SITE_URL = env.str("SITE_URL", default="")
-SITE_NAME = "Ma Petite Corée"
+SITE_NAME = "Jodhur"
 # Politique de sécurité du contenu des pages de la boutique : scripts du site uniquement (aucun script en ligne),
 # polices Google, images du site, iframe de la même origine (aperçu du thème).
 # Pixel Meta (chargé seulement après consentement) : script connect.facebook.net, envois vers www.facebook.com/tr.

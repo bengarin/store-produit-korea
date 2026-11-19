@@ -32,7 +32,7 @@ from .bootstrap import data_script, store_data
 
 PRIVATE_PREFIXES = ("/panier", "/commande", "/confirmation", "/admin")
 DEFAULT_DESCRIPTION = (
-    "Ma Petite Corée — soins coréens et naturels. Livraison partout au Maroc, paiement à la livraison."
+    "Jodhur — soins coréens et naturels. Livraison partout au Maroc, paiement à la livraison."
 )
 
 
@@ -77,13 +77,13 @@ PAGE_TEXTS = {
         "product_404": "Produit introuvable",
         "product_410": "Produit retiré",
         "blog": "Blog",
-        "blog_description": "Conseils de soin, routines et ingrédients coréens : le blog de Ma Petite Corée.",
+        "blog_description": "Conseils de soin, routines et ingrédients coréens : le blog de Jodhur.",
         "article_404": "Article introuvable",
         "reviews": "Avis clients",
-        "reviews_description": "Les avis de nos clientes et clients sur la boutique Ma Petite Corée.",
+        "reviews_description": "Les avis de nos clientes et clients sur la boutique Jodhur.",
         "privacy": "Politique de confidentialité",
         "privacy_description": (
-            "Données collectées, cookies, pixel Meta et consentement sur la boutique Ma Petite Corée."
+            "Données collectées, cookies, pixel Meta et consentement sur la boutique Jodhur."
         ),
         "not_found": "Page introuvable",
     },
@@ -100,12 +100,12 @@ PAGE_TEXTS = {
         "product_404": "المنتج غير موجود",
         "product_410": "المنتج لم يعد متوفرًا",
         "blog": "المدونة",
-        "blog_description": "نصائح العناية والروتين والمكونات الكورية: مدونة Ma Petite Corée.",
+        "blog_description": "نصائح العناية والروتين والمكونات الكورية: مدونة Jodhur.",
         "article_404": "المقال غير موجود",
         "reviews": "آراء العملاء",
-        "reviews_description": "آراء عملائنا حول متجر Ma Petite Corée.",
+        "reviews_description": "آراء عملائنا حول متجر Jodhur.",
         "privacy": "سياسة الخصوصية",
-        "privacy_description": "البيانات المجمعة وملفات تعريف الارتباط وبكسل Meta والموافقة في متجر Ma Petite Corée.",
+        "privacy_description": "البيانات المجمعة وملفات تعريف الارتباط وبكسل Meta والموافقة في متجر Jodhur.",
         "not_found": "الصفحة غير موجودة",
     },
 }

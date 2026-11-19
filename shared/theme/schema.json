@@ -165,7 +165,7 @@
         { "id": "text", "type": "textarea", "label": "Texte", "maxLength": 200, "default": "Nouveautés et conseils de routine, sans excès." },
         { "id": "buttonLabel", "type": "text", "label": "Texte du bouton", "maxLength": 30, "required": true, "default": "Je m'inscris" },
         { "id": "consentText", "type": "textarea", "label": "Texte de consentement (case à cocher)", "maxLength": 240, "required": true,
-          "default": "J'accepte de recevoir les e-mails de Ma Petite Corée. Je peux me désinscrire à tout moment." }
+          "default": "J'accepte de recevoir les e-mails de Jodhur. Je peux me désinscrire à tout moment." }
       ]
     },
     "footer": {

@@ -4,7 +4,7 @@
  * Valeurs marquées [DÉMO] = à remplacer par vos vraies règles business.
  */
 export const STORE_CONFIG = {
-  brandName: 'Ma Petite Corée',
+  brandName: 'Jodhur',
   brandTagline: 'KOREAN & NATURAL SKINCARE',
 
   /**

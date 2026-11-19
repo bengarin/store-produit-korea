@@ -48,6 +48,6 @@ export function useUrlFilters(defaults = {}) {
 /** Titre de l'onglet. */
 export function useTitle(title) {
   useEffect(() => {
-    document.title = `${title} · Admin Ma Petite Corée`;
+    document.title = `${title} · Admin Jodhur`;
   }, [title]);
 }

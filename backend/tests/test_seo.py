@@ -48,7 +48,7 @@ def test_fiche_produit_html_complet_sans_javascript(client, sellable):
     html = r.content.decode()
     assert r.status_code == 200 and r["Content-Type"].startswith("text/html")
     h = head(html)
-    assert h.count("<title>") == 1 and "<title>Crème test hydratante — Ma Petite Corée</title>" in h
+    assert h.count("<title>") == 1 and "<title>Crème test hydratante — Jodhur</title>" in h
     assert h.count('name="description"') == 1 and 'content="Une crème légère."' in h
     assert '<link rel="canonical" href="https://boutique.exemple.ma/produits/creme-test" />' in h
     assert (
@@ -114,7 +114,7 @@ def test_pages_privees_et_favoris_non_indexees(client):
 def test_categorie_canonique_et_inconnue(client, category):
     category(slug="eclat", name="Éclat")
     r = client.get("/produits?categorie=eclat")
-    assert "<title>Éclat — Ma Petite Corée</title>" in r.content.decode()
+    assert "<title>Éclat — Jodhur</title>" in r.content.decode()
     assert 'href="https://boutique.exemple.ma/produits?categorie=eclat"' in r.content.decode()
     assert client.get("/produits?categorie=fantome").status_code == 404
     other = client.get("/produits?ingredient=aloe").content.decode()
@@ -163,7 +163,7 @@ def test_csp_autorise_seulement_le_pixel_meta_sans_script_en_ligne(client):
 def test_politique_de_confidentialite_servie_mais_non_indexee(client):
     r = client.get("/confidentialite")
     html = r.content.decode()
-    assert r.status_code == 200 and "<title>Politique de confidentialité — Ma Petite Corée</title>" in html
+    assert r.status_code == 200 and "<title>Politique de confidentialité — Jodhur</title>" in html
     assert r["X-Robots-Tag"] == "noindex, nofollow"  # pas d'indexation tant que le texte n'est pas validé
     assert "/confidentialite" not in client.get("/sitemap.xml").content.decode()
 
@@ -233,7 +233,7 @@ def test_pages_arabes_indexables_avec_hreflang(client, sellable):
     html = r.content.decode()
     assert r.status_code == 200 and '<html lang="ar" dir="rtl">' in html
     h = head(html)
-    assert "<title>كريم تجريبي — Ma Petite Corée</title>" in h and 'content="ملخص بالعربية"' in h
+    assert "<title>كريم تجريبي — Jodhur</title>" in h and 'content="ملخص بالعربية"' in h
     assert f'<link rel="canonical" href="{base}/ar/produits/creme-test" />' in h
     assert f'hreflang="fr-MA" href="{base}/produits/creme-test"' in h
     assert f'hreflang="ar-MA" href="{base}/ar/produits/creme-test"' in h

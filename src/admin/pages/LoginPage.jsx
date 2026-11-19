@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Navigate, useNavigate, useSearchParams } from 'react-router-dom';
 import { Clock, Lock, LogIn } from 'lucide-react';
-import logo from '../../assets/brand/logo-full.webp';
+import logo from '../../assets/brand/logo-jodhur-400.png';
 import { safeNext, useAuth } from '../auth.jsx';
 import { Button, Field, Notice } from '../components/ui.jsx';
 import { useTitle } from '../hooks.js';
@@ -39,7 +39,7 @@ export default function LoginPage() {
   return (
     <div className="adm-login">
       <form className="adm-login__card" onSubmit={submit} noValidate>
-        <img src={logo} alt="Ma Petite Corée.ma" className="adm-login__logo" width="180" height="129" />
+        <img src={logo} alt="Jodhur" className="adm-login__logo" width="400" height="100" />
         <h1>Administration</h1>
         <p className="adm-login__lead">Connectez-vous pour gérer les commandes et le stock.</p>
         {params.get('expired') && (

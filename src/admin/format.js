@@ -39,7 +39,7 @@ export function whatsappLink(e164, message = '') {
 export function orderWhatsappMessage(order) {
   const greeting = `Bonjour ${order.customerName},`;
   if (order.status !== 'pending') {
-    return `${greeting} nous vous contactons au sujet de votre commande ${order.number} sur Ma Petite Corée.`;
+    return `${greeting} nous vous contactons au sujet de votre commande ${order.number} sur Jodhur.`;
   }
   const lines = (order.items || []).map((it) => {
     const variant = it.variantTitle && it.variantTitle !== 'Par défaut' ? ` (${it.variantTitle})` : '';
@@ -47,7 +47,7 @@ export function orderWhatsappMessage(order) {
   });
   const fee = Number(order.shippingFee) === 0 ? 'offerte' : formatMoney(order.shippingFee);
   return [
-    `${greeting} merci pour votre commande ${order.number} sur Ma Petite Corée.`,
+    `${greeting} merci pour votre commande ${order.number} sur Jodhur.`,
     '',
     ...lines,
     `Livraison : ${fee}`,
