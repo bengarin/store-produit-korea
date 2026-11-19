@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { AlertTriangle, Check, MessageCircle, X } from 'lucide-react';
+import { AlertTriangle, Check, MessageCircle } from 'lucide-react';
 import CheckoutForm from './CheckoutForm.jsx';
 import OrderSummary from './OrderSummary.jsx';
 import ProductImage from './ProductImage.jsx';
@@ -20,13 +20,13 @@ function stockMessage(t, { name, requested, available, reason }) {
 }
 
 /**
- * « Commander rapidement » : formulaire INTÉGRÉ à la fiche produit (ni fenêtre, ni autre page), sous les
- * informations du produit. Produit et variante choisis, quantité, nom, téléphone, ville, adresse, livraison,
+ * Commande rapide : formulaire INTÉGRÉ et déjà ouvert dans la fiche produit (ni bouton, ni fenêtre, ni autre page),
+ * sous les informations du produit. Produit et variante choisis, quantité, nom, téléphone, ville, adresse, livraison,
  * frais et total. Même formulaire, mêmes contrôles et même commande que la page de commande
  * (POST /orders, source « quick ») : le serveur revérifie le produit, le réglage, le stock et recalcule tout.
  * Le panier n'est pas touché ; la confirmation s'affiche à la place du formulaire.
  */
-export default function QuickOrderForm({ product, variant, initialQty = 1, maxQty, signal = 0, onClose }) {
+export default function QuickOrderForm({ product, variant, initialQty = 1, maxQty }) {
   const { getProductById, config } = useCatalog();
   const { t, lang, tc } = useI18n();
   const showToast = useToast();
@@ -43,14 +43,14 @@ export default function QuickOrderForm({ product, variant, initialQty = 1, maxQt
   const totals = useMemo(() => computeTotals(lines, null, config), [lines, config]);
   const line = lines[0];
 
-  // À l'ouverture (et après la confirmation) : la section défile jusqu'à l'écran, sans quitter la page.
+  // Après la confirmation seulement : la section défile jusqu'à l'écran (le formulaire, lui, est déjà ouvert).
   useEffect(() => {
     const el = sectionRef.current;
-    if (!el) return;
+    if (!order || !el) return;
     const reduce = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
     el.scrollIntoView({ behavior: reduce ? 'auto' : 'smooth', block: 'start' });
     el.focus({ preventScroll: true });
-  }, [order, signal]);
+  }, [order]);
 
   // Autre variante choisie sur la fiche = autre commande.
   useEffect(() => {
@@ -133,9 +133,6 @@ export default function QuickOrderForm({ product, variant, initialQty = 1, maxQt
     <section className="quick-order" ref={sectionRef} tabIndex={-1} aria-labelledby="quick-order-title">
       <header className="quick-order__head">
         <h2 id="quick-order-title">{t('quick.title')}</h2>
-        <button type="button" className="icon-btn icon-btn--sm" onClick={onClose} disabled={submitting} aria-label={t('quick.close')}>
-          <X size={20} />
-        </button>
       </header>
 
       <div className="quick-order__product">

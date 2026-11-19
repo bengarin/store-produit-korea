@@ -93,8 +93,8 @@ export default function ProductPage() {
         desktop={desktop}
         reviews={reviews}
         quickOrder={quickOrder}
-        renderQuickOrder={({ variant, signal, onClose }) => (
-          <QuickOrderForm product={product} variant={variant} initialQty={qty} maxQty={maxQty} signal={signal} onClose={onClose} />
+        renderQuickOrder={({ variant }) => (
+          <QuickOrderForm product={product} variant={variant} initialQty={qty} maxQty={maxQty} />
         )}
       />
       <ProductReviews product={product} reviews={reviews} />

@@ -49,7 +49,7 @@ export default function ProductPreviewPage() {
           onBuyNow={() => {}}
           quickOrder={quickOrderAllowed(product, data.quickOrderEnabled)}
           renderQuickOrder={() => (
-            <p className="pdp__note">Aperçu : le formulaire « Commander rapidement » s’affiche ici pour les clients (désactivé dans l’aperçu).</p>
+            <p className="pdp__note">Aperçu : le formulaire de commande rapide s’affiche ici, déjà ouvert, pour les clients (désactivé dans l’aperçu).</p>
           )}
           showDemoNotices={STORE_CONFIG.showDemoNotices}
           desktop={desktop}
