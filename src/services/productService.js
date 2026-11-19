@@ -72,6 +72,9 @@ export function normalizeProduct(raw, images = {}) {
     translations: raw.translations || {},
     // Visuels marketing (colonne de droite de la fiche), distincts des photos du produit.
     marketing: Array.isArray(raw.marketing) ? raw.marketing : [],
+    // Note des avis APPROUVÉS (mode API, présente seulement s'il en existe) ; null = aucune étoile affichée.
+    reviews: raw.reviews?.count > 0 && Number.isFinite(Number(raw.reviews.average))
+      ? { count: Number(raw.reviews.count), average: Number(raw.reviews.average) } : null,
   };
 }
 

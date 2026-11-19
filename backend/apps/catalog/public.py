@@ -8,7 +8,7 @@ Format PUBLIC d'un produit : identique à celui du catalogue local du front
 
 from decimal import Decimal
 
-from django.db.models import Count, Prefetch, Q
+from django.db.models import Avg, Count, Prefetch, Q
 
 from .models import (
     Category,
@@ -22,6 +22,9 @@ from .models import (
     ProductOption,
     Variant,
 )
+
+# Avis produits APPROUVÉS uniquement (statut de apps.reviews.ProductReview) : jamais d'avis en attente ou refusé.
+APPROVED_REVIEWS = Q(reviews__status="approved")
 
 # Valeur de filtre visible = valeur visible ET groupe visible (masquer un groupe masque toutes ses valeurs).
 VISIBLE_FILTER_OPTION = Q(is_active=True, group__is_active=True)
@@ -66,6 +69,11 @@ def public_products_queryset(statuses=(Product.Status.ACTIVE,)):
     """Produits au format public. `statuses` élargi uniquement pour l'aperçu de l'administration."""
     return (
         Product.objects.filter(status__in=statuses)
+        # Note des cartes produits : calculée sur les seuls avis approuvés (une seule jointure → pas de doublons).
+        .annotate(
+            approved_review_count=Count("reviews", filter=APPROVED_REVIEWS),
+            approved_review_avg=Avg("reviews__rating", filter=APPROVED_REVIEWS),
+        )
         .select_related("hover_image__media", "scene_image__media", "og_image")
         .prefetch_related(
             Prefetch(
@@ -189,6 +197,11 @@ def product_payload(product: Product) -> dict:
             "image": product.og_image.url if product.og_image_id else (main["src"] if main else None),
         },
     }
+    # Note moyenne et nombre d'avis APPROUVÉS : présents seulement s'il en existe (jamais de note inventée).
+    review_count = getattr(product, "approved_review_count", 0) or 0
+    review_avg = getattr(product, "approved_review_avg", None)
+    if review_count and review_avg is not None:
+        payload["reviews"] = {"count": review_count, "average": round(float(review_avg), 1)}
     # Pays de fabrication : seulement s'il a été renseigné (jamais supposé à partir de la marque).
     if product.origin_country:
         payload["origin"] = product.origin_country
@@ -254,15 +267,18 @@ def filter_groups_payload() -> list:
 ACTIVE_PRODUCTS = Q(products__status=Product.Status.ACTIVE)
 
 
-def visible_collections():
-    """Collections affichées dans la boutique : visibles ET contenant au moins un produit en ligne (dans l'ordre)."""
-    return (
+def visible_collections(include_empty: bool = False):
+    """
+    Collections affichées dans la boutique : visibles ET contenant au moins un produit en ligne (dans l'ordre).
+    `include_empty` : aussi les collections visibles encore vides (onglets de l'accueil, avec un message « bientôt »).
+    """
+    qs = (
         Collection.objects.filter(is_active=True)
         .select_related("image")
         .annotate(product_count=Count("products", filter=ACTIVE_PRODUCTS, distinct=True))
-        .filter(product_count__gt=0)
         .order_by("position", "id")  # l'ordre du modèle est ignoré par Django dans une requête avec Count
     )
+    return qs if include_empty else qs.filter(product_count__gt=0)
 
 
 def _fallback_image(collection: Collection):
@@ -299,5 +315,9 @@ def collection_payload(collection: Collection) -> dict:
     return payload
 
 
-def collections_payload() -> list:
-    return [collection_payload(c) for c in visible_collections()]
+def collections_payload(include_empty: bool = False) -> list:
+    """
+    Boutique : `include_empty=True` — collections visibles, y compris vides (`productCount` = 0). Le front n'affiche
+    les vides QUE dans les onglets de l'accueil ; menu, pages collection et plan du site restent limités aux pleines.
+    """
+    return [collection_payload(c) for c in visible_collections(include_empty)]

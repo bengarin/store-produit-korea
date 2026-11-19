@@ -47,10 +47,10 @@ class PublicCategoryListView(PublicView):
 
 
 class PublicCollectionListView(PublicView):
-    """GET /api/v1/store/collections — collections visibles contenant au moins un produit en ligne."""
+    """GET /api/v1/store/collections — collections visibles (`productCount` = produits en ligne, 0 si vide)."""
 
     def get(self, request):
-        return Response({"items": public.collections_payload()})
+        return Response({"items": public.collections_payload(include_empty=True)})
 
 
 class PublicFilterListView(PublicView):

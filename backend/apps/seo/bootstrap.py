@@ -25,7 +25,7 @@ def store_data(products: list | None = None) -> dict:
         "products": products,
         "categories": [catalog.category_payload(c) for c in catalog.visible_categories()],
         "filters": catalog.filter_groups_payload(),
-        "collections": catalog.collections_payload(),
+        "collections": catalog.collections_payload(include_empty=True),
         "config": store_config_payload(),
         "theme": theme,
     }

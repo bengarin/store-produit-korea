@@ -77,7 +77,10 @@ export function CatalogProvider({ children, preset = null }) {
   );
 
   // Collections (Admin → Collections) dans la langue active.
-  const collections = useMemo(() => state.collections.map((c) => localizeCollection(c, lang)), [state.collections, lang]);
+  // `homeCollections` : toutes les collections visibles, y compris vides (onglets « Nos essentiels » de l'accueil).
+  // `collections` : seulement celles qui ont au moins un produit en ligne (menu, pages collection) — inchangé.
+  const homeCollections = useMemo(() => state.collections.map((c) => localizeCollection(c, lang)), [state.collections, lang]);
+  const collections = useMemo(() => homeCollections.filter((c) => c.productCount !== 0), [homeCollections]);
 
   // Index de recherche : textes français et arabes du produit + libellés de ses catégories (toutes langues).
   const searchIndex = useMemo(() => {
@@ -105,6 +108,7 @@ export function CatalogProvider({ children, preset = null }) {
       allCategories: categories,
       filterGroups,
       collections,
+      homeCollections,
       getCollection: (id) => collections.find((c) => c.id === id),
       retry,
       getProductById: (id) => byId.get(id),
@@ -119,7 +123,7 @@ export function CatalogProvider({ children, preset = null }) {
         return product.categories.some((c) => family.has(c));
       },
     };
-  }, [state, products, categories, filterGroups, collections, searchIndex, retry]);
+  }, [state, products, categories, filterGroups, collections, homeCollections, searchIndex, retry]);
 
   return <CatalogContext.Provider value={value}>{children}</CatalogContext.Provider>;
 }

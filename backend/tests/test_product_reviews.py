@@ -199,3 +199,22 @@ def test_fiche_produit_html_et_donnees_structurees(client, sellable, settings, t
     assert [x["author"]["name"] for x in ld["review"]] == ["Salma"]
     root = html.split('<div id="root">')[1].split("</main>")[0]
     assert "Salma" in root and "Robot" not in root and "En attente" not in html
+
+
+@pytest.mark.django_db
+def test_note_des_cartes_avis_approuves_seulement(client, sellable):
+    """Liste publique des produits : note et nombre d'avis APPROUVÉS seulement ; aucun champ sans avis approuvé."""
+    p = sellable()
+    other = sellable(slug="sans-avis")
+    mk = lambda rating, status: ProductReview.objects.create(  # noqa: E731
+        product=p, name="Salma", rating=rating, text="Texte d'avis suffisamment long.", status=status
+    )
+    mk(5, ProductReview.Status.PENDING)  # en attente : ignoré
+    by_id = lambda: {x["id"]: x for x in client.get(f"{STORE}/products").json()["items"]}  # noqa: E731
+    assert "reviews" not in by_id()[p.slug] and "reviews" not in by_id()[other.slug]
+    mk(5, ProductReview.Status.APPROVED)
+    mk(4, ProductReview.Status.APPROVED)
+    mk(1, ProductReview.Status.REJECTED)  # refusé : ignoré
+    assert by_id()[p.slug]["reviews"] == {"count": 2, "average": 4.5}
+    assert "reviews" not in by_id()[other.slug]
+    assert client.get(f"{STORE}/products/{p.slug}").json()["reviews"] == {"count": 2, "average": 4.5}

@@ -1,12 +1,13 @@
 import Header from '../components/Header.jsx';
 import SiteFooter from '../components/SiteFooter.jsx';
-import CollectionCards from '../components/CollectionCards.jsx';
+import HomeEssentials from '../components/HomeEssentials.jsx';
 import SectionRenderer from '../theme/SectionRenderer.jsx';
 import { useTheme } from '../theme/ThemeContext.jsx';
 
 /**
  * Accueil : sections du thème publié (thème par défaut = accueil d'origine).
- * Les cartes des collections s'insèrent juste après la bannière principale (ou en tête s'il n'y en a pas).
+ * « Nos essentiels » (onglets des collections + produits) s'insère juste après la bannière principale
+ * (ou en tête s'il n'y en a pas).
  */
 export default function HomePage() {
   const { theme } = useTheme();
@@ -18,7 +19,7 @@ export default function HomePage() {
       <Header />
       <main>
         <SectionRenderer sections={sections.slice(0, split)} />
-        <CollectionCards />
+        <HomeEssentials />
         <SectionRenderer sections={sections.slice(split)} />
       </main>
       <SiteFooter />

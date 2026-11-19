@@ -45,8 +45,9 @@ def test_collections_creees_par_migrate_sans_produit(client):
     )  # fmt: skip
     assert (chinoise.name, chinoise.name_ar, chinoise.required_origin) == ("Beauté chinoise", "الجمال الصيني", "CN")
     assert naturels.products.count() == chinoise.products.count() == 0
-    # Collection vide : rien dans la boutique (ni menu, ni accueil, ni page).
-    assert client.get(f"{STORE}/collections").json()["items"] == []
+    # Collection vide : listée avec productCount = 0 (onglets de l'accueil seulement) ; pas de page ni de sitemap.
+    items = client.get(f"{STORE}/collections").json()["items"]
+    assert [(c["id"], c["productCount"]) for c in items] == [("soins-naturels", 0), ("beaute-chinoise", 0)]
     assert client.get("/collections/soins-naturels").status_code == 404
 
 
@@ -127,12 +128,13 @@ def test_visibilite_publique(client, staff, product):
     naturels, _ = seeded()
     draft = product(slug="brouillon", status="draft", ingredients=["Eau"])
     naturels.products.add(draft)
-    assert client.get(f"{STORE}/collections").json()["items"] == []  # aucun produit EN LIGNE
+    counts = lambda: {c["id"]: c["productCount"] for c in client.get(f"{STORE}/collections").json()["items"]}  # noqa: E731
+    assert counts()["soins-naturels"] == 0  # aucun produit EN LIGNE
     live = product(slug="gel", status="active", ingredients=["Aloe vera"])
     naturels.products.add(live)
-    assert [c["productCount"] for c in client.get(f"{STORE}/collections").json()["items"]] == [1]
+    assert counts() == {"soins-naturels": 1, "beaute-chinoise": 0}
     api.patch(f"{ADMIN}/collections/{naturels.pk}", {"isActive": False}, format="json")
-    assert client.get(f"{STORE}/collections").json()["items"] == []
+    assert "soins-naturels" not in counts()  # masquée : plus listée du tout, même vide
     assert client.get(f"{STORE}/products/gel").json()["collections"] == []
     # Pas d'origine renseignée = pas de champ « origin » (rien n'est supposé).
     assert "origin" not in client.get(f"{STORE}/products/gel").json()

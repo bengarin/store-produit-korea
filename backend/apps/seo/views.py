@@ -31,9 +31,7 @@ from . import content
 from .bootstrap import data_script, store_data
 
 PRIVATE_PREFIXES = ("/panier", "/commande", "/confirmation", "/admin")
-DEFAULT_DESCRIPTION = (
-    "Jodhur — soins coréens et naturels. Livraison partout au Maroc, paiement à la livraison."
-)
+DEFAULT_DESCRIPTION = "Jodhur — soins coréens et naturels. Livraison partout au Maroc, paiement à la livraison."
 
 
 @lru_cache(maxsize=4)
@@ -82,9 +80,7 @@ PAGE_TEXTS = {
         "reviews": "Avis clients",
         "reviews_description": "Les avis de nos clientes et clients sur la boutique Jodhur.",
         "privacy": "Politique de confidentialité",
-        "privacy_description": (
-            "Données collectées, cookies, pixel Meta et consentement sur la boutique Jodhur."
-        ),
+        "privacy_description": ("Données collectées, cookies, pixel Meta et consentement sur la boutique Jodhur."),
         "not_found": "Page introuvable",
     },
     "ar": {
@@ -211,6 +207,11 @@ def _missing(request, lang, key, status=404):
     )  # fmt: skip
 
 
+def filled_collections(data: dict) -> list:
+    """Collections contenant au moins un produit en ligne (les vides ne servent qu'aux onglets de l'accueil)."""
+    return [c for c in data["collections"] if c.get("productCount")]
+
+
 def home(request, lang="fr"):
     base = site_url(request)
     org = {
@@ -228,7 +229,7 @@ def home(request, lang="fr"):
         title=pt(lang, "home"),
         description=pt(lang, "description"),
         extra_head="    " + json_ld(org) + "\n",
-        body=content.home(data["products"], data["categories"], articles, lang, data["collections"]),
+        body=content.home(data["products"], data["categories"], articles, lang, filled_collections(data)),
         data=data,
     )
 
@@ -242,7 +243,7 @@ def _in_category(products: list, categories: list, slug: str) -> list:
 def collection(request, slug, lang="fr"):
     """Page d'une collection (Admin → Collections) : visible seulement si elle contient un produit en ligne."""
     data = store_data()
-    found = next((c for c in data["collections"] if c["id"] == slug), None)
+    found = next((c for c in filled_collections(data) if c["id"] == slug), None)
     if not found:
         return _missing(request, lang, "collection_404")
     name = content.localized(found, lang, "label")
