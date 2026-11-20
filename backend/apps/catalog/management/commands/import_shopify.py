@@ -12,10 +12,11 @@ Règles :
 - mise à jour des produits existants (seulement avec --mettre-a-jour, toujours visible dans l'aperçu) :
   · produit relié par son identifiant Shopify, ou relié s'il correspond à UN SEUL produit local (même identifiant
     URL ou même nom) sans ambiguïté — l'identifiant Shopify est alors enregistré sur la fiche ;
-  · seuls le fournisseur (s'il est vide) et les collections (ajout uniquement) sont complétés ; un fournisseur
-    saisi dans l'admin n'est jamais remplacé, un fournisseur ou une collection retirés à la main après un import
-    précédent ne sont pas remis (historique d'audit) ; nom, textes, prix, stock, variantes, images, statut,
-    marque et catégories ne sont jamais touchés ;
+  · seuls le fournisseur (s'il est vide), les collections (ajout uniquement) et la catégorie (seulement si le
+    produit n'en a AUCUNE et qu'une correspondance est claire) sont complétés ; un fournisseur ou une catégorie
+    choisis dans l'admin ne sont jamais remplacés ; un fournisseur, une collection ou une catégorie retirés à la
+    main après un import précédent ne sont pas remis (historique d'audit) ; nom, textes, prix, stock, variantes,
+    images, statut et marque ne sont jamais touchés ;
 - produit créé en BROUILLON (rien n'apparaît sur la boutique sans relecture) ; fournisseur = « Vendor » Shopify ;
   marque laissée vide (Shopify n'en fournit pas) ; aucune donnée inventée ;
 - variantes, prix, prix barrés et stock Shopify conservés ; chaque stock importé est tracé (« Premier comptage ») ;
@@ -26,8 +27,9 @@ Règles :
 - collections : une collection Shopify est reliée à une collection Jodhur seulement si leurs noms sont identiques
   (majuscules, accents et ponctuation ignorés) ; aucune collection n'est créée ; les autres sont listées
   « à traiter » ; les règles d'entrée de la collection Jodhur (pays, ingrédients) sont respectées ;
-- catégories (nouveaux produits seulement) : seulement si une catégorie Jodhur porte EXACTEMENT le nom d'une
-  collection ou de la catégorie Shopify ; sinon aucune (à choisir dans l'admin).
+- catégories : seulement si UNE catégorie Jodhur porte le même nom (majuscules, accents et ponctuation ignorés)
+  qu'une collection Shopify ou que le dernier niveau de la catégorie Shopify ; sinon aucune (à choisir dans
+  l'admin). Rien n'est déduit d'un nom proche.
 """
 
 import json
@@ -143,7 +145,10 @@ class Command(BaseCommand):
         self.dry = opts["dry_run"]
         self.with_images = not opts["sans_images"]
         self.update = opts["mettre_a_jour"]
-        self.categories = {c.name.strip().lower(): c for c in Category.objects.all()}
+        cats = {}
+        for c in Category.objects.select_related("parent"):
+            cats.setdefault(_norm(c.name), []).append(c)
+        self.categories = cats  # nom normalisé → catégories Jodhur (plusieurs = ambigu, jamais choisie)
         by_name = {}
         for c in Collection.objects.all():
             by_name.setdefault(_norm(c.name), []).append(c)
@@ -183,6 +188,7 @@ class Command(BaseCommand):
             "warnings": warnings,
             "action": CREATE,
             "collection_matches": self._match_collections(p),
+            "category_matches": self._match_categories(p),
         }
         existing = Product.objects.filter(shopify_id=p["id"]).first()
         if existing:
@@ -221,7 +227,7 @@ class Command(BaseCommand):
         cats = self._matching_categories(p)
         row["jodhur_categories"] = [c.name for c in cats]
         if not cats:
-            warnings.append("catégorie Jodhur à choisir (aucune correspondance exacte)")
+            warnings.append("catégorie Jodhur à choisir (aucune correspondance claire)")
         warnings.append("marque à renseigner (Shopify n'en fournit pas)")
         used_skus = set()
         for v in p["variants"]:
@@ -266,17 +272,32 @@ class Command(BaseCommand):
         logs = AuditLog.objects.filter(
             target_type="catalog.product", target_id=str(product.pk), action__in=[ACTION_CREATE, ACTION_UPDATE]
         )
-        supplier, collections = False, set()
+        supplier, collections, categories = False, set(), set()
         for log in logs:
             supplier = supplier or bool((log.changes or {}).get("supplier"))
             collections.update((log.changes or {}).get("collectionsAdded") or [])
-        return {"supplier": supplier, "collections": collections}
+            categories.update((log.changes or {}).get("categoriesAdded") or [])
+        return {"supplier": supplier, "collections": collections, "categories": categories}
 
     def _plan_update(self, product: Product, row: dict, link: str | None = None) -> dict:
         """Ce qui serait complété sur un produit existant. Ne lit que la base : aucune écriture."""
         history = self._history(product)
         vendor = row["vendor"][:150]
-        plan = {"pk": product.pk, "link": link, "supplier": None, "add": [], "kept": [], "changes": []}
+        plan = {
+            "pk": product.pk,
+            "link": link,
+            "supplier": None,
+            "add": [],
+            "categories": [],
+            "kept": [],
+            "changes": [],
+        }
+        plan["current_categories"] = [
+            _cat_label(pc.category)
+            for pc in ProductCategory.objects.filter(product=product)
+            .select_related("category__parent")
+            .order_by("position", "id")
+        ]
         local = product.supplier.strip()
         if vendor and not local:
             if history["supplier"]:
@@ -299,20 +320,50 @@ class Command(BaseCommand):
                 continue
             plan["add"].append(coll)
             plan["changes"].append(f"collection + « {coll.name} »")
+        clear = self._matching_categories_from(row["category_matches"])
+        if plan["current_categories"]:
+            if clear and {_cat_label(c) for c in clear} - set(plan["current_categories"]):
+                plan["kept"].append(
+                    "catégorie(s) déjà choisie(s) dans Jodhur conservée(s) (proposition ignorée : "
+                    + ", ".join(_cat_label(c) for c in clear)
+                    + ")"
+                )
+        else:
+            removed = [c for c in clear if c.pk in history["categories"]]
+            if removed:
+                plan["kept"].append("catégorie(s) retirée(s) à la main après un import : non remise(s)")
+            else:
+                plan["categories"] = clear
+                plan["changes"] += [f"catégorie + « {_cat_label(c)} »" for c in clear]
         if link:
             plan["changes"].insert(0, "identifiant Shopify enregistré")
         return plan
 
-    def _matching_categories(self, p: dict) -> list:
+    def _match_categories(self, p: dict) -> list[tuple[str, object]]:
+        """
+        (nom Shopify, catégorie Jodhur | None | "ambigu"). Sources : les collections Shopify et le dernier niveau de
+        la catégorie Shopify. Une correspondance est « claire » seulement si UNE catégorie Jodhur porte le même nom
+        (majuscules, accents et ponctuation ignorés) ; rien n'est déduit d'un nom proche.
+        """
         names = [*(p.get("collections") or [])]
         if p.get("category"):
-            names.append(p["category"].split(">")[-1])
-        found = []
+            names.append(p["category"].split(">")[-1].strip())
+        out = []
         for name in names:
-            cat = self.categories.get(name.strip().lower())
-            if cat and cat not in found:
+            found = self.categories.get(_norm(name)) or []
+            out.append((name, found[0] if len(found) == 1 else ("ambigu" if found else None)))
+        return out
+
+    @staticmethod
+    def _matching_categories_from(matches) -> list:
+        found = []
+        for _name, cat in matches:
+            if isinstance(cat, Category) and cat not in found:
                 found.append(cat)
         return found
+
+    def _matching_categories(self, p: dict) -> list:
+        return self._matching_categories_from(self._match_categories(p))
 
     def _flag_source_duplicates(self, products, rows):
         titles = Counter(p["title"].strip().lower() for p in products)
@@ -379,7 +430,8 @@ class Command(BaseCommand):
             description_html=sanitize_html(p.get("descriptionHtml") or ""),
             status=Product.Status.DRAFT,
         )
-        for i, cat in enumerate(self._matching_categories(p)):
+        new_cats = self._matching_categories(p)
+        for i, cat in enumerate(new_cats):
             ProductCategory.objects.create(product=product, category=cat, position=i)
         added = []
         for _name, coll in row["collection_matches"]:
@@ -455,11 +507,12 @@ class Command(BaseCommand):
                 "supplier": product.supplier,
                 "variants": len(p["variants"]),
                 "collectionsAdded": [c.pk for c in added],
+                "categoriesAdded": [c.pk for c in new_cats],
             },
         )
         return product
 
-    # --- Mise à jour d'un produit existant (fournisseur vide + collections, rien d'autre) ------------
+    # --- Mise à jour d'un produit existant (fournisseur vide, collections, catégorie si aucune) --------
     def _apply_update(self, p: dict, row: dict):
         try:
             with transaction.atomic():
@@ -477,6 +530,11 @@ class Command(BaseCommand):
                 if fields:
                     product.save(update_fields=[*fields, "updated_at"])
                 product.collections.add(*plan["add"])
+                if plan["categories"]:
+                    if ProductCategory.objects.filter(product=product).exists():
+                        raise ValueError("catégorie ajoutée entre-temps dans Jodhur : rien n'est remplacé")
+                    for i, cat in enumerate(plan["categories"]):
+                        ProductCategory.objects.create(product=product, category=cat, position=i)
                 if plan["changes"]:
                     log_action(
                         ACTION_UPDATE,
@@ -486,6 +544,7 @@ class Command(BaseCommand):
                             "linked": bool(plan["link"]),
                             "supplier": plan["supplier"] or "",
                             "collectionsAdded": [c.pk for c in plan["add"]],
+                            "categoriesAdded": [c.pk for c in plan["categories"]],
                         },
                     )
         except Exception as exc:  # noqa: BLE001 — un produit en échec n'arrête pas l'import
@@ -511,7 +570,8 @@ class Command(BaseCommand):
             "",
             "Règles : produits créés en brouillon ; fournisseur = « Vendor » Shopify (la marque est un autre champ,"
             " laissée vide) ; collections reliées seulement si le nom est identique ; aucune collection créée ;"
-            " produits existants : seuls le fournisseur vide et les collections sont complétés (avec --mettre-a-jour) ;"
+            " produits existants : seuls le fournisseur vide, les collections et la catégorie (si aucune)"
+            " sont complétés (avec --mettre-a-jour) ;"
             " Shopify jamais modifié.",
             "",
             "## Données manquantes",
@@ -544,8 +604,10 @@ class Command(BaseCommand):
             lines += ["", "Fournisseurs probablement identiques écrits différemment (NON fusionnés, à vérifier) :"]
             lines += ["- " + " · ".join(f"« {g} »" for g in group) for group in self.supplier_groups]
         lines += self._render_suppliers(rows)
+        lines += self._render_categories(products, rows)
         lines += self._render_collections(products, rows)
         lines += self._render_updates(rows)
+        lines += self._render_detail(rows)
         lines += [
             "",
             "## Produits",
@@ -654,23 +716,86 @@ class Command(BaseCommand):
             "",
             "## Produits déjà présents dans Jodhur (mise à jour)",
             "",
-            note + " Seuls l'identifiant Shopify, le fournisseur vide et les collections sont complétés ;"
-            " nom, textes, prix, stock, variantes, images, statut, marque et catégories ne sont jamais touchés.",
+            note + " Seuls l'identifiant Shopify, le fournisseur vide, les collections et la catégorie (si le produit"
+            " n'en a aucune) sont complétés ; nom, textes, prix, stock, variantes, images, statut et marque ne sont"
+            " jamais touchés.",
             "",
             f"- Reliés par identifiant Shopify : {sum(1 for r in planned if not r['plan']['link'])}"
             f" · à relier (même identifiant URL ou même nom, sans ambiguïté) :"
             f" {sum(1 for r in planned if r['plan']['link'])}"
             f" · avec des changements : {sum(1 for r in planned if r['plan']['changes'])}",
         ]
-        if not planned:
-            return lines
-        lines += ["", "| Produit | Fiche Jodhur | Action | Changements | Conservé tel quel |", "|---|---|---|---|---|"]
-        for r in planned:
+        fields = Counter(c.split(" ")[0] for r in planned for c in r["plan"]["changes"])
+        lines.append(
+            "- Champs qui seront modifiés : "
+            + (", ".join(f"{k} ({n})" for k, n in fields.most_common()) or "aucun")
+            + " — détail produit par produit ci-dessous."
+        )
+        return lines
+
+    def _render_categories(self, products, rows) -> list[str]:
+        sources = Counter()
+        status = {}
+        for r in rows:
+            for name, cat in r["category_matches"]:
+                sources[name] += 1
+                status[name] = cat
+        clear = [(n, status[n]) for n in sources if isinstance(status[n], Category)]
+        ambiguous = [n for n in sources if status[n] == "ambigu"]
+        existing = ", ".join(_cat_label(c) for cs in self.categories.values() for c in cs) or "aucune"
+        planned = [r for r in rows if r.get("plan")]
+        lines = [
+            "",
+            "## Catégories Jodhur (proposées à partir des collections et de la catégorie Shopify)",
+            "",
+            f"Catégories Jodhur existantes : {existing}.",
+            "Une catégorie est proposée seulement si une catégorie Jodhur porte EXACTEMENT le même nom (majuscules,"
+            " accents et ponctuation ignorés) qu'une collection Shopify ou que le dernier niveau de la catégorie"
+            " Shopify. Aucune catégorie n'est créée ni déduite d'un nom proche. Un produit qui a déjà une catégorie"
+            " dans Jodhur la garde (aucun ajout, aucun remplacement).",
+            "",
+            f"- Correspondances claires : {len(clear)} nom(s) Shopify"
+            + ("".join(f"\n  - « {n} » → {_cat_label(c)} ({sources[n]} produit(s))" for n, c in clear) or ""),
+            f"- Noms ambigus (plusieurs catégories Jodhur de ce nom, rien proposé) : {', '.join(ambiguous) or 'aucun'}",
+            f"- Produits existants qui recevront une catégorie : {sum(1 for r in planned if r['plan']['categories'])}",
+            f"- Produits existants sans catégorie et sans correspondance claire (à choisir à la main) : "
+            f"{sum(1 for r in planned if not r['plan']['categories'] and not r['plan']['current_categories'])}",
+            f"- Produits existants qui gardent leur catégorie Jodhur : "
+            f"{sum(1 for r in planned if r['plan']['current_categories'])}",
+        ]
+        return lines
+
+    def _render_detail(self, rows) -> list[str]:
+        lines = [
+            "",
+            "## Prévisualisation détaillée par produit",
+            "",
+            "| Produit | Fiche Jodhur | Collections Shopify | Catégorie Shopify | Catégorie(s) Jodhur actuelle(s)"
+            " | Catégorie Jodhur proposée | Champs modifiés | Conservé tel quel / à traiter |",
+            "|---|---|---|---|---|---|---|---|",
+        ]
+        for r in rows:
+            plan = r.get("plan")
+            if plan:
+                current = ", ".join(plan["current_categories"]) or "aucune"
+                proposed = ", ".join(_cat_label(c) for c in plan["categories"]) or (
+                    "— (garde l'actuelle)" if plan["current_categories"] else "aucune correspondance claire"
+                )
+                changes = "; ".join(plan["changes"]) or "aucun"
+                kept = "; ".join(plan["kept"]) or "—"
+            else:
+                current = "— (nouveau)" if r["action"] in (CREATE, "créé (brouillon)") else "—"
+                cats = r.get("jodhur_categories") or []
+                proposed = ", ".join(cats) or "aucune correspondance claire"
+                changes = "création (brouillon)" if r["action"] in (CREATE, "créé (brouillon)") else r["action"]
+                kept = "; ".join(w for w in r["warnings"] if not w.startswith(("marque", "SKU manquant"))) or "—"
             lines.append(
-                f"| {_cell(r['title'])} | `{r.get('local', '')}` | {r['action']}"
-                f" | {_cell('; '.join(r['plan']['changes']) or '—', 200)}"
-                f" | {_cell('; '.join(r['plan']['kept']) or '—', 200)} |"
+                f"| {_cell(r['title'], 60)} | `{r.get('local', '—')}`"
+                f" | {_cell(', '.join(r['collections']) or '—', 300)}"
+                f" | {_cell(r['category'].split('>')[-1].strip() or '—', 60)} | {_cell(current, 120)}"
+                f" | {_cell(proposed, 120)} | {_cell(changes, 300)} | {_cell(kept, 300)} |"
             )
+        lines += ["", "La marque n'est jamais modifiée par l'import (Shopify n'a pas de champ marque)."]
         return lines
 
     def _csv(self, path: Path, rows):
@@ -680,24 +805,31 @@ class Command(BaseCommand):
             w = csv.writer(fh, delimiter=";")
             w.writerow(
                 ["produit", "handle", "fournisseur", "variante", "sku", "prix", "prix_barre", "stock", "images",
-                 "categorie_shopify", "collections_shopify", "categorie_jodhur", "collections_jodhur", "action",
-                 "changements", "a_verifier"]
+                 "categorie_shopify", "collections_shopify", "categorie_jodhur_actuelle", "categorie_jodhur_proposee",
+                 "collections_jodhur", "action", "changements", "a_verifier"]
             )  # fmt: skip
             for r in rows:
                 plan = r.get("plan") or {}
-                common = [", ".join(self._collections_for(r)), r["action"], "; ".join(plan.get("changes", []))]
+                if plan:
+                    cats = [", ".join(plan["current_categories"]), ", ".join(_cat_label(c) for c in plan["categories"])]
+                else:
+                    cats = ["", ", ".join(r.get("jodhur_categories") or [])]
+                common = [*cats, ", ".join(self._collections_for(r)), r["action"], "; ".join(plan.get("changes", []))]
                 if not r["variants"]:
                     w.writerow(
                         [r["title"], r["handle"], r["vendor"], "", "", "", "", "", r["images"], r["category"],
-                         " | ".join(r["collections"]), "", *common, "; ".join(r["warnings"] + plan.get("kept", []))]
+                         " | ".join(r["collections"]), *common, "; ".join(r["warnings"] + plan.get("kept", []))]
                     )  # fmt: skip
                 for v in r["variants"]:
                     w.writerow(
                         [r["title"], r["handle"], r["vendor"], v["title"], v["sku"], v["price"], v["compare"] or "",
-                         v["stock"], r["images"], r["category"], " | ".join(r["collections"]),
-                         ", ".join(r.get("jodhur_categories") or []), *common,
+                         v["stock"], r["images"], r["category"], " | ".join(r["collections"]), *common,
                          "; ".join(r["warnings"] + [v.get("sku_note", ""), v.get("stock_note", "")]).strip("; ")]
                     )  # fmt: skip
+
+
+def _cat_label(cat) -> str:
+    return f"{cat.parent.name} › {cat.name}" if cat.parent_id else cat.name
 
 
 def _cell(value, size=80) -> str:

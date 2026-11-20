@@ -278,3 +278,52 @@ def test_liaison_ambigue_refusee(source, sellable, tmp_path):
     local.refresh_from_db()
     assert local.shopify_id is None and local.supplier == ""  # pas relié : on ne devine pas lequel
     assert "correspondance ambiguë" in report.read_text(encoding="utf-8")
+
+
+@pytest.mark.django_db
+def test_categorie_ajoutee_aux_produits_deja_importes_sans_categorie(source, category, tmp_path):
+    path = source([product(collections=["Soins Corps", "Mes Solutions"])])
+    run(path)  # import ancien : aucune catégorie Jodhur de ce nom à l'époque
+    p = Product.objects.get()
+    assert p.categories.count() == 0
+    corps = category(slug="soins-corps", name="Soins corps")  # même nom (majuscules ignorées)
+    category(slug="soins", name="Soins")  # nom proche : jamais proposé
+    report, csv_path = tmp_path / "a.md", tmp_path / "a.csv"
+    run(path, "--dry-run", "--mettre-a-jour", "--report", str(report), "--csv", str(csv_path))
+    assert p.categories.count() == 0  # aperçu : rien n'est écrit
+    text = report.read_text(encoding="utf-8")
+    assert "## Prévisualisation détaillée par produit" in text
+    assert "| Soins Corps, Mes Solutions | Lip Balms | aucune | Soins corps | catégorie + « Soins corps » |" in text
+    assert "categorie_jodhur_proposee" in csv_path.read_text(encoding="utf-8-sig")
+
+    run(path, "--mettre-a-jour")
+    assert list(p.categories.all()) == [corps] and p.brand == ""
+    run(path, "--dry-run", "--mettre-a-jour")  # 2e passage : plus rien à faire
+    p.categories.clear()  # retrait manuel après l'import
+    report2 = tmp_path / "b.md"
+    run(path, "--mettre-a-jour", "--report", str(report2))
+    assert p.categories.count() == 0 and "retirée(s) à la main" in report2.read_text(encoding="utf-8")
+
+
+@pytest.mark.django_db
+def test_categorie_choisie_dans_jodhur_conservee(source, category, tmp_path):
+    path = source([product(collections=["Soins Corps"])])
+    run(path)
+    p = Product.objects.get()
+    mine = category(slug="baumes", name="Baumes")
+    p.categories.add(mine)
+    category(slug="soins-corps", name="Soins Corps")
+    report = tmp_path / "r.md"
+    run(path, "--mettre-a-jour", "--report", str(report))
+    assert list(p.categories.all()) == [mine]
+    assert "déjà choisie(s) dans Jodhur conservée(s)" in report.read_text(encoding="utf-8")
+
+
+@pytest.mark.django_db
+def test_categorie_ambigue_non_proposee(source, category):
+    path = source([product(collections=["Soins Corps"])])
+    run(path)
+    category(slug="soins-corps", name="Soins Corps")
+    category(slug="soins-corps-2", name="Soins corps")  # deux catégories de ce nom : on ne choisit pas
+    run(path, "--mettre-a-jour")
+    assert Product.objects.get().categories.count() == 0
