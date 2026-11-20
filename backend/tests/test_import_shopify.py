@@ -7,7 +7,7 @@ from django.core.management import call_command
 
 from apps.accounts.roles import Role
 from apps.catalog.management.commands import import_shopify
-from apps.catalog.models import Product, Variant
+from apps.catalog.models import Collection, Product, Variant
 from apps.inventory.models import StockMovement
 from tests.conftest import image_bytes
 
@@ -137,8 +137,9 @@ def test_doublon_local_et_sku_deja_pris(source, sellable, tmp_path):
     Variant.objects.filter(product=local).update(sku="EAU-60")
     report = tmp_path / "r.md"
     run(source([product(), multi()]), "--report", str(report))
-    assert not Product.objects.filter(shopify_id="gid://shopify/Product/1").exists()  # même slug : non importé
-    assert "doublon possible" in report.read_text(encoding="utf-8")
+    assert not Product.objects.filter(shopify_id="gid://shopify/Product/1").exists()  # même slug : non recréé
+    assert Product.objects.filter(slug__startswith="baume-rose").count() == 1
+    assert "relier + mettre à jour" in report.read_text(encoding="utf-8")  # liaison seulement avec --mettre-a-jour
     m = Product.objects.get(shopify_id="gid://shopify/Product/2")
     assert all(v.sku is None for v in m.variants.all())  # SKU déjà utilisé localement : non repris
 
@@ -172,3 +173,108 @@ def test_fournisseur_admin_seulement(source, staff, client, shop):
     assert "supplier" not in json.dumps(product_payload(p))  # jamais sur la boutique
     copy = api.post(f"/api/v1/admin/products/{p.pk}/duplicate").json()
     assert Product.objects.get(pk=copy["id"]).shopify_id is None
+
+
+def coll(name, **extra):
+    from django.utils.text import slugify
+
+    return Collection.objects.create(slug=slugify(name)[:80] or "c", name=name, **extra)
+
+
+@pytest.mark.django_db
+def test_collections_reliees_si_nom_identique_sans_en_creer(source, tmp_path):
+    soins = coll("SOINS")  # majuscules / accents ignorés
+    chine = coll("Éclat", required_origin="CN")  # règle d'entrée non remplie par un produit importé
+    report = tmp_path / "r.md"
+    run(source([product(collections=["Soins", "Eclat", "Coffrets cadeaux"])]), "--report", str(report))
+    p = Product.objects.get()
+    assert list(p.collections.all()) == [soins] and chine.products.count() == 0
+    assert Collection.objects.count() == 2  # aucune collection créée
+    text = report.read_text(encoding="utf-8")
+    assert "| Coffrets cadeaux | 1 | — | à traiter : aucune collection Jodhur de ce nom |" in text
+    assert "pays de fabrication" in text and p.brand == "" and p.supplier == "Coopérative Test"
+
+
+@pytest.mark.django_db
+def test_collection_ambigue_non_reliee(source):
+    coll("Soins")
+    Collection.objects.create(slug="soins-2", name="soins")
+    run(source([product()]))
+    assert Product.objects.get().collections.count() == 0
+
+
+@pytest.mark.django_db
+def test_mise_a_jour_deja_importe_sans_ecraser(source, tmp_path):
+    run(source([product(collections=[], vendor="")]))  # import ancien : pas de fournisseur dans Shopify
+    p = Product.objects.get()
+    p.brand, p.name = "Ma marque", "Nom modifié"
+    p.save()
+    v = p.variants.get()
+    v.price, v.compare_at_price = 99, None
+    v.save()
+    soins = coll("Soins")
+    path = source([product()])
+    report = tmp_path / "a.md"
+    run(path, "--dry-run", "--mettre-a-jour", "--report", str(report))  # aperçu : rien n'est écrit
+    p.refresh_from_db()
+    assert p.supplier == "" and p.collections.count() == 0
+    text = report.read_text(encoding="utf-8")
+    assert "fournisseur → « Coopérative Test »" in text and "collection + « Soins »" in text
+
+    run(path)  # sans --mettre-a-jour : produits existants non touchés
+    p.refresh_from_db()
+    assert p.supplier == "" and p.collections.count() == 0
+
+    run(path, "--mettre-a-jour")
+    p.refresh_from_db()
+    v.refresh_from_db()
+    assert p.supplier == "Coopérative Test" and list(p.collections.all()) == [soins]
+    assert (p.brand, p.name, v.price, Product.objects.count()) == ("Ma marque", "Nom modifié", 99, 1)
+
+
+@pytest.mark.django_db
+def test_fournisseur_local_et_retraits_manuels_respectes(source, tmp_path):
+    soins = coll("Soins")
+    path = source([product()])
+    run(path)
+    p = Product.objects.get()
+    assert list(p.collections.all()) == [soins]
+    p.supplier = "Fournisseur corrigé"
+    p.save()
+    p.collections.remove(soins)  # retrait manuel
+    report = tmp_path / "r.md"
+    run(path, "--mettre-a-jour", "--report", str(report))
+    p.refresh_from_db()
+    assert p.supplier == "Fournisseur corrigé" and p.collections.count() == 0
+    text = report.read_text(encoding="utf-8")
+    assert "fournisseur local « Fournisseur corrigé » conservé" in text and "retirée à la main" in text
+
+    p.supplier = ""  # effacé à la main après l'import : pas remis
+    p.save()
+    run(path, "--mettre-a-jour")
+    p.refresh_from_db()
+    assert p.supplier == ""
+
+
+@pytest.mark.django_db
+def test_liaison_produit_local_par_identifiant_url(source, sellable):
+    local = sellable(slug="baume-rose")
+    price = local.variants.get().price
+    soins = coll("Soins")
+    run(source([product()]), "--mettre-a-jour")
+    local.refresh_from_db()
+    assert local.shopify_id == "gid://shopify/Product/1" and local.supplier == "Coopérative Test"
+    assert list(local.collections.all()) == [soins] and local.status == "active"
+    assert local.variants.get().price == price and local.brand != "Coopérative Test"
+    assert Product.objects.count() == 1
+
+
+@pytest.mark.django_db
+def test_liaison_ambigue_refusee(source, sellable, tmp_path):
+    local = sellable(slug="baume-rose")
+    report = tmp_path / "r.md"
+    twins = [product(), product(pid=3, handle="baume-rose-2", vendor="Autre")]  # même nom dans Shopify
+    run(source(twins), "--mettre-a-jour", "--report", str(report))
+    local.refresh_from_db()
+    assert local.shopify_id is None and local.supplier == ""  # pas relié : on ne devine pas lequel
+    assert "correspondance ambiguë" in report.read_text(encoding="utf-8")
