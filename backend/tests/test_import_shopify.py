@@ -327,3 +327,65 @@ def test_categorie_ambigue_non_proposee(source, category):
     category(slug="soins-corps-2", name="Soins corps")  # deux catégories de ce nom : on ne choisit pas
     run(path, "--mettre-a-jour")
     assert Product.objects.get().categories.count() == 0
+
+
+def _mapping(tmp_path, rows):
+    import csv
+
+    path = tmp_path / "corresp.csv"
+    with path.open("w", encoding="utf-8-sig", newline="") as fh:
+        w = csv.writer(fh, delimiter=";")
+        w.writerow(import_shopify.MAPPING_HEADER)
+        for name, value in rows:
+            w.writerow([name, "collection", "", "", "", value])
+    return str(path)
+
+
+@pytest.mark.django_db
+def test_modele_de_correspondances_sans_ecriture(source, category, tmp_path):
+    category(slug="soins-corps", name="Soins Corps")
+    out = tmp_path / "corresp.csv"
+    run(source([product(collections=["Soins Corps", "Mes Solutions"])]), "--modele-correspondances", str(out))
+    assert Product.objects.count() == 0  # rien n'est importé
+    text = out.read_text(encoding="utf-8-sig")
+    assert "collection_shopify;type;produits" in text
+    assert "Soins Corps;collection;1;Baume Rose;soins-corps;" in text and "Mes Solutions;collection;1;" in text
+    cats = (tmp_path / "corresp_categories_jodhur.csv").read_text(encoding="utf-8-sig")
+    assert "soins-corps;Soins Corps" in cats
+
+
+@pytest.mark.django_db
+def test_correspondances_appliquees_seulement_avec_mise_a_jour(source, category, tmp_path):
+    path = source([product(collections=["Soins Corps", "Mes Solutions"])])
+    run(path)
+    p = Product.objects.get()
+    corps = category(slug="corps", name="Corps")
+    visage = category(slug="visage", name="Visage")
+    corresp = _mapping(tmp_path, [("Soins Corps", "corps"), ("Mes Solutions", "visage | corps")])
+    report = tmp_path / "a.md"
+    run(path, "--dry-run", "--mettre-a-jour", "--correspondances", corresp, "--report", str(report))
+    assert p.categories.count() == 0
+    text = report.read_text(encoding="utf-8")
+    assert "« Soins Corps » → Corps (1 produit(s), tableau)" in text
+    assert "catégorie + « Corps »; catégorie + « Visage »" in text
+    run(path, "--mettre-a-jour", "--correspondances", corresp)
+    assert set(p.categories.all()) == {corps, visage}
+
+
+@pytest.mark.django_db
+def test_correspondance_aucune_bloque_le_nom_identique(source, category, tmp_path):
+    path = source([product(collections=["Soins Corps"])])
+    run(path)
+    category(slug="soins-corps", name="Soins Corps")
+    run(path, "--mettre-a-jour", "--correspondances", _mapping(tmp_path, [("Soins Corps", "aucune")]))
+    assert Product.objects.get().categories.count() == 0
+
+
+@pytest.mark.django_db
+def test_tableau_errone_refuse_sans_rien_ecrire(source, tmp_path):
+    from django.core.management.base import CommandError
+
+    corresp = _mapping(tmp_path, [("Soins", "inexistante"), ("Pas dans Shopify", "")])
+    with pytest.raises(CommandError, match="inexistante"):
+        run(source([product()]), "--correspondances", corresp)
+    assert Product.objects.count() == 0

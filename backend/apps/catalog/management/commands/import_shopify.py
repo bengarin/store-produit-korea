@@ -5,6 +5,8 @@ Importe les produits ACTIFS de Shopify dans le catalogue Jodhur, à partir d'un 
     python manage.py import_shopify --dry-run --report apercu_shopify.md   # aperçu : AUCUNE écriture
     python manage.py import_shopify --report rapport_shopify.md            # import réel (créations) + rapport
     python manage.py import_shopify --mettre-a-jour --report rapport.md    # + complète les produits existants
+    python manage.py import_shopify --modele-correspondances corresp.csv   # tableau à remplir (lecture seule)
+    python manage.py import_shopify --dry-run --mettre-a-jour --correspondances corresp.csv --report apercu.md
 
 Règles :
 - aucun doublon : un produit dont l'identifiant Shopify est déjà en base n'est jamais recréé ; un produit local
@@ -28,7 +30,8 @@ Règles :
   (majuscules, accents et ponctuation ignorés) ; aucune collection n'est créée ; les autres sont listées
   « à traiter » ; les règles d'entrée de la collection Jodhur (pays, ingrédients) sont respectées ;
 - catégories : seulement si UNE catégorie Jodhur porte le même nom (majuscules, accents et ponctuation ignorés)
-  qu'une collection Shopify ou que le dernier niveau de la catégorie Shopify ; sinon aucune (à choisir dans
+  qu'une collection Shopify ou que le dernier niveau de la catégorie Shopify, OU si le tableau de
+  correspondances rempli par la propriétaire (--correspondances) l'indique ; sinon aucune (à choisir dans
   l'admin). Rien n'est déduit d'un nom proche.
 """
 
@@ -74,6 +77,14 @@ NOTE = "Import Shopify"
 ACTION_CREATE = "product.import_shopify"
 ACTION_UPDATE = "product.import_shopify_update"
 CREATE = "créer"
+MAPPING_HEADER = [
+    "collection_shopify",
+    "type",
+    "produits",
+    "exemples_produits",
+    "correspondance_nom_identique",
+    "categorie_jodhur",
+]
 UPDATE = "mettre à jour"
 LINK = "relier + mettre à jour"
 UP_TO_DATE = "déjà à jour"
@@ -127,9 +138,19 @@ class Command(BaseCommand):
         parser.add_argument("--csv", help="Écrit l'aperçu produit par produit (CSV) dans ce fichier.")
         parser.add_argument("--sans-images", action="store_true", help="N'importe pas les images (essais hors ligne).")
         parser.add_argument(
+            "--correspondances",
+            help="Tableau CSV « collection Shopify → catégorie Jodhur » rempli à la main (identifiants URL).",
+        )
+        parser.add_argument(
+            "--modele-correspondances",
+            help="Écrit le tableau à remplir (CSV) et la liste des catégories Jodhur, puis s'arrête. Aucune écriture"
+            " en base.",
+        )
+        parser.add_argument(
             "--mettre-a-jour",
             action="store_true",
-            help="Complète aussi les produits déjà présents (fournisseur vide, collections) sans rien écraser.",
+            help="Complète aussi les produits déjà présents (fournisseur vide, collections, catégorie si aucune)"
+            " sans rien écraser.",
         )
 
     def handle(self, *args, **opts):
@@ -153,6 +174,13 @@ class Command(BaseCommand):
         for c in Collection.objects.all():
             by_name.setdefault(_norm(c.name), []).append(c)
         self.collections = by_name  # nom normalisé → collections Jodhur (plusieurs = ambigu, jamais relié)
+        if opts["modele_correspondances"]:
+            self._write_mapping_template(Path(opts["modele_correspondances"]), products)
+            return
+        self.mapping, self.mapping_path = {}, ""
+        if opts["correspondances"]:
+            self.mapping = self._load_mapping(Path(opts["correspondances"]), products)
+            self.mapping_path = opts["correspondances"]
 
         rows = [self._analyse(p) for p in products]
         self._flag_source_duplicates(products, rows)
@@ -350,17 +378,108 @@ class Command(BaseCommand):
             names.append(p["category"].split(">")[-1].strip())
         out = []
         for name in names:
+            chosen = self.mapping.get(_norm(name))
+            if chosen is not None:  # décision de la propriétaire (tableau) : prioritaire, même « aucune »
+                out += [(name, cat, "tableau") for cat in chosen] or [(name, None, "tableau")]
+                continue
             found = self.categories.get(_norm(name)) or []
-            out.append((name, found[0] if len(found) == 1 else ("ambigu" if found else None)))
+            out.append((name, found[0] if len(found) == 1 else ("ambigu" if found else None), "nom identique"))
         return out
 
     @staticmethod
     def _matching_categories_from(matches) -> list:
         found = []
-        for _name, cat in matches:
+        for _name, cat, _src in matches:
             if isinstance(cat, Category) and cat not in found:
                 found.append(cat)
         return found
+
+    # --- Tableau « collection Shopify → catégorie Jodhur » (décidé par la propriétaire) ----------------
+    @staticmethod
+    def _shopify_names(products) -> tuple[Counter, dict, dict]:
+        counts, kinds, examples = Counter(), {}, {}
+        for p in products:
+            names = [(n, "collection") for n in p.get("collections") or []]
+            if p.get("category"):
+                names.append((p["category"].split(">")[-1].strip(), "catégorie Shopify"))
+            for name, kind in dict.fromkeys(names):
+                counts[name] += 1
+                kinds.setdefault(name, kind)
+                examples.setdefault(name, []).append(p["title"])
+        return counts, kinds, examples
+
+    def _write_mapping_template(self, path: Path, products):
+        import csv
+
+        counts, kinds, examples = self._shopify_names(products)
+        with path.open("w", encoding="utf-8-sig", newline="") as fh:
+            w = csv.writer(fh, delimiter=";")
+            w.writerow(MAPPING_HEADER)
+            for name, n in sorted(counts.items(), key=lambda kv: (kinds[kv[0]] != "collection", -kv[1], kv[0])):
+                same = self.categories.get(_norm(name)) or []
+                auto = (
+                    same[0].slug if len(same) == 1 else ("ambigu : " + ", ".join(c.slug for c in same) if same else "")
+                )
+                w.writerow([name, kinds[name], n, " | ".join(examples[name][:3]), auto, ""])
+        cats_path = path.with_name(path.stem + "_categories_jodhur.csv")
+        with cats_path.open("w", encoding="utf-8-sig", newline="") as fh:
+            w = csv.writer(fh, delimiter=";")
+            w.writerow(["identifiant_url (à recopier)", "nom", "categorie_parente", "visible", "produits"])
+            for c in Category.objects.select_related("parent").order_by("parent__position", "position", "id"):
+                w.writerow(
+                    [c.slug, c.name, c.parent.name if c.parent_id else "", "oui" if c.is_active else "non",
+                     c.products.count()]
+                )  # fmt: skip
+        self.stdout.write(
+            f"Tableau à remplir : {path} ({len(counts)} noms Shopify) · catégories Jodhur : {cats_path}."
+            " Aucune écriture en base."
+        )
+
+    def _load_mapping(self, path: Path, products) -> dict:
+        """
+        Lit le tableau rempli. Colonne « categorie_jodhur » : identifiant URL d'une catégorie Jodhur (plusieurs
+        séparés par « | »), « aucune » pour bloquer toute proposition, vide = règle du nom identique.
+        Toute erreur (catégorie inconnue, ligne en double) arrête la commande AVANT toute écriture.
+        """
+        import csv
+
+        if not path.exists():
+            raise CommandError(f"Tableau de correspondances introuvable : {path}")
+        by_slug = {c.slug: c for c in Category.objects.all()}
+        known = {_norm(n) for n in self._shopify_names(products)[0]}
+        mapping, errors, seen = {}, [], set()
+        with path.open(encoding="utf-8-sig", newline="") as fh:
+            sample = fh.read(4096)
+            fh.seek(0)
+            delimiter = ";" if sample.count(";") >= sample.count(",") else ","
+            for i, line in enumerate(csv.DictReader(fh, delimiter=delimiter), start=2):
+                name = (line.get("collection_shopify") or "").strip()
+                value = (line.get("categorie_jodhur") or "").strip()
+                if not name:
+                    continue
+                key = _norm(name)
+                if key in seen:
+                    errors.append(f"ligne {i} : « {name} » figure deux fois")
+                    continue
+                seen.add(key)
+                if key not in known:
+                    errors.append(f"ligne {i} : « {name} » n'est pas une collection de l'export Shopify")
+                    continue
+                if not value:
+                    continue
+                if _norm(value) == "aucune":
+                    mapping[key] = []
+                    continue
+                cats = []
+                for slug in (v.strip() for v in value.split("|") if v.strip()):
+                    if slug not in by_slug:
+                        errors.append(f"ligne {i} : catégorie Jodhur « {slug} » inconnue (identifiant URL attendu)")
+                    elif by_slug[slug] not in cats:
+                        cats.append(by_slug[slug])
+                mapping[key] = cats
+        if errors:
+            raise CommandError("Tableau de correspondances refusé, rien n'a été fait :\n- " + "\n- ".join(errors))
+        return mapping
 
     def _matching_categories(self, p: dict) -> list:
         return self._matching_categories_from(self._match_categories(p))
@@ -735,13 +854,20 @@ class Command(BaseCommand):
 
     def _render_categories(self, products, rows) -> list[str]:
         sources = Counter()
-        status = {}
+        status, origin = {}, {}
         for r in rows:
-            for name, cat in r["category_matches"]:
-                sources[name] += 1
-                status[name] = cat
-        clear = [(n, status[n]) for n in sources if isinstance(status[n], Category)]
-        ambiguous = [n for n in sources if status[n] == "ambigu"]
+            seen = set()
+            for name, cat, src in r["category_matches"]:
+                if name not in seen:
+                    sources[name] += 1
+                    seen.add(name)
+                status.setdefault(name, [])
+                if cat not in status[name]:
+                    status[name].append(cat)
+                origin[name] = src
+        clear = [(n, c) for n in sources for c in status[n] if isinstance(c, Category)]
+        ambiguous = [n for n in sources if "ambigu" in status[n]]
+        refused = [n for n in sources if origin[n] == "tableau" and status[n] == [None]]
         existing = ", ".join(_cat_label(c) for cs in self.categories.values() for c in cs) or "aucune"
         planned = [r for r in rows if r.get("plan")]
         lines = [
@@ -754,8 +880,14 @@ class Command(BaseCommand):
             " Shopify. Aucune catégorie n'est créée ni déduite d'un nom proche. Un produit qui a déjà une catégorie"
             " dans Jodhur la garde (aucun ajout, aucun remplacement).",
             "",
-            f"- Correspondances claires : {len(clear)} nom(s) Shopify"
-            + ("".join(f"\n  - « {n} » → {_cat_label(c)} ({sources[n]} produit(s))" for n, c in clear) or ""),
+            f"Tableau de correspondances : {self.mapping_path or 'aucun (option --correspondances absente)'}.",
+            "",
+            f"- Correspondances claires : {len(clear)}"
+            + (
+                "".join(f"\n  - « {n} » → {_cat_label(c)} ({sources[n]} produit(s), {origin[n]})" for n, c in clear)
+                or ""
+            ),
+            f"- Marquées « aucune » dans le tableau : {', '.join(refused) or 'aucune'}",
             f"- Noms ambigus (plusieurs catégories Jodhur de ce nom, rien proposé) : {', '.join(ambiguous) or 'aucun'}",
             f"- Produits existants qui recevront une catégorie : {sum(1 for r in planned if r['plan']['categories'])}",
             f"- Produits existants sans catégorie et sans correspondance claire (à choisir à la main) : "
