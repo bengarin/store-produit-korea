@@ -1,47 +1,43 @@
 """
-Importe les produits ACTIFS de Shopify dans le catalogue Jodhur, à partir d'un export en lecture seule
-(backend/catalog_import/shopify/produits_actifs.json). Shopify n'est jamais modifié.
+Import COMPLET des produits ACTIFS de Shopify dans Jodhur — une seule commande, relançable sans doublon.
 
-    python manage.py import_shopify --dry-run --report apercu_shopify.md   # aperçu : AUCUNE écriture
-    python manage.py import_shopify --report rapport_shopify.md            # import réel (créations) + rapport
-    python manage.py import_shopify --mettre-a-jour --report rapport.md    # + complète les produits existants
-    python manage.py import_shopify --modele-correspondances corresp.csv   # tableau à remplir (lecture seule)
-    python manage.py import_shopify --dry-run --mettre-a-jour --correspondances corresp.csv --report apercu.md
+    python manage.py import_shopify --rendre-visibles utiles --report apercu.md --csv apercu.csv   # APERÇU
+    python manage.py import_shopify --rendre-visibles utiles --appliquer --report rapport.md --csv rapport.csv
 
-Règles :
-- aucun doublon : un produit dont l'identifiant Shopify est déjà en base n'est jamais recréé ; un produit local
-  sans identifiant Shopify, de même identifiant URL ou de même nom, n'est pas recréé non plus ;
-- mise à jour des produits existants (seulement avec --mettre-a-jour, toujours visible dans l'aperçu) :
-  · produit relié par son identifiant Shopify, ou relié s'il correspond à UN SEUL produit local (même identifiant
-    URL ou même nom) sans ambiguïté — l'identifiant Shopify est alors enregistré sur la fiche ;
-  · seuls le fournisseur et la marque (s'ils sont vides), les collections (ajout uniquement) et la catégorie
-    (seulement si le produit n'en a AUCUNE et qu'une correspondance est claire) sont complétés ; un fournisseur,
-    une marque ou une catégorie saisis dans l'admin ne sont jamais remplacés ; ce qui a été retiré ou effacé à la
-    main après un import précédent n'est pas remis (historique d'audit) ; nom, textes, prix, stock, variantes,
-    images et statut ne sont jamais touchés ;
-- produit créé en BROUILLON (rien n'apparaît sur la boutique sans relecture) ; aucune donnée inventée ;
-- variantes, prix, prix barrés et stock Shopify conservés ; chaque stock importé est tracé (« Premier comptage ») ;
-  SKU repris s'il existe et n'est pas déjà utilisé ;
-- images téléchargées depuis cdn.shopify.com (HTTPS uniquement), ré-encodées en WebP ; une image en échec est
-  signalée, le produit est quand même créé ;
-- « Vendor » Shopify → Fournisseur ET Marque (décision de la propriétaire : dans sa boutique Shopify, le Vendor
-  est aussi la marque) ; deux champs distincts dans Jodhur, chacun modifiable séparément ;
-- collections : une collection Shopify est reliée à une collection Jodhur seulement si leurs noms sont identiques
-  (majuscules, accents et ponctuation ignorés) ; aucune collection n'est créée ; les autres sont listées
-  « à traiter » ; les règles d'entrée de la collection Jodhur (pays, ingrédients) sont respectées ;
-- catégories : seulement si UNE catégorie Jodhur porte le même nom (majuscules, accents et ponctuation ignorés)
-  qu'une collection Shopify ou que le dernier niveau de la catégorie Shopify, OU si le tableau de
-  correspondances rempli par la propriétaire (--correspondances) l'indique ; sinon aucune (à choisir dans
-  l'admin). Rien n'est déduit d'un nom proche.
+`--rendre-visibles utiles` : avant d'activer les produits, rend visibles les catégories proposées (nouvelles
+catégories) qui contiendront au moins un produit actif ; les catégories masquées à la main ne sont pas touchées.
+
+Source : par défaut l'export complet versionné (catalog_import/shopify/export_shopify_complet.json) ;
+`--source shopify` lit directement l'API Admin (pagination ; variables SHOPIFY_STORE_DOMAIN, SHOPIFY_ADMIN_TOKEN,
+SHOPIFY_API_VERSION ; lecture seule) — `--export fichier.json` enregistre alors ce qui a été lu.
+
+Ce qui est importé (détail champ par champ : catalog_import/shopify/CORRESPONDANCE_CHAMPS.md) :
+- produit : nom, description, marque + fournisseur (Vendor), type, catégorie Shopify, collections, tags, SEO, handle ;
+- variantes : options, SKU, code-barres, prix, prix barré, stock disponible, suivi du stock, vente sans stock, poids ;
+- images : toutes, dans l'ordre, avec leur texte alternatif, TÉLÉCHARGÉES dans le stockage du projet (MEDIA_ROOT),
+  ré-encodées ; la fiche n'utilise jamais l'adresse Shopify ; doublons évités (identifiant Shopify + empreinte) ;
+- metafields : tous (identifiant, type, valeur brute), visibles dans l'admin ; certains alimentent aussi les champs
+  Jodhur (ingrédients, bienfaits, utilisation, phrase courte, types de peau) ;
+- catégories : uniquement par les correspondances EXPLICITES (tableau, nouvelles catégories, liste produit par
+  produit) ; toute valeur sans correspondance est listée dans le rapport ;
+- statut : un produit actif dans Shopify est ACTIF dans Jodhur s'il remplit les conditions d'activation ; sinon il
+  reste en brouillon et le rapport donne le champ manquant, produit par produit.
+
+Produits déjà présents : chaque champ venant de Shopify n'est remplacé que s'il n'a PAS été modifié dans Jodhur
+depuis le dernier import (comparaison avec la dernière valeur importée) ; sinon la valeur Jodhur est gardée et
+signalée. Rien n'est jamais supprimé (images, variantes, catégories, metafields) ; un produit archivé ou mis en
+brouillon à la main dans Jodhur garde son statut. Shopify n'est jamais modifié.
 """
 
+import csv
 import json
+import os
 import re
+import time
 import unicodedata
 import urllib.request
 from collections import Counter
 from decimal import Decimal
-from html import unescape
 from pathlib import Path
 
 from django.conf import settings
@@ -49,57 +45,69 @@ from django.core.files.base import ContentFile
 from django.core.management.base import BaseCommand, CommandError
 from django.db import transaction
 from django.db.models import Max
+from django.utils import timezone
+from django.utils.dateparse import parse_datetime
+from django.utils.text import slugify
 
 from apps.audit.models import AuditLog
 from apps.audit.services import log_action
+from apps.catalog import services
 from apps.catalog.models import (
     Category,
     Collection,
     Product,
     ProductCategory,
     ProductImage,
+    ProductMetafield,
     ProductOption,
     ProductOptionValue,
     Variant,
     VariantOptionValue,
 )
 from apps.catalog.services import unique_slug
+from apps.catalog.shopify_import import source as src
 from apps.core.html import sanitize_html
 from apps.inventory.models import StockMovement
 from apps.media_library.processing import ImageRejected
 from apps.media_library.services import create_from_upload
 
-DEFAULT_SOURCE = Path(settings.BASE_DIR) / "catalog_import" / "shopify" / "produits_actifs.json"
+DATA_DIR = Path(settings.BASE_DIR) / "catalog_import" / "shopify"
+DEFAULTS = {
+    "source": DATA_DIR / "export_shopify_complet.json",
+    "correspondances": DATA_DIR / "correspondances_proposees.csv",
+    "nouvelles_categories": DATA_DIR / "nouvelles_categories_proposees.csv",
+    "categories_produits": DATA_DIR / "produits_sans_categorie_proposes.csv",
+    "base_precedente": DATA_DIR / "produits_actifs.json",
+}
 IMAGE_HOST = "https://cdn.shopify.com/"
-OPTION_NAMES = {"size": "Taille"}  # nom technique Shopify → libellé affiché
-DEFAULT_TITLE = "Default Title"
+OPTION_NAMES = {"size": "Taille"}
 NOTE = "Import Shopify"
 ACTION_CREATE = "product.import_shopify"
 ACTION_UPDATE = "product.import_shopify_update"
-CREATE = "créer"
-MAPPING_HEADER = [
-    "collection_shopify",
-    "type",
-    "produits",
-    "exemples_produits",
-    "correspondance_nom_identique",
-    "categorie_jodhur",
-]
-UPDATE = "mettre à jour"
-LINK = "relier + mettre à jour"
-UP_TO_DATE = "déjà à jour"
-
-
-def _plain(html: str) -> str:
-    text = re.sub(r"<(br|/p|/li|/h[1-6]|/div)[^>]*>", "\n", html or "", flags=re.I)
-    text = unescape(re.sub(r"<[^>]+>", "", text))
-    return "\n".join(line.strip() for line in text.splitlines() if line.strip())
-
-
-def _first_paragraph(html: str) -> str:
-    """Premier paragraphe du texte Shopify (repris tel quel, rien n'est rédigé)."""
-    lines = _plain(html).split("\n")
-    return lines[0][:1000] if lines and lines[0] else ""
+MAPPING_HEADER = ["collection_shopify", "type", "produits", "exemples_produits", "correspondance_nom_identique",
+                  "categorie_jodhur", "statut", "raison"]  # fmt: skip
+# Metafields Shopify qui alimentent un champ Jodhur (namespace.key → champ, conversion).
+METAFIELD_FIELDS = {
+    "custom.ingredients": ("ingredients", "lines"),
+    "custom.les_benefices": ("benefits", "bullets"),
+    "custom.utilisation": ("usage_steps", "lines"),
+    "custom.description_courte": ("short_description", "text160"),
+    "custom.type_de_peau": ("skin_types", "text255"),
+}
+PRODUCT_FIELDS = ["name", "display_name", "brand", "supplier", "summary", "description_html", "short_description",
+                  "ingredients", "benefits", "usage_steps", "skin_types", "seo_title", "seo_description"]  # fmt: skip
+FIELD_LABELS = {
+    "name": "nom", "display_name": "nom affiché", "brand": "marque", "supplier": "fournisseur",
+    "summary": "description", "description_html": "description longue", "short_description": "phrase courte",
+    "ingredients": "ingrédients", "benefits": "bienfaits", "usage_steps": "utilisation", "skin_types": "types de peau",
+    "seo_title": "titre SEO", "seo_description": "méta-description", "title": "titre", "sku": "SKU",
+    "barcode": "code-barres", "price": "prix", "compare_at_price": "prix barré", "stock_quantity": "stock",
+    "track_inventory": "suivi du stock", "allow_backorder": "vente sans stock", "weight_grams": "poids",
+}  # fmt: skip
+CREATED = "créé"
+UPDATE = "mis à jour"
+LINK = "relié + mis à jour"
+DUP = "doublon possible (non importé)"
 
 
 def _norm(text: str) -> str:
@@ -108,367 +116,626 @@ def _norm(text: str) -> str:
 
 
 def _supplier_key(name: str) -> str:
-    """Clé pour repérer des fournisseurs PROBABLEMENT identiques écrits différemment (signalés, jamais fusionnés)."""
     words = [w for w in _norm(name).split() if w not in {"cooperative", "agricole", "al", "el", "des", "de"}]
     return " ".join(words).replace("outour", "otor")
 
 
-def _real_options(p: dict) -> list[dict]:
-    return [o for o in p["options"] if not (o["name"] == "Title" and o["values"] == [DEFAULT_TITLE])]
+def _empty(value) -> bool:
+    return value in (None, "", [], {})
 
 
-def _download(url: str, timeout=30) -> bytes:
+def _json(value):
+    """Valeur comparable / stockable en JSON (Decimal → texte)."""
+    if isinstance(value, Decimal):
+        return str(value.quantize(Decimal("0.01")))
+    return value
+
+
+def _url_key(url: str) -> str:
+    return (url or "").split("?")[0]
+
+
+def _cell(value, size=120) -> str:
+    text = str(value).replace("|", "/").replace("\n", " ")
+    return text if len(text) <= size else text[: size - 1] + "…"
+
+
+def _cat_label(cat) -> str:
+    parent = cat.parent if (cat.parent_id or cat._state.adding) else None
+    return f"{parent.name} › {cat.name}" if parent else cat.name
+
+
+def download(url: str, attempts: int = 3, timeout: int = 30) -> bytes:
+    """Télécharge une image Shopify (HTTPS cdn.shopify.com seulement), avec nouvelles tentatives."""
     if not url.startswith(IMAGE_HOST):
         raise ValueError("adresse d'image refusée (cdn.shopify.com uniquement)")
-    req = urllib.request.Request(url, headers={"User-Agent": "Jodhur-import/1.0"})  # noqa: S310 (hôte vérifié)
-    with urllib.request.urlopen(req, timeout=timeout) as resp:  # noqa: S310 (hôte vérifié ci-dessus)
-        data = resp.read(settings.MEDIA_MAX_UPLOAD_BYTES + 1)
-    if len(data) > settings.MEDIA_MAX_UPLOAD_BYTES:
-        raise ValueError("image trop lourde")
-    return data
+    delay, last = 1.0, None
+    for attempt in range(1, attempts + 1):
+        try:
+            req = urllib.request.Request(url, headers={"User-Agent": "Jodhur-import/2.0"})  # noqa: S310
+            with urllib.request.urlopen(req, timeout=timeout) as resp:  # noqa: S310 (hôte vérifié)
+                data = resp.read(settings.MEDIA_MAX_UPLOAD_BYTES + 1)
+            if len(data) > settings.MEDIA_MAX_UPLOAD_BYTES:
+                raise ValueError("image trop lourde")
+            return data
+        except ValueError:
+            raise
+        except OSError as exc:  # réseau, délai, 5xx…
+            last = exc
+            if attempt < attempts:
+                time.sleep(delay)
+                delay *= 2
+    raise OSError(f"échec après {attempts} tentatives : {last}")
 
 
 class Command(BaseCommand):
-    help = "Importe les produits actifs Shopify (export en lecture seule) en brouillons, sans doublon."
+    help = "Import complet des produits actifs Shopify (aperçu par défaut ; --appliquer pour écrire)."
 
     def add_arguments(self, parser):
-        parser.add_argument("--source", default=str(DEFAULT_SOURCE), help="Fichier JSON exporté de Shopify.")
-        parser.add_argument("--dry-run", action="store_true", help="Aperçu : aucune écriture, aucun téléchargement.")
-        parser.add_argument("--report", help="Écrit le rapport (Markdown) dans ce fichier.")
-        parser.add_argument("--csv", help="Écrit l'aperçu produit par produit (CSV) dans ce fichier.")
-        parser.add_argument("--sans-images", action="store_true", help="N'importe pas les images (essais hors ligne).")
+        parser.add_argument("--appliquer", action="store_true", help="Écrit en base. Sans cette option : aperçu.")
+        parser.add_argument("--dry-run", action="store_true", help="Aperçu (comportement par défaut).")
+        parser.add_argument("--source", default=str(DEFAULTS["source"]), help="Fichier JSON, ou « shopify » (API).")
+        parser.add_argument("--export", help="Avec --source shopify : enregistre l'export lu dans ce fichier.")
+        parser.add_argument("--page", type=int, default=10, help="Produits par page (API).")
+        parser.add_argument("--report", help="Rapport Markdown.")
+        parser.add_argument("--csv", help="Détail produit par produit (CSV).")
+        parser.add_argument("--sans-images", action="store_true", help="Ne télécharge aucune image (essais).")
+        parser.add_argument("--correspondances", default=str(DEFAULTS["correspondances"]))
+        parser.add_argument("--nouvelles-categories", default=str(DEFAULTS["nouvelles_categories"]))
+        parser.add_argument("--categories-produits", default=str(DEFAULTS["categories_produits"]))
+        parser.add_argument("--base-precedente", default=str(DEFAULTS["base_precedente"]),
+                            help="Export du premier import (référence des valeurs déjà importées).")  # fmt: skip
+        parser.add_argument("--modele-correspondances", help="Écrit le tableau de correspondances à remplir.")
         parser.add_argument(
-            "--correspondances",
-            help="Tableau CSV « collection Shopify → catégorie Jodhur » rempli à la main (identifiants URL).",
-        )
-        parser.add_argument(
-            "--modele-correspondances",
-            help="Écrit le tableau à remplir (CSV) et la liste des catégories Jodhur, puis s'arrête. Aucune écriture"
-            " en base.",
-        )
-        parser.add_argument(
-            "--mettre-a-jour",
-            action="store_true",
-            help="Complète aussi les produits déjà présents (fournisseur vide, collections, catégorie si aucune)"
-            " sans rien écraser.",
+            "--rendre-visibles",
+            default="",
+            help="« utiles » : rend visibles, AVANT l'activation des produits, les catégories proposées"
+            " (fichier des nouvelles catégories) qui contiendront au moins un produit actif ; ou une liste"
+            " d'identifiants URL séparés par des virgules. Vide : aucune catégorie n'est rendue visible.",
         )
 
+    # --- Entrée -------------------------------------------------------------------------------------
     def handle(self, *args, **opts):
-        path = Path(opts["source"])
-        if not path.exists():
-            raise CommandError(f"Fichier introuvable : {path}")
-        doc = json.loads(path.read_text(encoding="utf-8"))
-        products = doc.get("products") or []
-        if not products:
-            raise CommandError("Aucun produit dans le fichier.")
-        if any(p.get("status") != "ACTIVE" for p in products):
-            raise CommandError("Le fichier contient des produits non actifs : export refusé.")
-        self.dry = opts["dry_run"]
+        if opts["appliquer"] and opts["dry_run"]:
+            raise CommandError("--appliquer et --dry-run sont incompatibles.")
+        self.apply = opts["appliquer"]
         self.with_images = not opts["sans_images"]
-        self.update = opts["mettre_a_jour"]
-        cats = {}
-        for c in Category.objects.select_related("parent"):
-            cats.setdefault(_norm(c.name), []).append(c)
-        self.categories = cats  # nom normalisé → catégories Jodhur (plusieurs = ambigu, jamais choisie)
+        doc, nodes = self._read_source(opts)
+        if any(n.get("status") != "ACTIVE" for n in nodes):
+            raise CommandError("La source contient des produits non actifs : refusée.")
+        products = [src.normalize(n) for n in nodes]
+        if not products:
+            raise CommandError("Aucun produit actif dans la source.")
+        self.previous = self._load_previous(opts["base_precedente"])
+
         by_name = {}
         for c in Collection.objects.all():
             by_name.setdefault(_norm(c.name), []).append(c)
-        self.collections = by_name  # nom normalisé → collections Jodhur (plusieurs = ambigu, jamais relié)
+        self.collections = by_name
+        self.new_categories, self.new_categories_report = [], []
+        if opts["nouvelles_categories"] and Path(opts["nouvelles_categories"]).is_file():
+            self.new_categories = self._load_new_categories(Path(opts["nouvelles_categories"]))
+        cats = {}
+        for c in [*Category.objects.select_related("parent"), *self.new_categories]:
+            cats.setdefault(_norm(c.name), []).append(c)
+        self.categories = cats
+        self.by_slug = {c.slug: c for c in [*Category.objects.select_related("parent"), *self.new_categories]}
         if opts["modele_correspondances"]:
             self._write_mapping_template(Path(opts["modele_correspondances"]), products)
             return
         self.mapping, self.mapping_path = {}, ""
-        if opts["correspondances"]:
+        if opts["correspondances"] and Path(opts["correspondances"]).is_file():
             self.mapping = self._load_mapping(Path(opts["correspondances"]), products)
             self.mapping_path = opts["correspondances"]
+        self.per_product, self.per_product_skipped = {}, 0
+        if opts["categories_produits"] and Path(opts["categories_produits"]).is_file():
+            self.per_product = self._load_per_product(Path(opts["categories_produits"]), products)
 
-        rows = [self._analyse(p) for p in products]
-        self._flag_source_duplicates(products, rows)
-        if not self.dry:
+        rows = [self._plan(p) for p in products]
+        self._flag_ambiguities(products, rows)
+        self.visible_plan = self._plan_visibility(opts["rendre_visibles"], rows)
+        if self.apply:
+            self._apply_visibility()  # d'abord les catégories, ensuite l'activation des produits
             for p, row in zip(products, rows, strict=True):
-                if row["action"] == CREATE:
-                    self._create(p, row)
-                elif row["action"] in (UPDATE, LINK) and self.update:
-                    self._apply_update(p, row)
+                if row["action"] in (CREATED, UPDATE, LINK):
+                    self._apply(p, row)
         report = self._render(doc, products, rows)
         if opts["report"]:
             Path(opts["report"]).write_text(report, encoding="utf-8")
+        else:
+            self.stdout.write(report)
         if opts["csv"]:
             self._csv(Path(opts["csv"]), rows)
-        counts = Counter(r["action"] for r in rows)
-        mode = "APERÇU (aucune écriture)" if self.dry else "IMPORT"
+        counts = Counter(r["result"] for r in rows)
+        mode = "IMPORT APPLIQUÉ" if self.apply else "APERÇU (aucune écriture)"
         self.stdout.write(f"{mode} — " + ", ".join(f"{k} : {v}" for k, v in sorted(counts.items())))
-        if not opts["report"]:
-            self.stdout.write(report)
 
-    # --- Analyse (aucune écriture) ----------------------------------------------------------------
-    def _analyse(self, p: dict) -> dict:
-        warnings = []
-        row = {
-            "title": p["title"],
-            "handle": p["handle"],
-            "vendor": p.get("vendor") or "",
-            "shopify_id": p["id"],
-            "category": p.get("category") or "",
-            "collections": p.get("collections") or [],
-            "images": len(p.get("images") or []),
-            "variants": [],
-            "warnings": warnings,
-            "action": CREATE,
-            "collection_matches": self._match_collections(p),
-            "category_matches": self._match_categories(p),
-        }
-        existing = Product.objects.filter(shopify_id=p["id"]).first()
-        if existing:
-            row["action"] = UPDATE
-            row["local"] = existing.slug
-            row["plan"] = self._plan_update(existing, row)
-            if not row["plan"]["changes"]:
-                row["action"] = UP_TO_DATE
-            return row
-        title = p["title"].strip()
-        candidates = list(
-            Product.objects.filter(slug=p["handle"])
-            | Product.objects.filter(name__iexact=title)
-            | Product.objects.filter(display_name__iexact=title)
-        )
-        if candidates:
-            row["local"] = ", ".join(c.slug for c in candidates)
-            if len(candidates) == 1 and not candidates[0].shopify_id:
-                row["action"] = LINK
-                row["link_pk"] = candidates[0].pk
-                row["plan"] = self._plan_update(candidates[0], row, link=p["id"])
-                local = candidates[0].public_name.strip()
-                warnings.append(f"produit local « {local} » ({candidates[0].slug}) : même identifiant URL ou même nom")
-            else:
-                row["action"] = "doublon possible (non importé)"
-                why = "déjà relié à un autre produit Shopify" if len(candidates) == 1 else "plusieurs produits locaux"
-                row["ambiguity"] = why
-                warnings.append(f"correspondance ambiguë ({why}) : {row['local']} — à traiter à la main")
-            return row
-        if not row["vendor"]:
-            warnings.append("fournisseur manquant")
-        if not row["images"]:
-            warnings.append("aucune image")
-        if not _plain(p.get("descriptionHtml")):
-            warnings.append("description manquante")
-        cats = self._matching_categories(p)
-        row["jodhur_categories"] = [c.name for c in cats]
-        if not cats:
-            warnings.append("catégorie Jodhur à choisir (aucune correspondance claire)")
-        if not row["vendor"]:
-            warnings.append("marque à renseigner (Vendor Shopify vide)")
-        used_skus = set()
-        for v in p["variants"]:
-            sku = (v.get("sku") or "").strip()
-            info = {
-                "title": "" if v["title"] == DEFAULT_TITLE else v["title"],
-                "sku": sku,
-                "price": v["price"],
-                "compare": v.get("compareAtPrice"),
-                "stock": v.get("inventoryQuantity") if v.get("tracked") else "non suivi",
+    def _read_source(self, opts):
+        if opts["source"] == "shopify":
+            env = os.environ
+            try:
+                nodes = src.fetch_from_api(
+                    env.get("SHOPIFY_STORE_DOMAIN", ""),
+                    env.get("SHOPIFY_ADMIN_TOKEN", ""),
+                    env.get("SHOPIFY_API_VERSION", "2026-01"),
+                    opts["page"],
+                    log=self.stdout.write,
+                )
+            except src.SourceError as exc:
+                raise CommandError(str(exc)) from exc
+            doc = {"source": "API Shopify (lecture seule)", "shop": env.get("SHOPIFY_STORE_DOMAIN"),
+                   "exportedAt": timezone.now().isoformat(), "products": nodes}  # fmt: skip
+            if opts["export"]:
+                Path(opts["export"]).write_text(json.dumps(doc, ensure_ascii=False), encoding="utf-8")
+            return doc, nodes
+        path = Path(opts["source"])
+        if not path.exists():
+            raise CommandError(f"Fichier introuvable : {path}")
+        try:
+            return src.load_file(path)
+        except src.SourceError as exc:
+            raise CommandError(str(exc)) from exc
+
+    def _load_previous(self, path) -> dict:
+        """Premier export (format simple) : valeurs que le premier import a écrites, par identifiant Shopify."""
+        if not path or not Path(path).is_file():
+            return {}
+        doc = json.loads(Path(path).read_text(encoding="utf-8"))
+        out = {}
+        for p in doc.get("products") or []:
+            if "variants" not in p or "images" not in p:
+                continue
+            out[p["id"]] = {
+                "fields": {
+                    "name": p["title"][:200],
+                    "display_name": p["title"][:255],
+                    "summary": src.first_paragraph(p.get("descriptionHtml")),
+                    "description_html": sanitize_html(p.get("descriptionHtml") or ""),
+                    "supplier": (p.get("vendor") or "")[:150],
+                },
+                "variants": {
+                    v["id"]: {
+                        "price": str(Decimal(v["price"]).quantize(Decimal("0.01"))),
+                        "stock_quantity": v.get("inventoryQuantity") if v.get("tracked") else None,
+                    }
+                    for v in p["variants"]
+                },
+                "image_urls": [_url_key(i["url"]) for i in p["images"]],
+                "handle": p["handle"],
             }
-            if not sku:
-                info["sku_note"] = "SKU manquant"
-            elif Variant.objects.filter(sku=sku).exists() or sku in used_skus:
-                info["sku_note"] = f"SKU « {sku} » déjà utilisé : non repris"
-                info["sku"] = ""
-            elif sku.isdigit() and len(sku) < 3:
-                info["sku_note"] = f"SKU « {sku} » suspect (à vérifier)"
-            used_skus.add(sku)
-            if Decimal(v["price"]) <= 0:
-                warnings.append(f"prix à 0 ({info['title'] or 'variante'})")
-            if v.get("tracked") and v.get("inventoryQuantity") is None:
-                warnings.append("stock manquant")
-            elif v.get("tracked") and v["inventoryQuantity"] <= 0:
-                info["stock_note"] = "rupture"
-            row["variants"].append(info)
-        missing_sku = sum(1 for v in row["variants"] if v.get("sku_note") == "SKU manquant")
-        if missing_sku:
-            warnings.append(f"SKU manquant ({missing_sku}/{len(row['variants'])} variante(s))")
-        return row
-
-    def _match_collections(self, p: dict) -> list[tuple[str, object]]:
-        """(collection Shopify, collection Jodhur | None | "ambigu") — noms identiques seulement, rien n'est deviné."""
-        out = []
-        for name in p.get("collections") or []:
-            found = self.collections.get(_norm(name)) or []
-            out.append((name, found[0] if len(found) == 1 else ("ambigu" if found else None)))
         return out
 
-    def _history(self, product: Product) -> dict:
-        """Ce que les imports précédents ont déjà posé sur ce produit (pour ne pas remettre un retrait manuel)."""
-        logs = AuditLog.objects.filter(
-            target_type="catalog.product", target_id=str(product.pk), action__in=[ACTION_CREATE, ACTION_UPDATE]
-        )
-        supplier, brand, collections, categories = False, False, set(), set()
-        for log in logs:
-            supplier = supplier or bool((log.changes or {}).get("supplier"))
-            brand = brand or bool((log.changes or {}).get("brand"))
-            collections.update((log.changes or {}).get("collectionsAdded") or [])
-            categories.update((log.changes or {}).get("categoriesAdded") or [])
-        return {"supplier": supplier, "brand": brand, "collections": collections, "categories": categories}
-
-    def _plan_update(self, product: Product, row: dict, link: str | None = None) -> dict:
-        """Ce qui serait complété sur un produit existant. Ne lit que la base : aucune écriture."""
-        history = self._history(product)
-        vendor = row["vendor"][:150]
-        plan = {
-            "pk": product.pk,
-            "link": link,
-            "supplier": None,
-            "brand": None,
-            "current_brand": product.brand.strip(),
-            "add": [],
-            "categories": [],
-            "kept": [],
-            "changes": [],
+    # --- Valeurs voulues (Shopify → champs Jodhur) ---------------------------------------------------
+    def _desired(self, p: dict) -> tuple[dict, list[str]]:
+        notes = []
+        mf = {f"{m['namespace']}.{m['key']}": m for m in p["metafields"]}
+        desc = p["descriptionHtml"]
+        want = {
+            "name": p["title"][:200],
+            "display_name": p["title"][:255],
+            "brand": p["vendor"][:100],
+            "supplier": p["vendor"][:150],
+            "summary": src.first_paragraph(desc),
+            "description_html": sanitize_html(desc),
         }
-        plan["current_categories"] = [
-            _cat_label(pc.category)
-            for pc in ProductCategory.objects.filter(product=product)
-            .select_related("category__parent")
-            .order_by("position", "id")
+        for key, (field, kind) in METAFIELD_FIELDS.items():
+            if key not in mf:
+                continue
+            lines = src.rich_text_lines(mf[key]["value"])
+            if kind == "lines":
+                want[field] = lines
+            elif kind == "bullets":
+                want[field] = src.bullet_free(lines)
+            elif kind == "text255":
+                want[field] = " ".join(lines)[:255]
+            elif kind == "text160":
+                text = " ".join(lines)
+                if len(text) <= 160:
+                    want[field] = text
+                else:
+                    notes.append("phrase courte (custom.description_courte) non reprise : plus de 160 caractères")
+        title, cut_t = src.cut(p["seoTitle"], 70)
+        description, cut_d = src.cut(p["seoDescription"], 160)
+        want["seo_title"], want["seo_description"] = title, description
+        if cut_t:
+            notes.append("titre SEO coupé à 70 caractères (texte complet gardé dans Shopify)")
+        if cut_d:
+            notes.append("méta-description coupée à 160 caractères (plus longue dans Shopify)")
+        return want, notes
+
+    def _desired_variant(self, v: dict) -> dict:
+        price = Decimal(v["price"])
+        compare = Decimal(v["compareAtPrice"]) if v.get("compareAtPrice") else None
+        return {
+            "title": v["title"][:160],
+            "sku": v["sku"] or None,
+            "barcode": v["barcode"] or None,
+            "price": price,
+            "compare_at_price": compare if compare and compare > price else None,
+            "stock_quantity": v["inventoryQuantity"] if v["tracked"] else None,
+            "track_inventory": v["tracked"],
+            "allow_backorder": v["backorder"],
+            "weight_grams": v["weightGrams"],
+        }
+
+    @staticmethod
+    def _merge(current, wanted, has_base: bool, base):
+        """
+        Fusion à trois : « set » (remplacer), « same » (déjà égal), « keep » (modifié dans Jodhur : gardé).
+        Remplacer seulement si la valeur locale est vide ou égale à la dernière valeur importée.
+        """
+        cur, new = _json(current), _json(wanted)
+        if cur == new:
+            return "same"
+        if _empty(cur):
+            return "set" if not _empty(new) else "same"
+        if _empty(new):
+            return "same"  # Shopify vide : on n'efface jamais une donnée Jodhur
+        if has_base and cur == _json(base):
+            return "set"
+        return "keep"
+
+    # --- Plan (lecture seule) ------------------------------------------------------------------------
+    def _plan(self, p: dict) -> dict:
+        row = {
+            "p": p,
+            "title": p["title"],
+            "handle": p["handle"],
+            "vendor": p["vendor"],
+            "action": CREATED,
+            "result": "",
+            "changes": [],
+            "kept": [],
+            "notes": [],
+            "images": {"download": [], "link": [], "same": [], "alt_fallback": 0},
+            "variants": {"create": [], "update": [], "missing_local": []},
+            "categories_add": [],
+            "category_values": self._match_categories(p),
+            "collection_matches": self._match_collections(p),
+            "collections_add": [],
+            "local": "",
+            "status_before": "",
+            "status_after": "",
+            "blocked": [],
+        }
+        row["want"], notes = self._desired(p)
+        row["notes"] += notes
+        if p["truncated"]:
+            row["notes"].append("listes Shopify tronquées à 100 : " + ", ".join(p["truncated"]))
+        product = Product.objects.filter(shopify_id=p["id"]).first()
+        if product is None:
+            candidates = list(
+                Product.objects.filter(slug=p["handle"])
+                | Product.objects.filter(name__iexact=p["title"])
+                | Product.objects.filter(display_name__iexact=p["title"])
+            )
+            if candidates:
+                row["local"] = ", ".join(c.slug for c in candidates)
+                if len(candidates) == 1 and not candidates[0].shopify_id:
+                    product = candidates[0]
+                    row["action"] = LINK
+                else:
+                    row["action"] = DUP
+                    row["ambiguity"] = (
+                        "déjà relié à un autre produit Shopify" if len(candidates) == 1 else "plusieurs produits locaux"
+                    )
+                    row["result"] = DUP
+                    return row
+        if product is None:
+            self._plan_new(p, row)
+        else:
+            if row["action"] != LINK:
+                row["action"] = UPDATE
+            self._plan_existing(p, row, product)
+        return row
+
+    def _plan_new(self, p, row):
+        row["changes"].append("création")
+        row["images"]["download"] = list(p["images"]) if self.with_images else []
+        row["images"]["alt_fallback"] = sum(1 for i in p["images"] if not i["alt"])
+        row["variants"]["create"] = list(p["variants"])
+        row["categories_add"] = self._clear_categories(row["category_values"])
+        row["collections_add"] = [
+            c
+            for _n, c in row["collection_matches"]
+            if isinstance(c, Collection) and not c.entry_errors(origin="", ingredients=[])
         ]
-        local = product.supplier.strip()
-        if vendor and not local:
-            if history["supplier"]:
-                plan["kept"].append("fournisseur effacé à la main après un import : laissé vide")
-            else:
-                plan["supplier"] = vendor
-                plan["changes"].append(f"fournisseur → « {vendor} »")
-        elif vendor and local != vendor:
-            plan["kept"].append(f"fournisseur local « {local} » conservé (Shopify : « {vendor} »)")
-        brand = row["vendor"].strip()[:100]
-        local_brand = plan["current_brand"]
-        if brand and not local_brand:
-            if history["brand"]:
-                plan["kept"].append("marque effacée à la main après un import : laissée vide")
-            else:
-                plan["brand"] = brand
-                plan["changes"].append(f"marque → « {brand} »")
-        elif brand and local_brand != brand:
-            plan["kept"].append(f"marque locale « {local_brand} » conservée (Vendor Shopify : « {brand} »)")
-        current = set(product.collections.values_list("pk", flat=True))
-        for _name, coll in row["collection_matches"]:
-            if not isinstance(coll, Collection) or coll.pk in current or coll in plan["add"]:
+        row["slug"] = unique_slug(p["handle"], Product) if p["handle"] else unique_slug(p["title"], Product)
+        if row["slug"] != p["handle"]:
+            row["notes"].append(f"identifiant URL « {row['slug']} » (le handle « {p['handle']} » est déjà pris)")
+        row["status_before"] = "—"
+        row["blocked"] = self._predict_blockers(row, None)
+        row["status_after"] = "actif" if not row["blocked"] else "brouillon"
+        row["result"] = "créé actif" if not row["blocked"] else "créé brouillon (bloqué)"
+        cats = row["categories_add"]
+        if (
+            cats
+            and not row["blocked"]
+            and not any(c.pk and c.is_active and (c.parent is None or c.parent.is_active) for c in cats)
+        ):
+            row["notes"].append("visible dans « Tous les produits » mais pas dans le menu (catégories masquées)")
+
+    def _plan_existing(self, p, row, product):
+        row["product"] = product
+        row["local"] = product.slug
+        history = self._history(product)
+        prev = self.previous.get(p["id"], {})
+        base = dict(product.shopify_baseline or {})
+        base_fields = base.get("fields") or {}
+        if not base_fields and prev and row["action"] == UPDATE:
+            base_fields = prev["fields"]
+        row["field_ops"] = {}
+        for field in PRODUCT_FIELDS:
+            if field not in row["want"]:
+                continue
+            current = getattr(product, field)
+            op = self._merge(current, row["want"][field], field in base_fields, base_fields.get(field))
+            if field in ("brand", "supplier") and op == "set" and _empty(current) and history[field]:
+                op = "keep_cleared"
+            row["field_ops"][field] = op
+            if op == "set":
+                row["changes"].append(FIELD_LABELS[field])
+            elif op == "keep":
+                row["kept"].append(f"{FIELD_LABELS[field]} modifié(e) dans Jodhur : gardé(e)")
+            elif op == "keep_cleared":
+                row["kept"].append(f"{FIELD_LABELS[field]} effacé(e) à la main : laissé(e) vide")
+        if product.slug != p["handle"]:
+            row["notes"].append(f"identifiant URL Jodhur « {product.slug} » ≠ handle Shopify « {p['handle']} » (gardé)")
+        # Variantes
+        local_variants = list(product.variants.all())
+        by_id = {v.shopify_id: v for v in local_variants if v.shopify_id}
+        if not by_id and len(local_variants) == 1 and len(p["variants"]) == 1:
+            by_id = {p["variants"][0]["id"]: local_variants[0]}
+            row["notes"].append("variante unique reliée à la variante Shopify")
+        vbase_all = {}
+        for v in p["variants"]:
+            local = by_id.get(v["id"])
+            if local is None:
+                row["variants"]["create"].append(v)
+                continue
+            vbase = dict((local.shopify_baseline or {}).get("fields") or {})
+            if not vbase and prev:
+                vbase = (prev.get("variants") or {}).get(v["id"], {})
+            vbase_all[v["id"]] = vbase
+            ops = {}
+            for field, wanted in self._desired_variant(v).items():
+                op = self._merge(getattr(local, field), wanted, field in vbase, vbase.get(field))
+                if field in ("sku", "barcode") and op == "set" and wanted:
+                    clash = Variant.objects.filter(**{field: wanted}).exclude(pk=local.pk).exists()
+                    if clash:
+                        op = "clash"
+                ops[field] = op
+                label = FIELD_LABELS[field]
+                if op == "set":
+                    row["changes"].append(f"variante {v['title'] or 'unique'} : {label}")
+                elif op == "keep":
+                    row["kept"].append(f"variante {v['title'] or 'unique'} : {label} modifié(e) dans Jodhur")
+                elif op == "clash":
+                    row["kept"].append(f"variante {v['title'] or 'unique'} : {label} « {wanted} » déjà utilisé")
+            row["variants"]["update"].append((v, local, ops))
+        known = {v["id"] for v in p["variants"]}
+        row["variants"]["missing_local"] = [v for v in local_variants if v.shopify_id and v.shopify_id not in known]
+        if row["variants"]["missing_local"]:
+            row["notes"].append(f"{len(row['variants']['missing_local'])} variante(s) absente(s) de Shopify (gardées)")
+        if row["variants"]["create"] and product.options.exists() is False and len(p["variants"]) > 1:
+            row["notes"].append("nouvelles variantes Shopify sur un produit sans options : à ajouter à la main")
+            row["variants"]["create"] = []
+        # Images
+        self._plan_images(p, row, product, prev)
+        # Catégories (ajout seulement ; catégories choisies à la main protégées)
+        self._plan_categories(row, product, history)
+        current_colls = set(product.collections.values_list("pk", flat=True))
+        for _n, coll in row["collection_matches"]:
+            if not isinstance(coll, Collection) or coll.pk in current_colls or coll in row["collections_add"]:
                 continue
             if coll.pk in history["collections"]:
-                plan["kept"].append(f"« {coll.name} » retirée à la main après un import : non remise")
+                row["kept"].append(f"collection « {coll.name} » retirée à la main : non remise")
+            elif coll.entry_errors(origin=product.origin_country, ingredients=product.ingredients):
+                row["kept"].append(f"collection « {coll.name} » : règle d'entrée non remplie")
+            else:
+                row["collections_add"].append(coll)
+                row["changes"].append(f"collection + {coll.name}")
+        # Statut
+        row["status_before"] = product.get_status_display()
+        row["blocked"] = self._predict_blockers(row, product)
+        if product.status == Product.Status.ACTIVE:
+            row["status_after"] = "actif"
+            if row["blocked"]:
+                row["notes"].append("actif dans Jodhur mais incomplet : " + "; ".join(row["blocked"]))
+        elif product.status == Product.Status.ARCHIVED:
+            row["status_after"] = "archivé (gardé)"
+            row["kept"].append("archivé dans Jodhur : statut gardé")
+        elif history["manual_status"]:
+            row["status_after"] = "brouillon (gardé)"
+            row["kept"].append("mis en brouillon à la main dans Jodhur : statut gardé")
+        else:
+            row["status_after"] = "actif" if not row["blocked"] else "brouillon"
+            if not row["blocked"]:
+                row["changes"].append("statut → actif")
+        vis = self._masked_categories(product, row)
+        if vis and row["status_after"] == "actif":
+            row["notes"].append("visible dans « Tous les produits » mais pas dans le menu (catégories masquées)")
+        done = row["action"] if row["changes"] else "déjà à jour"
+        row["result"] = (
+            f"{done} — bloqué (brouillon)" if row["status_after"] == "brouillon" and row["blocked"] else done
+        )
+        row["vbase"] = vbase_all
+
+    def _plan_images(self, p, row, product, prev):
+        existing = list(product.images.select_related("media"))
+        by_media = {pi.shopify_media_id: pi for pi in existing if pi.shopify_media_id}
+        # Images du premier import (sans identifiant Shopify) : retrouvées par leur rang dans le premier export.
+        old_by_url = {}
+        if prev:
+            pattern = re.compile(rf"^shopify-{re.escape(prev['handle'])}-(\d+)\.")
+            for pi in existing:
+                if pi.shopify_media_id:
+                    continue
+                match = pattern.match(pi.media.original_filename or "")
+                if match and int(match.group(1)) <= len(prev["image_urls"]):
+                    old_by_url[prev["image_urls"][int(match.group(1)) - 1]] = pi
+        base_alts = ((product.shopify_baseline or {}).get("images") or {}) if product else {}
+        for img in p["images"]:
+            pi = by_media.get(img["id"]) or old_by_url.get(_url_key(img["url"]))
+            alt = (img["alt"] or p["title"])[:255]
+            if not img["alt"]:
+                row["images"]["alt_fallback"] += 1
+            if pi is None:
+                if self.with_images:
+                    row["images"]["download"].append(img)
                 continue
-            errors = coll.entry_errors(origin=product.origin_country, ingredients=product.ingredients)
-            if errors:
-                plan["kept"].append("collection non ajoutée — " + " ".join(errors))
-                continue
-            plan["add"].append(coll)
-            plan["changes"].append(f"collection + « {coll.name} »")
-        clear = self._matching_categories_from(row["category_matches"])
-        if plan["current_categories"]:
-            if clear and {_cat_label(c) for c in clear} - set(plan["current_categories"]):
-                plan["kept"].append(
-                    "catégorie(s) déjà choisie(s) dans Jodhur conservée(s) (proposition ignorée : "
-                    + ", ".join(_cat_label(c) for c in clear)
+            op = self._merge(pi.alt, alt, img["id"] in base_alts, base_alts.get(img["id"]))
+            row["images"]["link" if not pi.shopify_media_id else "same"].append((img, pi, op))
+            if op == "keep":
+                row["kept"].append("texte alternatif d'une image modifié dans Jodhur : gardé")
+        n_dl, n_link = len(row["images"]["download"]), sum(1 for x in row["images"]["link"])
+        if n_dl:
+            row["changes"].append(f"{n_dl} image(s) à télécharger")
+        if n_link:
+            row["changes"].append(f"{n_link} image(s) existante(s) reliée(s) à Shopify")
+        removed = [
+            pi for pi in existing if pi.shopify_media_id and pi.shopify_media_id not in {i["id"] for i in p["images"]}
+        ]
+        if removed:
+            row["notes"].append(f"{len(removed)} image(s) absente(s) de Shopify (gardées)")
+
+    def _plan_categories(self, row, product, history):
+        clear = self._clear_categories(row["category_values"])
+        links = list(ProductCategory.objects.filter(product=product).select_related("category__parent"))
+        current = [link.category for link in links]
+        by_import = set(history["categories"])
+        if history["created"]:
+            by_import |= {c.pk for c in self._exact_categories(row["p"])}
+        manual = [c for c in current if c.pk not in by_import]
+        missing = [c for c in clear if c not in current]
+        if manual:
+            if missing:
+                row["kept"].append(
+                    "catégorie(s) choisie(s) à la main : rien n'est ajouté (proposé : "
+                    + ", ".join(_cat_label(c) for c in missing)
                     + ")"
                 )
-        else:
-            removed = [c for c in clear if c.pk in history["categories"]]
-            if removed:
-                plan["kept"].append("catégorie(s) retirée(s) à la main après un import : non remise(s)")
-            else:
-                plan["categories"] = clear
-                plan["changes"] += [f"catégorie + « {_cat_label(c)} »" for c in clear]
-        if link:
-            plan["changes"].insert(0, "identifiant Shopify enregistré")
-        return plan
-
-    def _match_categories(self, p: dict) -> list[tuple[str, object]]:
-        """
-        (nom Shopify, catégorie Jodhur | None | "ambigu"). Sources : les collections Shopify et le dernier niveau de
-        la catégorie Shopify. Une correspondance est « claire » seulement si UNE catégorie Jodhur porte le même nom
-        (majuscules, accents et ponctuation ignorés) ; rien n'est déduit d'un nom proche.
-        """
-        names = [*(p.get("collections") or [])]
-        if p.get("category"):
-            names.append(p["category"].split(">")[-1].strip())
-        out = []
-        for name in names:
-            chosen = self.mapping.get(_norm(name))
-            if chosen is not None:  # décision de la propriétaire (tableau) : prioritaire, même « aucune »
-                out += [(name, cat, "tableau") for cat in chosen] or [(name, None, "tableau")]
+            return
+        for c in missing:
+            if c.pk and c.pk in history["categories"]:
+                row["kept"].append(f"catégorie « {_cat_label(c)} » retirée à la main : non remise")
                 continue
-            found = self.categories.get(_norm(name)) or []
+            row["categories_add"].append(c)
+            row["changes"].append(f"catégorie + {_cat_label(c)}{' (nouvelle)' if not c.pk else ''}")
+
+    def _masked_categories(self, product, row) -> bool:
+        cats = [
+            link.category for link in ProductCategory.objects.filter(product=product).select_related("category__parent")
+        ]
+        cats += row["categories_add"]
+        if not cats:
+            return False
+        return not any(c.pk and c.is_active and (c.parent is None or c.parent.is_active) for c in cats)
+
+    def _predict_blockers(self, row, product) -> list[str]:
+        """Conditions d'activation (mêmes règles que l'admin), évaluées sur l'état APRÈS import."""
+        want, ops = row["want"], row.get("field_ops", {})
+
+        def final(field):
+            if product is None:
+                return want.get(field)
+            return want[field] if ops.get(field) == "set" else getattr(product, field)
+
+        errors = []
+        if _empty((final("brand") or "").strip()):
+            errors.append("La marque est obligatoire." + (" (Vendor vide dans Shopify)" if not row["vendor"] else ""))
+        if _empty((final("name") or "").strip()):
+            errors.append("Le nom est obligatoire.")
+        if _empty((final("summary") or "").strip()):
+            errors.append("La description est obligatoire. (description Shopify vide)")
+        has_cat = bool(row["categories_add"]) or (product is not None and product.category_links.exists())
+        if not has_cat:
+            values = ", ".join(n for n, _c, _s in row["category_values"]) or "aucune valeur Shopify"
+            errors.append(f"Au moins une catégorie est obligatoire. (aucune correspondance pour : {values})")
+        n_images = len(row["images"]["download"]) + len(row["images"]["link"]) + len(row["images"]["same"])
+        if product is not None:
+            n_images = max(n_images, product.images.filter(in_gallery=True).count())
+        if not n_images:
+            errors.append(
+                "Au moins une image dans la galerie est obligatoire." + ("" if self.with_images else " (--sans-images)")
+            )
+        variants = row["p"]["variants"]
+        if not variants and (product is None or not product.variants.exists()):
+            errors.append("Une variante par défaut est obligatoire.")
+        elif variants and Decimal(variants[0]["price"]) <= 0:
+            errors.append("Le prix doit être supérieur à 0.")
+        return errors
+
+    # --- Historique (retraits / modifications manuels) -----------------------------------------------
+    def _history(self, product) -> dict:
+        logs = AuditLog.objects.filter(target_type="catalog.product", target_id=str(product.pk))
+        out = {"supplier": False, "brand": False, "collections": set(), "categories": set(), "created": False,
+               "manual_status": False}  # fmt: skip
+        for log in logs:
+            ch = log.changes or {}
+            if log.action in (ACTION_CREATE, ACTION_UPDATE):
+                out["created"] = out["created"] or log.action == ACTION_CREATE
+                out["supplier"] = out["supplier"] or bool(ch.get("supplier"))
+                out["brand"] = out["brand"] or bool(ch.get("brand"))
+                out["collections"].update(ch.get("collectionsAdded") or [])
+                out["categories"].update(ch.get("categoriesAdded") or [])
+            elif log.action == "product.status" and log.actor_id is not None:
+                out["manual_status"] = True
+        return out
+
+    # --- Catégories et collections (correspondances explicites) --------------------------------------
+    def _values(self, p):
+        values = [(c, c) for c in p["collections"]]
+        if p["category"]:
+            values.append((p["category"], p["category"].split(">")[-1].strip()))
+        return values
+
+    def _match_categories(self, p) -> list:
+        out = []
+        for name, exact in self._values(p):
+            chosen = self.mapping.get(_norm(name))
+            if chosen is not None:
+                cats, statut = chosen
+                src_label = "tableau" + (f" · {statut}" if statut else "")
+                out += [(name, c, src_label) for c in cats] or [(name, None, src_label)]
+                continue
+            found = self.categories.get(_norm(exact)) or []
             out.append((name, found[0] if len(found) == 1 else ("ambigu" if found else None), "nom identique"))
+        for cat in self.per_product.get(p["handle"], []):
+            out.append((f"liste produit : {p['title']}", cat, "liste produit · validé"))
         return out
 
     @staticmethod
-    def _matching_categories_from(matches) -> list:
+    def _clear_categories(matches) -> list:
         found = []
-        for _name, cat, _src in matches:
+        for _n, cat, _s in matches:
             if isinstance(cat, Category) and cat not in found:
                 found.append(cat)
         return found
 
-    # --- Tableau « collection Shopify → catégorie Jodhur » (décidé par la propriétaire) ----------------
-    @staticmethod
-    def _shopify_names(products) -> tuple[Counter, dict, dict]:
-        counts, kinds, examples = Counter(), {}, {}
-        for p in products:
-            names = [(n, "collection") for n in p.get("collections") or []]
-            if p.get("category"):
-                names.append((p["category"].split(">")[-1].strip(), "catégorie Shopify"))
-            for name, kind in dict.fromkeys(names):
-                counts[name] += 1
-                kinds.setdefault(name, kind)
-                examples.setdefault(name, []).append(p["title"])
-        return counts, kinds, examples
+    def _exact_categories(self, p) -> list:
+        found = []
+        for _name, exact in self._values(p):
+            cats = [c for c in self.categories.get(_norm(exact)) or [] if c.pk]
+            if len(cats) == 1 and cats[0] not in found:
+                found.append(cats[0])
+        return found
 
-    def _write_mapping_template(self, path: Path, products):
-        import csv
-
-        counts, kinds, examples = self._shopify_names(products)
-        with path.open("w", encoding="utf-8-sig", newline="") as fh:
-            w = csv.writer(fh, delimiter=";")
-            w.writerow(MAPPING_HEADER)
-            for name, n in sorted(counts.items(), key=lambda kv: (kinds[kv[0]] != "collection", -kv[1], kv[0])):
-                same = self.categories.get(_norm(name)) or []
-                auto = (
-                    same[0].slug if len(same) == 1 else ("ambigu : " + ", ".join(c.slug for c in same) if same else "")
-                )
-                w.writerow([name, kinds[name], n, " | ".join(examples[name][:3]), auto, ""])
-        cats_path = path.with_name(path.stem + "_categories_jodhur.csv")
-        with cats_path.open("w", encoding="utf-8-sig", newline="") as fh:
-            w = csv.writer(fh, delimiter=";")
-            w.writerow(["identifiant_url (à recopier)", "nom", "categorie_parente", "visible", "produits"])
-            for c in Category.objects.select_related("parent").order_by("parent__position", "position", "id"):
-                w.writerow(
-                    [c.slug, c.name, c.parent.name if c.parent_id else "", "oui" if c.is_active else "non",
-                     c.products.count()]
-                )  # fmt: skip
-        self.stdout.write(
-            f"Tableau à remplir : {path} ({len(counts)} noms Shopify) · catégories Jodhur : {cats_path}."
-            " Aucune écriture en base."
-        )
+    def _match_collections(self, p) -> list:
+        out = []
+        for name in p["collections"]:
+            found = self.collections.get(_norm(name)) or []
+            out.append((name, found[0] if len(found) == 1 else ("ambigu" if found else None)))
+        return out
 
     def _load_mapping(self, path: Path, products) -> dict:
-        """
-        Lit le tableau rempli. Colonne « categorie_jodhur » : identifiant URL d'une catégorie Jodhur (plusieurs
-        séparés par « | »), « aucune » pour bloquer toute proposition, vide = règle du nom identique.
-        Toute erreur (catégorie inconnue, ligne en double) arrête la commande AVANT toute écriture.
-        """
-        import csv
-
-        if not path.exists():
-            raise CommandError(f"Tableau de correspondances introuvable : {path}")
-        by_slug = {c.slug: c for c in Category.objects.all()}
-        known = {_norm(n) for n in self._shopify_names(products)[0]}
+        known = {_norm(n) for p in products for n, _e in self._values(p)}
         mapping, errors, seen = {}, [], set()
         with path.open(encoding="utf-8-sig", newline="") as fh:
-            sample = fh.read(4096)
-            fh.seek(0)
-            delimiter = ";" if sample.count(";") >= sample.count(",") else ","
-            for i, line in enumerate(csv.DictReader(fh, delimiter=delimiter), start=2):
+            for i, line in enumerate(csv.DictReader(fh, delimiter=";"), start=2):
                 name = (line.get("collection_shopify") or "").strip()
                 value = (line.get("categorie_jodhur") or "").strip()
+                statut = (line.get("statut") or "").strip()
                 if not name:
                     continue
                 key = _norm(name)
@@ -477,118 +744,247 @@ class Command(BaseCommand):
                     continue
                 seen.add(key)
                 if key not in known:
-                    errors.append(f"ligne {i} : « {name} » n'est pas une collection de l'export Shopify")
-                    continue
+                    continue  # valeur qui n'existe plus dans Shopify : ignorée
                 if not value:
                     continue
                 if _norm(value) == "aucune":
-                    mapping[key] = []
+                    mapping[key] = ([], statut)
                     continue
                 cats = []
                 for slug in (v.strip() for v in value.split("|") if v.strip()):
-                    if slug not in by_slug:
-                        errors.append(f"ligne {i} : catégorie Jodhur « {slug} » inconnue (identifiant URL attendu)")
-                    elif by_slug[slug] not in cats:
-                        cats.append(by_slug[slug])
-                mapping[key] = cats
+                    if slug not in self.by_slug:
+                        errors.append(f"ligne {i} : catégorie Jodhur « {slug} » inconnue")
+                    elif self.by_slug[slug] not in cats:
+                        cats.append(self.by_slug[slug])
+                mapping[key] = (cats, statut)
         if errors:
             raise CommandError("Tableau de correspondances refusé, rien n'a été fait :\n- " + "\n- ".join(errors))
+        self.mapping_rows = seen
         return mapping
 
-    def _matching_categories(self, p: dict) -> list:
-        return self._matching_categories_from(self._match_categories(p))
+    def _load_per_product(self, path: Path, products) -> dict:
+        handles = {p["handle"] for p in products}
+        out, errors = {}, []
+        with path.open(encoding="utf-8-sig", newline="") as fh:
+            for i, line in enumerate(csv.DictReader(fh, delimiter=";"), start=2):
+                handle = (line.get("handle") or "").strip()
+                if not handle or handle not in handles:
+                    continue
+                if _norm(line.get("appliquer") or "") != "oui":
+                    self.per_product_skipped += 1
+                    continue
+                cats = []
+                for slug in (v.strip() for v in (line.get("categorie_jodhur") or "").split("|") if v.strip()):
+                    if slug not in self.by_slug:
+                        errors.append(f"ligne {i} : catégorie Jodhur « {slug} » inconnue")
+                    elif self.by_slug[slug] not in cats:
+                        cats.append(self.by_slug[slug])
+                out[handle] = cats
+        if errors:
+            raise CommandError("Liste produit par produit refusée, rien n'a été fait :\n- " + "\n- ".join(errors))
+        return out
 
-    def _flag_source_duplicates(self, products, rows):
-        titles = Counter(p["title"].strip().lower() for p in products)
-        for p, row in zip(products, rows, strict=True):
-            n = titles[p["title"].strip().lower()]
-            if n > 1:
-                row["warnings"].append(
-                    f"même nom que {n - 1} autre(s) produit(s) Shopify (fournisseur : {row['vendor']})"
+    def _load_new_categories(self, path: Path) -> list:
+        existing = {c.slug: c for c in Category.objects.select_related("parent")}
+        rows = []
+        with path.open(encoding="utf-8-sig", newline="") as fh:
+            for i, line in enumerate(csv.DictReader(fh, delimiter=";"), start=2):
+                slug, name = (line.get("identifiant_url") or "").strip(), (line.get("nom") or "").strip()
+                if not slug and not name:
+                    continue
+                if not slug or not name or slugify(slug) != slug:
+                    raise CommandError(f"Nouvelles catégories, ligne {i} : identifiant URL et nom obligatoires.")
+                rows.append(
+                    (slug, name[:100], (line.get("nom_ar") or "").strip()[:100], (line.get("parente") or "").strip())
                 )
+        new = []
+        with transaction.atomic():
+            for slug, name, name_ar, parent_slug in rows:
+                if slug in existing:
+                    self.new_categories_report.append((existing[slug], "existe déjà"))
+                    continue
+                parent = existing.get(parent_slug) if parent_slug else None
+                if parent_slug and parent is None:
+                    raise CommandError(f"Catégorie parente « {parent_slug} » introuvable pour « {slug} ».")
+                cat = Category(slug=slug, name=name, name_ar=name_ar, parent=parent, is_active=False, position=900)
+                if self.apply:
+                    cat.save()
+                    log_action("category.import_shopify", target=cat, changes={"slug": slug, "name": name})
+                self.new_categories_report.append((cat, "créée masquée" if self.apply else "à créer (masquée)"))
+                existing[slug] = cat
+                new.append(cat)
+        return new
+
+    def _write_mapping_template(self, path: Path, products):
+        counts, kinds, examples = Counter(), {}, {}
+        for p in products:
+            vals = [(c, "collection") for c in p["collections"]] + (
+                [(p["category"], "catégorie Shopify")] if p["category"] else []
+            )
+            for v, k in dict.fromkeys(vals):
+                counts[v] += 1
+                kinds[v] = k
+                examples.setdefault(v, []).append(p["title"])
+        with path.open("w", encoding="utf-8-sig", newline="") as fh:
+            w = csv.writer(fh, delimiter=";")
+            w.writerow(MAPPING_HEADER)
+            for name, n in counts.most_common():
+                same = self.categories.get(_norm(name.split(">")[-1])) or []
+                w.writerow(
+                    [
+                        name,
+                        kinds[name],
+                        n,
+                        " | ".join(examples[name][:3]),
+                        same[0].slug if len(same) == 1 else "",
+                        "",
+                        "",
+                        "",
+                    ]
+                )
+        self.stdout.write(f"Tableau à remplir : {path} ({len(counts)} valeurs). Aucune écriture en base.")
+
+    def _flag_ambiguities(self, products, rows):
+        titles = Counter(p["title"].strip().lower() for p in products)
+        claims = Counter(r["product"].pk for r in rows if r["action"] == LINK)
+        for p, row in zip(products, rows, strict=True):
+            if titles[p["title"].strip().lower()] > 1:
+                row["notes"].append(
+                    f"même nom que {titles[p['title'].strip().lower()] - 1} autre(s) produit(s) Shopify"
+                )
+            if row["action"] == LINK and (titles[p["title"].strip().lower()] > 1 or claims[row["product"].pk] > 1):
+                row["action"] = row["result"] = DUP
+                row["ambiguity"] = "plusieurs produits Shopify correspondent au même produit local"
         groups = {}
-        for v in {p.get("vendor") or "" for p in products}:
+        for v in {p["vendor"] for p in products}:
             groups.setdefault(_supplier_key(v), set()).add(v)
         self.supplier_groups = [sorted(g) for g in groups.values() if len(g) > 1]
-        # Une liaison n'est faite que si elle est sans ambiguïté des deux côtés.
-        claims = Counter(r["link_pk"] for r in rows if r["action"] == LINK)
-        for p, row in zip(products, rows, strict=True):
-            if row["action"] != LINK:
-                continue
-            reason = ""
-            if titles[p["title"].strip().lower()] > 1:
-                reason = "plusieurs produits Shopify portent ce nom"
-            elif claims[row["link_pk"]] > 1:
-                reason = "le même produit local correspond à plusieurs produits Shopify"
-            if reason:
-                row["action"] = "doublon possible (non importé)"
-                row["ambiguity"] = reason
-                row.pop("plan", None)
-                row["warnings"].append(f"correspondance ambiguë ({reason}) : {row['local']} — à traiter à la main")
 
-    # --- Création (une transaction par produit) ----------------------------------------------------
-    def _create(self, p: dict, row: dict):
-        media = []
-        if self.with_images:
-            for i, img in enumerate(p.get("images") or []):
-                try:
-                    data = _download(img["url"])
-                    name = f"shopify-{p['handle']}-{i + 1}.img"
-                    alt = (img.get("alt") or p["title"])[:255]
-                    asset, _ = create_from_upload(ContentFile(data, name=name), alt=alt)
-                    media.append((img, asset))
-                except (OSError, ValueError, ImageRejected) as exc:
-                    row["warnings"].append(f"image {i + 1} non importée ({exc})")
+    # --- Application ---------------------------------------------------------------------------------
+    def _apply(self, p, row):
+        assets = self._download_images(row)
         try:
             with transaction.atomic():
-                product = self._create_product(p, row, media)
+                create = row["action"] == CREATED
+                product = self._create(p, row, assets) if create else self._update(p, row, assets)
         except Exception as exc:  # noqa: BLE001 — un produit en échec n'arrête pas l'import
-            row["action"] = "échec"
-            row["warnings"].append(f"erreur : {exc}")
+            row["result"] = "échec"
+            row["status_after"] = "—"
+            row["notes"].append(f"erreur : {exc}")
             return
-        row["action"] = "créé (brouillon)"
-        row["local"] = product.slug
+        row["product"] = product
+        self._finish_status(product, row)
 
-    def _create_product(self, p: dict, row: dict, media) -> Product:
-        position = (Product.objects.aggregate(m=Max("position"))["m"] or 0) + 1
-        product = Product.objects.create(
-            slug=unique_slug(p["handle"], Product),
-            position=position,
-            brand=(p.get("vendor") or "").strip()[:100],
-            supplier=(p.get("vendor") or "")[:150],
-            shopify_id=p["id"],
-            name=p["title"][:200],
-            display_name=p["title"][:255],
-            summary=_first_paragraph(p.get("descriptionHtml")),
-            description_html=sanitize_html(p.get("descriptionHtml") or ""),
-            status=Product.Status.DRAFT,
-        )
-        new_cats = self._matching_categories(p)
-        for i, cat in enumerate(new_cats):
-            ProductCategory.objects.create(product=product, category=cat, position=i)
-        added = []
-        for _name, coll in row["collection_matches"]:
-            if not isinstance(coll, Collection) or coll in added:
+    def _download_images(self, row) -> dict:
+        assets, failures = {}, []
+        for img in row["images"]["download"]:
+            try:
+                data = download(img["url"])
+                name = f"shopify-{row['handle']}-{img['position'] + 1}.img"
+                asset, _created = create_from_upload(
+                    ContentFile(data, name=name), alt=(img["alt"] or row["title"])[:255]
+                )
+                assets[img["id"]] = asset
+            except (OSError, ValueError, ImageRejected) as exc:
+                failures.append(f"image {img['position'] + 1} non importée ({exc})")
+        row["notes"] += failures
+        row["images"]["failed"] = len(failures)
+        return assets
+
+    def _attach_images(self, product, p, row, assets) -> dict:
+        """Images téléchargées → galerie (sans doublon : même fichier déjà présent = relié, pas recopié)."""
+        start = (product.images.aggregate(m=Max("position"))["m"] or -1) + 1
+        by_media_id = {}
+        for img in p["images"]:
+            asset = assets.get(img["id"])
+            if asset is None:
                 continue
-            errors = coll.entry_errors(origin=product.origin_country, ingredients=product.ingredients)
-            if errors:
-                row["warnings"].append("collection non ajoutée — " + " ".join(errors))
+            alt = (img["alt"] or p["title"])[:255]
+            pi = ProductImage.objects.filter(product=product, media=asset).first()
+            if pi is not None:
+                pi.shopify_media_id = img["id"]
+                pi.save(update_fields=["shopify_media_id"])
             else:
-                added.append(coll)
-        product.collections.add(*added)
-        row["collections_added"] = [c.name for c in added]
+                pi = ProductImage.objects.create(product=product, media=asset, alt=alt, position=start,
+                                                 in_gallery=True, shopify_media_id=img["id"])  # fmt: skip
+                start += 1
+            by_media_id[img["id"]] = pi
+        for img, pi, op in row["images"]["link"] + row["images"]["same"]:
+            fields = []
+            if not pi.shopify_media_id:
+                pi.shopify_media_id = img["id"]
+                fields.append("shopify_media_id")
+            if op == "set":
+                pi.alt = (img["alt"] or p["title"])[:255]
+                fields.append("alt")
+            if fields:
+                pi.save(update_fields=fields)
+            by_media_id[img["id"]] = pi
+        return by_media_id
 
-        images_by_url = {}
-        for i, (img, asset) in enumerate(media):
-            pi = ProductImage.objects.create(
-                product=product, media=asset, alt=(img.get("alt") or p["title"])[:255], position=i, in_gallery=True
-            )
-            images_by_url[img["url"].split("?")[0]] = pi
+    def _set_categories(self, product, cats):
+        start = (ProductCategory.objects.filter(product=product).aggregate(m=Max("position"))["m"] or -1) + 1
+        saved = []
+        for i, cat in enumerate(cats):
+            if not cat.pk:  # nouvelle catégorie : créée au chargement en mode application
+                cat = Category.objects.get(slug=cat.slug)
+            ProductCategory.objects.get_or_create(product=product, category=cat, defaults={"position": start + i})
+            saved.append(cat.pk)
+        return saved
 
-        options = _real_options(p)
-        multi = len(p["variants"]) > 1
+    def _mirror(self, product, p):
+        product.shopify_handle = p["handle"][:255]
+        product.shopify_product_type = p["productType"][:255]
+        product.shopify_category = p["category"][:255]
+        product.shopify_tags = p["tags"]
+        product.shopify_collections = p["collections"]
+        product.shopify_updated_at = parse_datetime(p["updatedAt"]) if p["updatedAt"] else None
+        product.shopify_synced_at = timezone.now()
+
+    def _sync_metafields(self, product, p):
+        seen = set()
+        for m in p["metafields"]:
+            ProductMetafield.objects.update_or_create(
+                product=product, namespace=m["namespace"][:100], key=m["key"][:100],
+                defaults={"shopify_id": m["id"], "type": m["type"][:80], "value": m["value"], "in_shopify": True},
+            )  # fmt: skip
+            seen.add((m["namespace"][:100], m["key"][:100]))
+        for mf in ProductMetafield.objects.filter(product=product, in_shopify=True):
+            if (mf.namespace, mf.key) not in seen:
+                mf.in_shopify = False
+                mf.save(update_fields=["in_shopify", "updated_at"])
+
+    def _create(self, p, row, assets) -> Product:
+        want = row["want"]
+        product = Product(
+            slug=unique_slug(p["handle"] or p["title"], Product),
+            position=(Product.objects.aggregate(m=Max("position"))["m"] or 0) + 1,
+            shopify_id=p["id"],
+            status=Product.Status.DRAFT,
+            **{f: want[f] for f in PRODUCT_FIELDS if f in want},
+        )
+        self._mirror(product, p)
+        product.shopify_baseline = {"fields": {f: _json(want[f]) for f in PRODUCT_FIELDS if f in want}}
+        product.save()
+        images = self._attach_images(product, p, row, assets)
+        product.shopify_baseline["images"] = {img["id"]: (img["alt"] or p["title"])[:255] for img in p["images"]}
+        product.save(update_fields=["shopify_baseline"])
+        cats = self._set_categories(product, row["categories_add"])
+        product.collections.add(*row["collections_add"])
+        self._sync_metafields(product, p)
+        self._create_variants(product, p, p["variants"], images, fresh=True)
+        log_action(ACTION_CREATE, target=product, changes={
+            "shopifyId": p["id"], "supplier": product.supplier, "brand": product.brand,
+            "variants": len(p["variants"]), "images": len(images),
+            "collectionsAdded": [c.pk for c in row["collections_add"]], "categoriesAdded": cats,
+        })  # fmt: skip
+        return product
+
+    def _create_variants(self, product, p, variants, images, fresh):
+        options = p["options"]
         values = {}
-        if multi:
+        multi = len(p["variants"]) > 1
+        if multi and fresh:
             for oi, opt in enumerate(options):
                 option = ProductOption.objects.create(
                     product=product, name=OPTION_NAMES.get(opt["name"], opt["name"])[:50], position=oi
@@ -597,425 +993,336 @@ class Command(BaseCommand):
                     values[(opt["name"], value)] = ProductOptionValue.objects.create(
                         option=option, value=value[:50], position=vi
                     )
-
-        for i, (v, info) in enumerate(zip(p["variants"], row["variants"], strict=True)):
-            tracked = bool(v.get("tracked"))
-            stock = v.get("inventoryQuantity") if tracked else None
-            compare = v.get("compareAtPrice")
+        elif multi:
+            for option in product.options.prefetch_related("values"):
+                for ov in option.values.all():
+                    values[(option.name, ov.value)] = ov
+                    for raw, shown in OPTION_NAMES.items():
+                        if shown == option.name:
+                            values[(raw, ov.value)] = ov
+        has_default = product.variants.filter(is_default=True).exists()
+        start = (product.variants.aggregate(m=Max("position"))["m"] or -1) + 1
+        for i, v in enumerate(variants):
+            data = self._desired_variant(v)
+            for field in ("sku", "barcode"):
+                if data[field] and Variant.objects.filter(**{field: data[field]}).exists():
+                    data[field] = None
             variant = Variant.objects.create(
-                product=product,
-                shopify_id=v["id"],
-                title=info["title"][:160],
-                sku=info["sku"] or None,
-                price=Decimal(v["price"]),
-                compare_at_price=Decimal(compare) if compare and Decimal(compare) > Decimal(v["price"]) else None,
-                stock_quantity=stock,
-                track_inventory=tracked,
-                position=i,
-                is_default=i == 0,
-                image=images_by_url.get((v.get("imageUrl") or "").split("?")[0]),
-            )
+                product=product, shopify_id=v["id"], position=start + i,
+                is_default=not has_default and i == 0, image=images.get(v["mediaId"]),
+                shopify_baseline={"fields": {k: _json(val) for k, val in data.items()}}, **data,
+            )  # fmt: skip
             if multi:
-                VariantOptionValue.objects.bulk_create(
-                    [
-                        VariantOptionValue(variant=variant, option_value=values[(o["name"], o["value"])])
-                        for o in v.get("options") or []
-                        if (o["name"], o["value"]) in values
-                    ]
-                )
-            if stock is not None:
+                VariantOptionValue.objects.bulk_create([
+                    VariantOptionValue(variant=variant, option_value=values[(o["name"], o["value"])])
+                    for o in v["options"] if (o["name"], o["value"]) in values
+                ])  # fmt: skip
+            if data["stock_quantity"] is not None:
+                StockMovement.objects.create(variant=variant, delta=data["stock_quantity"], quantity_before=None,
+                                             quantity_after=data["stock_quantity"],
+                                             reason=StockMovement.Reason.INITIAL_COUNT, note=NOTE)  # fmt: skip
+
+    def _update(self, p, row, assets) -> Product:
+        product = Product.objects.select_for_update().get(pk=row["product"].pk)
+        want = row["want"]
+        base = dict(product.shopify_baseline or {})
+        base_fields = dict(base.get("fields") or {})
+        fields = []
+        if row["action"] == LINK:
+            if Product.objects.filter(shopify_id=p["id"]).exclude(pk=product.pk).exists():
+                raise ValueError("identifiant Shopify déjà utilisé")
+            product.shopify_id = p["id"]
+            fields.append("shopify_id")
+        changed = {}
+        for field, op in row["field_ops"].items():
+            if op == "set":
+                setattr(product, field, want[field])
+                fields.append(field)
+                changed[field] = True
+            if op in ("set", "same"):
+                base_fields[field] = _json(want[field])
+        self._mirror(product, p)
+        images = self._attach_images(product, p, row, assets)
+        base_imgs = dict(base.get("images") or {})
+        for img in p["images"]:
+            if img["id"] in images:
+                base_imgs[img["id"]] = (img["alt"] or p["title"])[:255]
+        product.shopify_baseline = {**base, "fields": base_fields, "images": base_imgs}
+        product.save()
+        # Variantes
+        for v, local, ops in row["variants"]["update"]:
+            local = Variant.objects.select_for_update().get(pk=local.pk)
+            data = self._desired_variant(v)
+            vbase = dict((local.shopify_baseline or {}).get("fields") or row["vbase"].get(v["id"]) or {})
+            before_stock = local.stock_quantity
+            vfields = []
+            if not local.shopify_id:
+                local.shopify_id = v["id"]
+                vfields.append("shopify_id")
+            for field, op in ops.items():
+                if op == "set":
+                    setattr(local, field, data[field])
+                    vfields.append(field)
+                if op in ("set", "same"):
+                    vbase[field] = _json(data[field])
+            if local.compare_at_price is not None and local.compare_at_price <= local.price:
+                local.compare_at_price = None  # contrainte « prix barré > prix »
+                vfields.append("compare_at_price")
+            if v["mediaId"] in images and local.image_id is None:
+                local.image = images[v["mediaId"]]
+                vfields.append("image")
+            local.shopify_baseline = {"fields": vbase}
+            local.save()
+            if "stock_quantity" in vfields and local.stock_quantity is not None:
                 StockMovement.objects.create(
-                    variant=variant,
-                    delta=stock,
-                    quantity_before=None,
-                    quantity_after=stock,
-                    reason=StockMovement.Reason.INITIAL_COUNT,
-                    note=NOTE,
-                )
-        log_action(
-            ACTION_CREATE,
-            target=product,
-            changes={
-                "shopifyId": p["id"],
-                "supplier": product.supplier,
-                "brand": product.brand,
-                "variants": len(p["variants"]),
-                "collectionsAdded": [c.pk for c in added],
-                "categoriesAdded": [c.pk for c in new_cats],
-            },
-        )
+                    variant=local, delta=local.stock_quantity - (before_stock or 0), quantity_before=before_stock,
+                    quantity_after=local.stock_quantity, reason=StockMovement.Reason.RECOUNT, note=NOTE,
+                )  # fmt: skip
+        if row["variants"]["create"]:
+            self._create_variants(product, p, row["variants"]["create"], images, fresh=False)
+        cats = self._set_categories(product, row["categories_add"])
+        product.collections.add(*row["collections_add"])
+        self._sync_metafields(product, p)
+        log_action(ACTION_UPDATE, target=product, changes={
+            "shopifyId": p["id"], "linked": row["action"] == LINK, "fields": sorted(changed),
+            "supplier": want["supplier"] if changed.get("supplier") else "",
+            "brand": want["brand"] if changed.get("brand") else "",
+            "collectionsAdded": [c.pk for c in row["collections_add"]], "categoriesAdded": cats,
+        })  # fmt: skip
         return product
 
-    # --- Mise à jour d'un produit existant (fournisseur vide, collections, catégorie si aucune) --------
-    def _apply_update(self, p: dict, row: dict):
-        try:
-            with transaction.atomic():
-                product = Product.objects.select_for_update().get(pk=row["plan"]["pk"])
-                plan = self._plan_update(product, row, link=row["plan"]["link"])  # recalculé sous verrou
-                fields = []
-                if plan["link"]:
-                    if product.shopify_id or Product.objects.filter(shopify_id=plan["link"]).exists():
-                        raise ValueError("identifiant Shopify déjà utilisé : liaison annulée")
-                    product.shopify_id = plan["link"]
-                    fields.append("shopify_id")
-                if plan["supplier"]:
-                    product.supplier = plan["supplier"]
-                    fields.append("supplier")
-                if plan["brand"]:
-                    product.brand = plan["brand"]
-                    fields.append("brand")
-                if fields:
-                    product.save(update_fields=[*fields, "updated_at"])
-                product.collections.add(*plan["add"])
-                if plan["categories"]:
-                    if ProductCategory.objects.filter(product=product).exists():
-                        raise ValueError("catégorie ajoutée entre-temps dans Jodhur : rien n'est remplacé")
-                    for i, cat in enumerate(plan["categories"]):
-                        ProductCategory.objects.create(product=product, category=cat, position=i)
-                if plan["changes"]:
-                    log_action(
-                        ACTION_UPDATE,
-                        target=product,
-                        changes={
-                            "shopifyId": p["id"],
-                            "linked": bool(plan["link"]),
-                            "supplier": plan["supplier"] or "",
-                            "brand": plan["brand"] or "",
-                            "collectionsAdded": [c.pk for c in plan["add"]],
-                            "categoriesAdded": [c.pk for c in plan["categories"]],
-                        },
-                    )
-        except Exception as exc:  # noqa: BLE001 — un produit en échec n'arrête pas l'import
-            row["action"] = "échec"
-            row["warnings"].append(f"erreur : {exc}")
+    def _finish_status(self, product, row):
+        """Active le produit s'il le peut ; sinon le laisse en brouillon et note précisément ce qui manque."""
+        product.refresh_from_db()
+        predicted = row["blocked"]
+        errors = services.activation_errors(product)
+        # Message détaillé de l'aperçu (ex. valeurs Shopify sans correspondance) quand il s'agit du même champ.
+        row["blocked"] = [next((d for d in predicted if d.startswith(e.rstrip("."))), e) for e in errors]
+        if product.status == Product.Status.ACTIVE:
+            row["status_after"] = "actif"
             return
-        row["plan"] = plan
-        row["action"] = "mis à jour" if plan["changes"] else UP_TO_DATE
+        if product.status == Product.Status.ARCHIVED or (
+            row["action"] != CREATED and self._history(product)["manual_status"]
+        ):
+            return
+        if errors:
+            row["status_after"] = "brouillon"
+            done = row["action"] if row["changes"] else "déjà à jour"
+            row["result"] = f"{done} — bloqué (brouillon)" if row["action"] != CREATED else "créé brouillon (bloqué)"
+            return
+        services.change_status(product, Product.Status.ACTIVE)
+        row["status_after"] = "actif"
+        row["result"] = "créé actif" if row["action"] == CREATED else f"{row['action']} — activé"
 
     # --- Rapport ------------------------------------------------------------------------------------
     def _render(self, doc, products, rows) -> str:
-        counts = Counter(r["action"] for r in rows)
-        variants = [v for r in rows for v in r["variants"]]
+        counts = Counter(r["result"] for r in rows)
+        n_var = sum(len(p["variants"]) for p in products)
+        n_img = sum(len(p["images"]) for p in products)
+        n_mf = sum(len(p["metafields"]) for p in products)
+        title = "IMPORT APPLIQUÉ" if self.apply else "APERÇU (aucune écriture)"
+        blocked = [r for r in rows if r["blocked"] and r["status_after"] != "actif" and r["action"] != DUP]
         lines = [
-            f"# Import Shopify → Jodhur — {'APERÇU (aucune écriture)' if self.dry else 'RAPPORT'}",
+            f"# Import Shopify → Jodhur — {title}",
             "",
             f"Source : {doc.get('source', '?')} · boutique {doc.get('shop', '?')}"
-            f" · export du {doc.get('exportedAt', '?')}"
-            f" · {len(products)} produits actifs · {len(variants)} variantes"
-            f" · {sum(r['images'] for r in rows)} images.",
+            f" · export du {doc.get('exportedAt', '?')}",
+            f"{len(products)} produits actifs · {n_var} variantes · {n_img} images · {n_mf} metafields.",
             "",
-            "Actions : " + " · ".join(f"**{k}** : {v}" for k, v in sorted(counts.items())),
+            "Résultat : " + " · ".join(f"**{k}** : {v}" for k, v in sorted(counts.items())),
             "",
-            "Règles : produits créés en brouillon ; « Vendor » Shopify → Fournisseur ET Marque ;"
-            " collections reliées seulement si le nom est identique ; aucune collection créée ;"
-            " produits existants : seuls le fournisseur et la marque vides, les collections et la catégorie"
-            " (si aucune) sont complétés (avec --mettre-a-jour) ;"
-            " Shopify jamais modifié.",
+            "## Statut dans Jodhur",
             "",
-            "## Données manquantes",
+            f"- Actifs après import : **{sum(1 for r in rows if r['status_after'] == 'actif')}**",
+            f"- Bloqués en brouillon : **{len(blocked)}** (détail ci-dessous)",
+            f"- Statut gardé (archivé / mis en brouillon à la main) : "
+            f"{sum(1 for r in rows if 'gardé' in r['status_after'])}",
+            f"- Actifs dont toutes les catégories sont masquées (absents du menu, présents dans « Tous les produits »)"
+            f" : {sum(1 for r in rows if any('catégories masquées' in n for n in r['notes']))}",
             "",
-            f"- SKU manquant : {sum(1 for v in variants if v.get('sku_note') == 'SKU manquant')} variante(s) sur"
-            f" {len(variants)}",
-            f"- Catégorie Jodhur à choisir : {sum(1 for r in rows if not r.get('jodhur_categories'))} produit(s)",
-            f"- Marque : reprise du Vendor Shopify ; Vendor vide :"
-            f" {sum(1 for r in rows if not r['vendor'])} produit(s)",
-            f"- Stock à 0 (rupture) : {sum(1 for v in variants if v.get('stock_note') == 'rupture')} variante(s)",
-            f"- Sans image : {sum(1 for r in rows if not r['images'])} · sans fournisseur :"
-            f" {sum(1 for r in rows if not r['vendor'])}",
-            "",
-            "## Doublons possibles",
+            "### Produits bloqués (champ manquant)",
             "",
         ]
-        dup_local = [r for r in rows if r["action"].startswith("doublon")]
-        lines += [
-            f"- **{r['title']}** ↔ produit local `{r['local']}` (non importé, non relié : correspondance ambiguë —"
-            f" {r.get('ambiguity', '?')} ; à traiter à la main)"
-            for r in dup_local
-        ] or ["- Aucun doublon avec le catalogue Jodhur actuel."]
-        same_names = sorted({r["title"] for r in rows if any(w.startswith("même nom") for w in r["warnings"])})
-        if same_names:
-            lines += ["", "Même nom dans Shopify (produits distincts, importés tous les deux) :"]
-            lines += [
-                f"- {t} — " + ", ".join(f"{r['vendor']} (`{r['handle']}`)" for r in rows if r["title"] == t)
-                for t in same_names
-            ]
-        if self.supplier_groups:
-            lines += ["", "Fournisseurs probablement identiques écrits différemment (NON fusionnés, à vérifier) :"]
-            lines += ["- " + " · ".join(f"« {g} »" for g in group) for group in self.supplier_groups]
-        lines += self._render_suppliers(rows)
-        lines += self._render_categories(products, rows)
-        lines += self._render_collections(products, rows)
-        lines += self._render_updates(rows)
+        lines += [f"- **{r['title']}** (`{r['handle']}`) : " + " ".join(r["blocked"]) for r in blocked] or ["- Aucun."]
+        lines += self._render_categories(rows)
+        lines += self._render_images(rows)
+        lines += self._render_conflicts(rows)
+        lines += self._render_misc(products, rows)
         lines += self._render_detail(rows)
-        lines += [
-            "",
-            "## Produits",
-            "",
-            "| Produit | Fournisseur | Variantes (titre · SKU · prix DH · stock) | Images | Catégorie Shopify"
-            " | Catégorie Jodhur | Collections Jodhur | Action | Points à vérifier |",
-            "|---|---|---|---|---|---|---|---|---|",
-        ]
-        for r in rows:
-            vs = "<br>".join(
-                f"{v['title'] or '—'} · {v['sku'] or 'sans SKU'} · {v['price']}"
-                + (f" (barré {v['compare']})" if v["compare"] else "")
-                + f" · {v['stock']}"
-                for v in r["variants"]
-            )
-            notes = "; ".join(
-                w for w in r["warnings"] if not w.startswith(("marque", "SKU manquant", "catégorie Jodhur"))
-            )
-            lines.append(
-                f"| {_cell(r['title'])} | {_cell(r['vendor'])} | {vs} | {r['images']} | {_cell(r['category'] or '—')}"
-                f" | {_cell(', '.join(r.get('jodhur_categories') or []) or '—')}"
-                f" | {_cell(', '.join(self._collections_for(r)) or '—')} | {r['action']}"
-                f" | {_cell(notes or '—')} |"
-            )
         return "\n".join(lines) + "\n"
 
-    def _collections_for(self, r: dict) -> list[str]:
-        """Collections Jodhur posées (import réel) ou prévues (aperçu) pour cette ligne."""
-        if "plan" in r:
-            return [c.name for c in r["plan"]["add"]]
-        if "collections_added" in r:
-            return r["collections_added"]
-        if r["action"] != CREATE:
+    # --- Catégories rendues visibles avant l'activation ------------------------------------------------
+    def _plan_visibility(self, choice: str, rows) -> list:
+        """
+        Catégories à rendre visibles. « utiles » = catégories du fichier des nouvelles catégories (proposées pour
+        Shopify), encore masquées, qui contiendront au moins un produit actif après l'import, + leur parente.
+        Les catégories masquées volontairement dans Jodhur (hors de ce fichier) ne sont jamais touchées.
+        """
+        choice = (choice or "").strip()
+        if not choice:
             return []
-        return [
-            c.name
-            for _n, c in r["collection_matches"]
-            if isinstance(c, Collection) and not c.entry_errors(origin="", ingredients=[])
-        ]
+        proposed = {c.slug: c for c, _state in self.new_categories_report}
+        if choice == "utiles":
+            useful = {}
+            for r in rows:
+                if r["status_after"] != "actif" or r["action"] == DUP:
+                    continue
+                cats = list(r["categories_add"])
+                if r.get("product") is not None:
+                    cats += [link.category for link in r["product"].category_links.select_related("category__parent")]
+                for c in cats:
+                    if c.slug in proposed:
+                        useful.setdefault(c.slug, proposed[c.slug])
+            targets = list(useful.values())
+        else:
+            slugs = [s.strip() for s in choice.split(",") if s.strip()]
+            unknown = [s for s in slugs if s not in self.by_slug]
+            if unknown:
+                raise CommandError(f"--rendre-visibles : catégorie(s) inconnue(s) : {', '.join(unknown)}")
+            targets = [self.by_slug[s] for s in slugs]
+        for c in list(targets):  # une sous-catégorie n'est visible que si sa parente l'est
+            parent = c.parent if (c.parent_id or c._state.adding) else None
+            if parent is not None and parent not in targets:
+                targets.append(parent)
+        out = [c for c in targets if not (c.pk and c.is_active)]
+        shown = {c.slug for c in [*out, *targets]}
+        for r in rows:  # ces produits seront dans le menu : la remarque « catégories masquées » ne s'applique plus
+            cats = [*r["categories_add"]]
+            if r.get("product") is not None:
+                cats += [link.category for link in r["product"].category_links.all()]
+            if any(c.slug in shown for c in cats):
+                r["notes"] = [n for n in r["notes"] if "catégories masquées" not in n]
+        return out
 
-    def _render_suppliers(self, rows) -> list[str]:
-        new = [r for r in rows if r["action"] in (CREATE, "créé (brouillon)")]
-        planned = [r for r in rows if r.get("plan")]
-        fill = [r for r in planned if r["plan"]["supplier"]]
-        kept = [(r, k) for r in planned for k in r["plan"]["kept"] if k.startswith("fournisseur")]
-        same = len(planned) - len(fill) - len({id(r) for r, _k in kept})
-        bfill = [r for r in planned if r["plan"]["brand"]]
-        bkept = [(r, k) for r in planned for k in r["plan"]["kept"] if k.startswith("marque")]
-        bsame = len(planned) - len(bfill) - len({id(r) for r, _k in bkept})
+    def _apply_visibility(self):
+        if not self.visible_plan:
+            return
+        slugs = [c.slug for c in self.visible_plan]
+        Category.objects.filter(slug__in=slugs).update(is_active=True)
+        log_action("category.show", target_type="catalog.category", changes={"slugs": slugs, "source": NOTE})
+
+    def _render_categories(self, rows) -> list[str]:
+        unmapped = Counter()
+        undecided = Counter()
+        refused = Counter()
+        for r in rows:
+            for name, cat, srcl in r["category_values"]:
+                if srcl.startswith("liste produit"):
+                    continue
+                if cat is None and srcl.startswith("tableau"):
+                    refused[name] += 1
+                elif cat is None and _norm(name) in getattr(self, "mapping_rows", set()):
+                    undecided[name] += 1
+                elif cat is None or cat == "ambigu":
+                    unmapped[name] += 1
         lines = [
             "",
-            "## Fournisseur et marque (« Vendor » Shopify → Fournisseur ET Marque Jodhur)",
+            "## Catégories (correspondances explicites)",
             "",
-            "Deux champs distincts dans Jodhur, remplis avec la même valeur Shopify. Une valeur saisie dans l'admin"
-            " n'est jamais remplacée ; seuls les champs vides sont complétés.",
+            f"Tableau : {self.mapping_path or 'aucun'} · liste produit par produit :"
+            f" {len(self.per_product)} appliqué(s), {self.per_product_skipped} non appliqué(s) (« appliquer = non »).",
+            f"- Produits qui recevront au moins une catégorie : {sum(1 for r in rows if r['categories_add'])}",
             "",
-            "### Marque",
-            "",
-            f"- Nouveaux produits avec marque : {sum(1 for r in new if r['vendor'])} / {len(new)}",
-            f"- Produits existants dont la marque vide sera complétée : {len(bfill)}",
-            f"- Produits existants à la marque déjà identique (ou Vendor vide) : {bsame}",
-            f"- Marque locale différente ou effacée à la main (conservée, non remplacée) : {len(bkept)}",
+            "Valeurs Shopify SANS correspondance (aucune catégorie Jodhur ; à décider dans le tableau) :",
         ]
-        lines += [f"  - {r['title']} : {k}" for r, k in bkept]
-        if self.supplier_groups:
+        lines += [f"- {n} — {c} produit(s)" for n, c in (unmapped + undecided).most_common()] or ["- aucune"]
+        lines += ["", "Valeurs marquées « aucune catégorie adaptée » dans le tableau :"]
+        lines += [f"- {n} — {c} produit(s)" for n, c in refused.most_common()] or ["- aucune"]
+        if self.new_categories_report:
             lines += [
                 "",
-                "⚠️ Vendors probablement identiques écrits différemment : ils donneront des marques différentes"
-                " (à harmoniser dans Shopify ou dans l'admin si besoin) :",
+                "Nouvelles catégories : " + ", ".join(f"{_cat_label(c)} ({s})" for c, s in self.new_categories_report),
             ]
-            lines += ["- " + " · ".join(f"« {g} »" for g in group) for group in self.supplier_groups]
-        lines += [
-            "",
-            "### Fournisseur",
-            "",
-            f"- Nouveaux produits avec fournisseur : {sum(1 for r in new if r['vendor'])} / {len(new)}",
-            f"- Produits existants dont le fournisseur vide sera complété : {len(fill)}",
-            f"- Produits existants au fournisseur déjà identique (ou absent dans Shopify) : {same}",
-            f"- Fournisseur local différent ou effacé à la main (conservé, non remplacé) : {len(kept)}",
-        ]
-        lines += [f"  - {r['title']} : {k}" for r, k in kept]
-        lines += ["", "| Fournisseur Shopify | Produits |", "|---|---|"]
-        lines += [f"| {_cell(v or '(vide)')} | {n} |" for v, n in Counter(r["vendor"] for r in rows).most_common()]
-        return lines
-
-    def _render_collections(self, products, rows) -> list[str]:
-        counts = Counter(c for p in products for c in (p.get("collections") or []))
-        status = {}
+        visible = {c.slug for c in self.visible_plan}
+        counts = Counter()
         for r in rows:
-            for name, coll in r["collection_matches"]:
-                status[name] = coll
-        linked = [n for n in counts if isinstance(status.get(n), Collection)]
-        todo = [n for n in counts if n not in linked]
-        existing = ", ".join(f"« {c.name} »" for cs in self.collections.values() for c in cs) or "aucune"
-        lines = [
-            "",
-            "## Collections Shopify → Collections Jodhur",
-            "",
-            f"Collections Jodhur existantes : {existing}. Aucune collection n'est créée par l'import.",
-            f"Reliées (nom identique) : {len(linked)} · à traiter : {len(todo)} sur {len(counts)} collections Shopify.",
-            "",
-            "| Collection Shopify | Produits | Collection Jodhur | Statut |",
-            "|---|---|---|---|",
-        ]
-        for name, n in counts.most_common():
-            coll = status.get(name)
-            if isinstance(coll, Collection):
-                lines.append(f"| {_cell(name)} | {n} | {_cell(coll.name)} | reliée |")
-            elif coll == "ambigu":
-                lines.append(f"| {_cell(name)} | {n} | — | à traiter : plusieurs collections Jodhur de ce nom |")
-            else:
-                lines.append(f"| {_cell(name)} | {n} | — | à traiter : aucune collection Jodhur de ce nom |")
-        blocked = Counter(k for r in rows for k in r.get("plan", {}).get("kept", []) if k.startswith("collection"))
-        blocked.update(w for r in rows for w in r["warnings"] if w.startswith("collection non ajoutée"))
-        if blocked:
-            lines += ["", "Ajouts refusés par les règles de la collection Jodhur :"]
-            lines += [f"- {k} ({n} produit(s))" for k, n in blocked.most_common()]
-        return lines
-
-    def _render_updates(self, rows) -> list[str]:
-        planned = [r for r in rows if r.get("plan")]
-        if self.dry:
-            note = "Aperçu : rien n'est écrit. Appliqué seulement avec l'option --mettre-a-jour."
-        elif self.update:
-            note = "Appliqué."
-        else:
-            note = "NON appliqué (option --mettre-a-jour absente)."
-        lines = [
-            "",
-            "## Produits déjà présents dans Jodhur (mise à jour)",
-            "",
-            note + " Seuls l'identifiant Shopify, le fournisseur vide, les collections et la catégorie (si le produit"
-            " n'en a aucune) sont complétés ; nom, textes, prix, stock, variantes, images, statut et marque ne sont"
-            " jamais touchés.",
-            "",
-            f"- Reliés par identifiant Shopify : {sum(1 for r in planned if not r['plan']['link'])}"
-            f" · à relier (même identifiant URL ou même nom, sans ambiguïté) :"
-            f" {sum(1 for r in planned if r['plan']['link'])}"
-            f" · avec des changements : {sum(1 for r in planned if r['plan']['changes'])}",
-        ]
-        fields = Counter(c.split(" ")[0] for r in planned for c in r["plan"]["changes"])
-        lines.append(
-            "- Champs qui seront modifiés : "
-            + (", ".join(f"{k} ({n})" for k, n in fields.most_common()) or "aucun")
-            + " — détail produit par produit ci-dessous."
+            if r["status_after"] == "actif":
+                cats = [*r["categories_add"]]
+                if r.get("product") is not None:
+                    cats += [link.category for link in r["product"].category_links.all()]
+                for slug in {c.slug for c in cats} & visible:
+                    counts[slug] += 1
+        lines += ["", "### Catégories rendues visibles (avant l'activation des produits)", ""]
+        verb = "rendue visible" if self.apply else "sera rendue visible"
+        lines += [f"- {_cat_label(c)} (`{c.slug}`) : {verb} — {counts[c.slug]} produit(s) actif(s) directement"
+                  for c in self.visible_plan] or ["- Aucune (option --rendre-visibles absente)."]  # fmt: skip
+        hidden = sorted(
+            _cat_label(c)
+            for c, _s in self.new_categories_report
+            if c.slug not in visible and not (c.pk and c.is_active)
         )
+        if hidden:
+            lines.append("- Restent masquées (aucun produit actif) : " + ", ".join(hidden))
         return lines
 
-    def _render_categories(self, products, rows) -> list[str]:
-        sources = Counter()
-        status, origin = {}, {}
-        for r in rows:
-            seen = set()
-            for name, cat, src in r["category_matches"]:
-                if name not in seen:
-                    sources[name] += 1
-                    seen.add(name)
-                status.setdefault(name, [])
-                if cat not in status[name]:
-                    status[name].append(cat)
-                origin[name] = src
-        clear = [(n, c) for n in sources for c in status[n] if isinstance(c, Category)]
-        ambiguous = [n for n in sources if "ambigu" in status[n]]
-        refused = [n for n in sources if origin[n] == "tableau" and status[n] == [None]]
-        existing = ", ".join(_cat_label(c) for cs in self.categories.values() for c in cs) or "aucune"
-        planned = [r for r in rows if r.get("plan")]
-        lines = [
+    def _render_images(self, rows) -> list[str]:
+        dl = sum(len(r["images"]["download"]) for r in rows)
+        link = sum(len(r["images"]["link"]) for r in rows)
+        same = sum(len(r["images"]["same"]) for r in rows)
+        alt = sum(r["images"]["alt_fallback"] for r in rows)
+        failed = sum(r["images"].get("failed", 0) for r in rows)
+        return [
             "",
-            "## Catégories Jodhur (proposées à partir des collections et de la catégorie Shopify)",
+            "## Images (stockées dans le projet, jamais servies depuis Shopify)",
             "",
-            f"Catégories Jodhur existantes : {existing}.",
-            "Une catégorie est proposée seulement si une catégorie Jodhur porte EXACTEMENT le même nom (majuscules,"
-            " accents et ponctuation ignorés) qu'une collection Shopify ou que le dernier niveau de la catégorie"
-            " Shopify. Aucune catégorie n'est créée ni déduite d'un nom proche. Un produit qui a déjà une catégorie"
-            " dans Jodhur la garde (aucun ajout, aucun remplacement).",
-            "",
-            f"Tableau de correspondances : {self.mapping_path or 'aucun (option --correspondances absente)'}.",
-            "",
-            f"- Correspondances claires : {len(clear)}"
-            + (
-                "".join(f"\n  - « {n} » → {_cat_label(c)} ({sources[n]} produit(s), {origin[n]})" for n, c in clear)
-                or ""
-            ),
-            f"- Marquées « aucune » dans le tableau : {', '.join(refused) or 'aucune'}",
-            f"- Noms ambigus (plusieurs catégories Jodhur de ce nom, rien proposé) : {', '.join(ambiguous) or 'aucun'}",
-            f"- Produits existants qui recevront une catégorie : {sum(1 for r in planned if r['plan']['categories'])}",
-            f"- Produits existants sans catégorie et sans correspondance claire (à choisir à la main) : "
-            f"{sum(1 for r in planned if not r['plan']['categories'] and not r['plan']['current_categories'])}",
-            f"- Produits existants qui gardent leur catégorie Jodhur : "
-            f"{sum(1 for r in planned if r['plan']['current_categories'])}",
+            f"- À télécharger : {dl} · déjà présentes, reliées à leur image Shopify : {link} · déjà reliées : {same}"
+            + (f" · échecs : {failed}" if self.apply else ""),
+            f"- Sans texte alternatif dans Shopify (nom du produit utilisé) : {alt}",
         ]
+
+    def _render_conflicts(self, rows) -> list[str]:
+        kept = [(r, k) for r in rows for k in r["kept"]]
+        lines = ["", "## Modifications Jodhur conservées (non écrasées)", ""]
+        lines += [f"- {r['title']} : {k}" for r, k in kept] or ["- Aucune."]
+        return lines
+
+    def _render_misc(self, products, rows) -> list[str]:
+        lines = ["", "## Autres points", ""]
+        notes = Counter(n for r in rows for n in r["notes"] if not n.startswith(("identifiant URL Jodhur", "même nom")))
+        lines += [f"- {n} ({c} produit(s))" for n, c in notes.most_common()] or ["- Aucun."]
+        dups = [r for r in rows if r["action"] == DUP]
+        if dups:
+            lines += ["", "Doublons possibles (non importés, à traiter à la main) :"]
+            lines += [f"- {r['title']} ↔ `{r['local']}` : {r.get('ambiguity', '?')}" for r in dups]
+        if self.supplier_groups:
+            lines += ["", "Vendors probablement identiques écrits différemment (marques différentes, non fusionnés) :"]
+            lines += ["- " + " · ".join(f"« {g} »" for g in group) for group in self.supplier_groups]
+        refs = Counter(m["type"] for p in products for m in p["metafields"] if "reference" in m["type"])
+        if refs:
+            lines += ["", "Metafields de type référence (stockés tels quels, non résolus) : "
+                      + ", ".join(f"{t} ({n})" for t, n in refs.most_common())]  # fmt: skip
         return lines
 
     def _render_detail(self, rows) -> list[str]:
         lines = [
             "",
-            "## Prévisualisation détaillée par produit",
+            "## Détail produit par produit",
             "",
-            "| Produit | Fiche Jodhur | Vendor Shopify | Marque actuelle | Marque proposée | Collections Shopify"
-            " | Catégorie Shopify | Catégorie(s) Jodhur actuelle(s) | Catégorie Jodhur proposée | Champs modifiés"
-            " | Conservé tel quel / à traiter |",
-            "|---|---|---|---|---|---|---|---|---|---|---|",
+            "| Produit | Fiche Jodhur | Résultat | Statut avant → après | Champs mis à jour | Gardé (Jodhur) |"
+            " Catégories ajoutées | Images (télécharger / relier) | Points à vérifier |",
+            "|---|---|---|---|---|---|---|---|---|",
         ]
         for r in rows:
-            plan = r.get("plan")
-            if plan:
-                current = ", ".join(plan["current_categories"]) or "aucune"
-                proposed = ", ".join(_cat_label(c) for c in plan["categories"]) or (
-                    "— (garde l'actuelle)" if plan["current_categories"] else "aucune correspondance claire"
-                )
-                changes = "; ".join(plan["changes"]) or "aucun"
-                kept = "; ".join(plan["kept"]) or "—"
-                brand_now = plan["current_brand"] or "(vide)"
-                brand_new = plan["brand"] or "— (inchangée)"
-            else:
-                current = "— (nouveau)" if r["action"] in (CREATE, "créé (brouillon)") else "—"
-                cats = r.get("jodhur_categories") or []
-                proposed = ", ".join(cats) or "aucune correspondance claire"
-                changes = "création (brouillon)" if r["action"] in (CREATE, "créé (brouillon)") else r["action"]
-                is_new = r["action"] in (CREATE, "créé (brouillon)")
-                brand_now = "— (nouveau)" if is_new else "—"
-                brand_new = (r["vendor"] or "(vide)") if is_new else "—"
-                kept = "; ".join(w for w in r["warnings"] if not w.startswith(("marque", "SKU manquant"))) or "—"
+            cats = ", ".join(_cat_label(c) for c in r["categories_add"]) or "—"
+            imgs = f"{len(r['images']['download'])} / {len(r['images']['link'])}"
+            pts = "; ".join([*r["blocked"], *r["notes"]]) if r["status_after"] != "actif" else "; ".join(r["notes"])
             lines.append(
-                f"| {_cell(r['title'], 60)} | `{r.get('local', '—')}` | {_cell(r['vendor'] or '(vide)', 60)}"
-                f" | {_cell(brand_now, 60)} | {_cell(brand_new, 60)}"
-                f" | {_cell(', '.join(r['collections']) or '—', 300)}"
-                f" | {_cell(r['category'].split('>')[-1].strip() or '—', 60)} | {_cell(current, 120)}"
-                f" | {_cell(proposed, 120)} | {_cell(changes, 300)} | {_cell(kept, 300)} |"
+                f"| {_cell(r['title'], 60)} | `{r['local'] or r.get('slug', '—')}` | {r['result']}"
+                f" | {r['status_before'] or '—'} → {r['status_after'] or '—'}"
+                f" | {_cell('; '.join(r['changes']) or '—', 300)}"
+                f" | {_cell('; '.join(r['kept']) or '—', 200)} | {_cell(cats)} | {imgs} | {_cell(pts or '—', 300)} |"
             )
         return lines
 
     def _csv(self, path: Path, rows):
-        import csv
-
         with path.open("w", encoding="utf-8-sig", newline="") as fh:
             w = csv.writer(fh, delimiter=";")
-            w.writerow(
-                ["produit", "handle", "fournisseur", "variante", "sku", "prix", "prix_barre", "stock", "images",
-                 "categorie_shopify", "collections_shopify", "marque_actuelle", "marque_proposee",
-                 "categorie_jodhur_actuelle", "categorie_jodhur_proposee",
-                 "collections_jodhur", "action", "changements", "a_verifier"]
-            )  # fmt: skip
+            w.writerow(["produit", "handle", "fiche_jodhur", "resultat", "statut_avant", "statut_apres", "bloque_par",
+                        "champs_mis_a_jour", "garde_jodhur", "categories_ajoutees", "images_a_telecharger",
+                        "images_reliees", "variantes", "points_a_verifier"])  # fmt: skip
             for r in rows:
-                plan = r.get("plan") or {}
-                if plan:
-                    proposed = ", ".join(_cat_label(c) for c in plan["categories"])
-                    cats = [plan["current_brand"], plan["brand"] or "", ", ".join(plan["current_categories"]), proposed]
-                else:
-                    new = r["action"] in (CREATE, "créé (brouillon)")
-                    cats = ["", r["vendor"] if new else "", "", ", ".join(r.get("jodhur_categories") or [])]
-                common = [*cats, ", ".join(self._collections_for(r)), r["action"], "; ".join(plan.get("changes", []))]
-                if not r["variants"]:
-                    w.writerow(
-                        [r["title"], r["handle"], r["vendor"], "", "", "", "", "", r["images"], r["category"],
-                         " | ".join(r["collections"]), *common, "; ".join(r["warnings"] + plan.get("kept", []))]
-                    )  # fmt: skip
-                for v in r["variants"]:
-                    w.writerow(
-                        [r["title"], r["handle"], r["vendor"], v["title"], v["sku"], v["price"], v["compare"] or "",
-                         v["stock"], r["images"], r["category"], " | ".join(r["collections"]), *common,
-                         "; ".join(r["warnings"] + [v.get("sku_note", ""), v.get("stock_note", "")]).strip("; ")]
-                    )  # fmt: skip
-
-
-def _cat_label(cat) -> str:
-    return f"{cat.parent.name} › {cat.name}" if cat.parent_id else cat.name
-
-
-def _cell(value, size=80) -> str:
-    text = str(value).replace("|", "/").replace("\n", " ")
-    return text if len(text) <= size else text[: size - 1] + "…"
+                w.writerow([r["title"], r["handle"], r["local"] or r.get("slug", ""), r["result"], r["status_before"],
+                            r["status_after"], " ".join(r["blocked"]), "; ".join(r["changes"]), "; ".join(r["kept"]),
+                            ", ".join(_cat_label(c) for c in r["categories_add"]), len(r["images"]["download"]),
+                            len(r["images"]["link"]), len(r["p"]["variants"]) if "p" in r else "",
+                            "; ".join(r["notes"])])  # fmt: skip

@@ -361,6 +361,7 @@ class ProductSerializer(serializers.ModelSerializer):
     activationErrors = serializers.SerializerMethodField()
     publishedAt = serializers.DateTimeField(source="published_at", read_only=True)
     shopifyId = serializers.CharField(source="shopify_id", read_only=True)
+    shopify = serializers.SerializerMethodField()
     createdAt = serializers.DateTimeField(source="created_at", read_only=True)
     updatedAt = serializers.DateTimeField(source="updated_at", read_only=True)
 
@@ -374,6 +375,7 @@ class ProductSerializer(serializers.ModelSerializer):
             "brand",
             "supplier",
             "shopifyId",
+            "shopify",
             "name",
             "displayName",
             "cardLine",
@@ -434,6 +436,25 @@ class ProductSerializer(serializers.ModelSerializer):
             {"id": o.pk, "name": o.name, "values": [v.value for v in o.values.all()]}
             for o in product.options.prefetch_related("values")
         ]
+
+    def get_shopify(self, product):
+        """Données recopiées de Shopify (lecture seule ; mises à jour par l'import, jamais par l'admin)."""
+        if not product.shopify_id:
+            return None
+        return {
+            "id": product.shopify_id,
+            "handle": product.shopify_handle,
+            "productType": product.shopify_product_type,
+            "category": product.shopify_category,
+            "tags": product.shopify_tags,
+            "collections": product.shopify_collections,
+            "updatedAt": product.shopify_updated_at,
+            "syncedAt": product.shopify_synced_at,
+            "metafields": [
+                {"namespace": m.namespace, "key": m.key, "type": m.type, "value": m.value, "inShopify": m.in_shopify}
+                for m in product.shopify_metafields.all()
+            ],
+        }
 
     def get_activationErrors(self, product):
         return services.activation_errors(product)

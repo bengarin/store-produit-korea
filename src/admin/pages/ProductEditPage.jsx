@@ -12,6 +12,7 @@ import FiltersCard from '../components/product/FiltersCard.jsx';
 import CollectionsCard from '../components/product/CollectionsCard.jsx';
 import VariantsCard from '../components/product/VariantsCard.jsx';
 import ArabicCard from '../components/product/ArabicCard.jsx';
+import ShopifyDataCard from '../components/product/ShopifyDataCard.jsx';
 import RichTextEditor from '../components/RichTextEditor.jsx';
 import { Badge, Button, ButtonLink, Card, ErrorState, Field, Notice, PageHeader, SkeletonRows } from '../components/ui.jsx';
 import { PRODUCT_STATUS } from '../format.js';
@@ -217,6 +218,8 @@ export default function ProductEditPage() {
             </div>
             <p className="adm-footnote adm-mt">Ces balises sont enregistrées et renvoyées par l’API ; leur insertion dans les pages publiques viendra avec le rendu côté serveur (évolution prévue).</p>
           </Card>
+
+          <ShopifyDataCard shopify={product.shopify} />
         </div>
 
         <aside className="adm-detail__side">

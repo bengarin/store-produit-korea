@@ -138,6 +138,18 @@ class Product(Timestamped):
     )
     published_at = models.DateTimeField("première mise en ligne", null=True, blank=True)
 
+    # --- Données recopiées de Shopify (lecture seule dans l'admin ; mises à jour par `import_shopify`) ---
+    shopify_handle = models.CharField("handle Shopify", max_length=255, blank=True, editable=False)
+    shopify_product_type = models.CharField("type de produit Shopify", max_length=255, blank=True, editable=False)
+    shopify_category = models.CharField("catégorie Shopify", max_length=255, blank=True, editable=False)
+    shopify_tags = models.JSONField("tags Shopify", default=list, blank=True, editable=False)
+    shopify_collections = models.JSONField("collections Shopify", default=list, blank=True, editable=False)
+    shopify_updated_at = models.DateTimeField("modifié dans Shopify le", null=True, blank=True, editable=False)
+    shopify_synced_at = models.DateTimeField("dernier import Shopify", null=True, blank=True, editable=False)
+    # Dernières valeurs écrites par l'import (champ → valeur) : une valeur locale différente = modification
+    # manuelle dans Jodhur, jamais écrasée.
+    shopify_baseline = models.JSONField(default=dict, blank=True, editable=False)
+
     class Meta:
         verbose_name = "produit"
         verbose_name_plural = "produits"
@@ -229,6 +241,9 @@ class ProductImage(models.Model):
     focal_position = models.CharField("cadrage", max_length=20, blank=True, validators=[FOCAL_POSITION])
     position = models.PositiveIntegerField(default=0)
     in_gallery = models.BooleanField("dans la galerie", default=True)
+    shopify_media_id = models.CharField(  # noqa: DJ001 (NULL = image ajoutée dans Jodhur)
+        "média Shopify", max_length=64, null=True, blank=True, db_index=True
+    )
 
     class Meta:
         ordering = ["position", "id"]
@@ -236,6 +251,31 @@ class ProductImage(models.Model):
 
     def __str__(self):
         return self.alt or f"Image {self.pk}"
+
+
+class ProductMetafield(models.Model):
+    """
+    Metafield Shopify d'un produit, recopié tel quel (identifiant, type, valeur brute). Jamais supprimé par
+    l'import : un metafield qui disparaît de Shopify est seulement marqué « absent de Shopify ».
+    """
+
+    product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name="shopify_metafields")
+    shopify_id = models.CharField("identifiant Shopify", max_length=64, null=True, blank=True, unique=True)
+    namespace = models.CharField("espace de noms", max_length=100)
+    key = models.CharField("clé", max_length=100)
+    type = models.CharField("type", max_length=80)
+    value = models.TextField("valeur", blank=True)
+    in_shopify = models.BooleanField("présent dans Shopify", default=True)
+    updated_at = models.DateTimeField("mis à jour le", auto_now=True)
+
+    class Meta:
+        verbose_name = "metafield Shopify"
+        verbose_name_plural = "metafields Shopify"
+        ordering = ["namespace", "key"]
+        constraints = [models.UniqueConstraint(fields=["product", "namespace", "key"], name="uniq_product_metafield")]
+
+    def __str__(self):
+        return f"{self.namespace}.{self.key}"
 
 
 class ProductMarketingImage(models.Model):
@@ -326,6 +366,7 @@ class Variant(Timestamped):
         "identifiant Shopify", max_length=64, null=True, blank=True, unique=True, editable=False
     )
     barcode = models.CharField("code-barres", max_length=64, null=True, blank=True, unique=True)
+    shopify_baseline = models.JSONField(default=dict, blank=True, editable=False)
     price = models.DecimalField("prix (DH)", max_digits=10, decimal_places=2)
     compare_at_price = models.DecimalField("prix barré (DH)", max_digits=10, decimal_places=2, null=True, blank=True)
     cost = models.DecimalField("coût (DH) — jamais public", max_digits=10, decimal_places=2, null=True, blank=True)

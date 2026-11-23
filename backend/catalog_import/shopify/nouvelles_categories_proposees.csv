@@ -1,0 +1,13 @@
+﻿identifiant_url;nom;nom_ar;parente;raison
+visage;Visage;الوجه;;Sérums, crèmes, nettoyants et masques visage (catégories Shopify « Face … » et collection « Soins du Visage »)
+yeux;Yeux;العيون;visage;Sous-catégorie de Visage : contour des yeux et patchs (décision de la propriétaire, produits Jodhur)
+levres;Lèvres;الشفاه;;Baumes à lèvres (catégories Shopify « Lip Balms » / « Medicated Lip Treatments »)
+corps;Corps;الجسم;;Crèmes mains/pieds, beurres, gommages et gels corps (catégories Shopify « Body … », « Hand/Foot … », collection « Soins Corps »)
+cheveux;Cheveux;الشعر;;Shampoings, huiles, sérums et masques capillaires (catégories Shopify « Hair … », collections cheveux)
+hammam;Hammam;الحمّام;;Savons noirs et rituels du hammam (catégorie Shopify « Bar Soap », collection « Rituels Hammam »)
+huiles-eaux-florales;Huiles & eaux florales;الزيوت والمياه الزهرية;;Catégorie principale qui regroupe Huiles et Eaux florales (menu à 2 niveaux)
+huiles;Huiles;الزيوت;huiles-eaux-florales;Huiles végétales, essentielles et de massage (catégories Shopify « Body Oil », « Massage Oil », collection « Huiles »)
+eaux-florales;Eaux florales;المياه الزهرية;huiles-eaux-florales;Eaux florales et hydrolats (catégories Shopify « Toners », « Astringents », collection « Eaux Florales »)
+plantes-infusions;Plantes & infusions;أعشاب ومنقوعات;;Plantes séchées et infusions (catégories Shopify « Infusions », « Herbs & Spices »…)
+maquillage;Maquillage;المكياج;;Blush et teintures (catégorie Shopify « Blushes & Bronzers »)
+coffrets;Coffrets;علب الهدايا;;Coffrets et rituels complets (collection « Coffrets cadeaux »)

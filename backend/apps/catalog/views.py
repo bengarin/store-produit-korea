@@ -234,6 +234,8 @@ class ProductListCreateView(generics.ListCreateAPIView):
                 Q(name__icontains=term)
                 | Q(brand__icontains=term)
                 | Q(supplier__icontains=term)
+                | Q(shopify_handle__icontains=term)
+                | Q(shopify_tags__icontains=term)
                 | Q(display_name__icontains=term)
                 | Q(slug__icontains=term)
                 | Q(variants__sku__icontains=term)

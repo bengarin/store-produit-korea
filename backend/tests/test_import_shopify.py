@@ -1,420 +1,382 @@
-"""Import Shopify → Jodhur : brouillons, fournisseur, variantes, stock, sans doublon ni écrasement."""
+"""
+Import Shopify complet (une seule commande) : aperçu sans écriture, création active, produit bloqué expliqué,
+images locales sans doublon, metafields, variantes, correspondances explicites, relance sans doublon,
+modifications manuelles conservées.
+"""
 
+import csv
 import json
 
 import pytest
 from django.core.management import call_command
+from django.core.management.base import CommandError
 
-from apps.accounts.roles import Role
 from apps.catalog.management.commands import import_shopify
-from apps.catalog.models import Collection, Product, Variant
+from apps.catalog.models import Product, ProductImage, ProductMetafield, Variant
+from apps.catalog.shopify_import import source as src
 from apps.inventory.models import StockMovement
 from tests.conftest import image_bytes
 
-IMG = "https://cdn.shopify.com/s/files/1/0000/0001/files/a.png?v=1"
+IMG = "https://cdn.shopify.com/s/files/1/0000/0001/files/{}.png?v=1"
 
 
-def product(pid=1, handle="baume-rose", title="Baume Rose", **extra):
+def page(items):
+    return {"pageInfo": {"hasNextPage": False}, "nodes": items}
+
+
+def mf(namespace, key, type_, value, i=1):
+    return {
+        "id": f"gid://shopify/Metafield/{i}{key}",
+        "namespace": namespace,
+        "key": key,
+        "type": type_,
+        "value": value,
+    }
+
+
+def rich(*paragraphs):
+    return json.dumps(
+        {
+            "type": "root",
+            "children": [{"type": "paragraph", "children": [{"type": "text", "value": p}]} for p in paragraphs],
+        }
+    )
+
+
+def variant(vid, title="Default Title", price="20.00", stock=7, sku=None, barcode=None, options=None, compare=None):
+    return {
+        "id": f"gid://shopify/ProductVariant/{vid}",
+        "title": title,
+        "sku": sku,
+        "position": 1,
+        "price": price,
+        "compareAtPrice": compare,
+        "inventoryQuantity": stock,
+        "inventoryPolicy": "DENY",
+        "barcodes": {"nodes": [{"type": "EAN13", "value": barcode}] if barcode else []},
+        "selectedOptions": options or [{"name": "Title", "value": "Default Title"}],
+        "media": {"nodes": []},
+        "inventoryItem": {"tracked": True, "measurement": {"weight": {"unit": "GRAMS", "value": 0}}},
+    }
+
+
+def node(
+    pid=1,
+    handle="baume-rose",
+    title="Baume Rose",
+    vendor="Coopérative Test",
+    collections=("Soins Corps",),
+    images=("a", "b"),
+    variants=None,
+    metafields=None,
+    category="Health & Beauty > Lip Balms",
+    **extra,
+):
     data = {
         "id": f"gid://shopify/Product/{pid}",
         "handle": handle,
         "title": title,
         "status": "ACTIVE",
-        "vendor": "Coopérative Test",
+        "vendor": vendor,
+        "productType": "Soin lèvres",
+        "tags": ["zone-levres", "bio"],
         "descriptionHtml": "<p>Premier paragraphe.</p><p>Suite <script>x</script></p>",
-        "category": "Health & Beauty > Lip Balms",
-        "collections": ["Soins"],
-        "options": [{"name": "Title", "values": ["Default Title"]}],
-        "images": [{"url": IMG, "alt": None, "width": 10, "height": 10}],
-        "variants": [
-            {
-                "id": f"gid://shopify/ProductVariant/{pid}0",
-                "title": "Default Title",
-                "sku": None,
-                "price": "20.00",
-                "compareAtPrice": "30.00",
-                "inventoryQuantity": 7,
-                "tracked": True,
-                "options": [{"name": "Title", "value": "Default Title"}],
-                "imageUrl": None,
-            }
-        ],
+        "updatedAt": "2026-11-20T10:00:00Z",
+        "category": {"id": "gid://shopify/TaxonomyCategory/x", "fullName": category} if category else None,
+        "seo": {"title": f"{title} | Jodhur", "description": "Description SEO."},
+        "options": [{"name": "Title", "position": 1, "values": ["Default Title"]}],
+        "collections": page(
+            [{"id": f"gid://shopify/Collection/{i}", "title": c, "handle": c} for i, c in enumerate(collections)]
+        ),
+        "media": page(
+            [
+                {
+                    "id": f"gid://shopify/MediaImage/{pid}{n}",
+                    "mediaContentType": "IMAGE",
+                    "alt": "" if n == "b" else f"Alt {n}",
+                    "image": {"url": IMG.format(f"{pid}{n}"), "width": 10, "height": 10, "altText": None},
+                }
+                for n in images
+            ]
+        ),
+        "metafields": page(
+            metafields
+            if metafields is not None
+            else [
+                mf("custom", "ingredients", "rich_text_field", rich("Beurre de karité", "Cire d'abeille")),
+                mf("custom", "les_benefices", "rich_text_field", rich("✓ Nourrit\n✓ Protège")),
+                mf("custom", "type_de_peau", "single_line_text_field", "Tous types"),
+                mf("reviews", "rating", "rating", '{"value":"5.0"}'),
+            ]
+        ),
+        "variants": page(variants or [variant(pid * 10, barcode="6111000000001", sku=f"SKU-{pid}")]),
     }
+    for m in data["metafields"]["nodes"]:
+        m["id"] = f"gid://shopify/Metafield/{pid}{m['key']}"
     data.update(extra)
     return data
 
 
-def multi(pid=2):
-    variants = [
-        {
-            "id": f"gid://shopify/ProductVariant/{pid}{i}",
-            "title": f"{size} / {mat}",
-            "sku": sku,
-            "price": price,
-            "compareAtPrice": None,
-            "inventoryQuantity": stock,
-            "tracked": True,
-            "options": [{"name": "size", "value": size}, {"name": "Matière", "value": mat}],
-            "imageUrl": None,
-        }
-        for i, (size, mat, sku, price, stock) in enumerate(
-            [("60ml", "Verre", "EAU-60", "30.00", 4), ("100ml", "Verre", None, "43.00", 0)]
-        )
-    ]
-    return product(
-        pid,
-        handle="eau-rose",
-        title="Eau de Rose",
-        options=[{"name": "size", "values": ["60ml", "100ml"]}, {"name": "Matière", "values": ["Verre"]}],
-        variants=variants,
-    )
-
-
 @pytest.fixture
-def source(tmp_path, monkeypatch):
-    monkeypatch.setattr(import_shopify, "_download", lambda url: image_bytes())
+def setup(tmp_path, monkeypatch, category):
+    """Export + tableau de correspondances (Soins Corps → corps) ; téléchargement d'images simulé."""
+    corps = category(slug="corps", name="Corps")
+    downloads = []
 
-    def _write(products):
-        path = tmp_path / "shopify.json"
-        path.write_text(json.dumps({"source": "test", "products": products}), encoding="utf-8")
-        return str(path)
+    def fake_download(url, attempts=3, timeout=30):
+        downloads.append(url)
+        color = sum(map(ord, url)) % 255
+        return image_bytes(color=(color, 120, 40))
 
-    return _write
-
-
-def run(path, *args, tmp_path=None):
-    call_command("import_shopify", "--source", path, *args)
-
-
-@pytest.mark.django_db
-def test_apercu_n_ecrit_rien(source, tmp_path):
-    report = tmp_path / "apercu.md"
-    run(source([product(), multi()]), "--dry-run", "--report", str(report))
-    assert Product.objects.filter(shopify_id__isnull=False).count() == 0
-    text = report.read_text(encoding="utf-8")
-    assert "APERÇU" in text and "SKU manquant : 2 variante(s) sur 3" in text and "Coopérative Test" in text
-
-
-@pytest.mark.django_db
-def test_import_brouillon_fournisseur_variantes_stock(source):
-    run(source([product(), multi()]))
-    p = Product.objects.get(shopify_id="gid://shopify/Product/1")
-    assert p.status == "draft" and p.supplier == "Coopérative Test" and p.brand == "Coopérative Test"
-    assert p.display_name == "Baume Rose" and p.summary == "Premier paragraphe."
-    assert "<script" not in p.description_html
-    assert p.images.count() == 1
-    v = p.variants.get()
-    assert (v.price, v.compare_at_price, v.stock_quantity, v.title) == (20, 30, 7, "")
-    assert StockMovement.objects.get(variant=v).reason == "initial_count"
-
-    m = Product.objects.get(shopify_id="gid://shopify/Product/2")
-    assert [o.name for o in m.options.order_by("position")] == ["Taille", "Matière"]
-    vs = list(m.variants.order_by("position"))
-    assert [v.sku for v in vs] == ["EAU-60", None] and vs[0].is_default and vs[1].stock_quantity == 0
-    assert sorted(ov.value for ov in vs[1].option_values.all()) == ["100ml", "Verre"]
-
-
-@pytest.mark.django_db
-def test_aucun_doublon_et_modifications_locales_conservees(source):
-    path = source([product()])
-    run(path)
-    p = Product.objects.get()
-    p.name, p.brand, p.supplier = "Nom modifié", "Ma marque", "Autre"
-    p.save()
-    v = p.variants.get()
-    v.price, v.compare_at_price, v.stock_quantity = 99, None, 2
-    v.save()
-    run(path)  # 2e exécution
-    assert Product.objects.count() == 1
-    p.refresh_from_db()
-    v.refresh_from_db()
-    assert (p.name, p.brand, p.supplier, v.price, v.stock_quantity) == ("Nom modifié", "Ma marque", "Autre", 99, 2)
-
-
-@pytest.mark.django_db
-def test_doublon_local_et_sku_deja_pris(source, sellable, tmp_path):
-    local = sellable(slug="baume-rose")
-    Variant.objects.filter(product=local).update(sku="EAU-60")
-    report = tmp_path / "r.md"
-    run(source([product(), multi()]), "--report", str(report))
-    assert not Product.objects.filter(shopify_id="gid://shopify/Product/1").exists()  # même slug : non recréé
-    assert Product.objects.filter(slug__startswith="baume-rose").count() == 1
-    assert "relier + mettre à jour" in report.read_text(encoding="utf-8")  # liaison seulement avec --mettre-a-jour
-    m = Product.objects.get(shopify_id="gid://shopify/Product/2")
-    assert all(v.sku is None for v in m.variants.all())  # SKU déjà utilisé localement : non repris
-
-
-def test_images_hors_shopify_refusees():
-    for url in ("https://evil.example/x.png", "http://cdn.shopify.com/x.png", "file:///etc/passwd"):
-        with pytest.raises(ValueError):
-            import_shopify._download(url)
-
-
-@pytest.mark.django_db
-def test_refuse_produits_non_actifs(source):
-    from django.core.management.base import CommandError
-
-    with pytest.raises(CommandError):
-        run(source([product(status="DRAFT")]))
-    assert Product.objects.count() == 0
-
-
-@pytest.mark.django_db
-def test_fournisseur_admin_seulement(source, staff, client, shop):
-    run(source([product()]))
-    p = Product.objects.get()
-    api = staff(Role.ADMIN)
-    assert api.get(f"/api/v1/admin/products/{p.pk}").json()["supplier"] == "Coopérative Test"
-    assert api.patch(f"/api/v1/admin/products/{p.pk}", {"supplier": "Nouveau"}, format="json").status_code == 200
-    assert api.get("/api/v1/admin/products", {"search": "Nouveau"}).json()["items"][0]["supplier"] == "Nouveau"
-    # Copie d'un produit importé : pas le même identifiant Shopify.
-    from apps.catalog.public import product_payload
-
-    assert "supplier" not in json.dumps(product_payload(p))  # jamais sur la boutique
-    copy = api.post(f"/api/v1/admin/products/{p.pk}/duplicate").json()
-    assert Product.objects.get(pk=copy["id"]).shopify_id is None
-
-
-def coll(name, **extra):
-    from django.utils.text import slugify
-
-    return Collection.objects.create(slug=slugify(name)[:80] or "c", name=name, **extra)
-
-
-@pytest.mark.django_db
-def test_collections_reliees_si_nom_identique_sans_en_creer(source, tmp_path):
-    soins = coll("SOINS")  # majuscules / accents ignorés
-    chine = coll("Éclat", required_origin="CN")  # règle d'entrée non remplie par un produit importé
-    report = tmp_path / "r.md"
-    run(source([product(collections=["Soins", "Eclat", "Coffrets cadeaux"])]), "--report", str(report))
-    p = Product.objects.get()
-    assert list(p.collections.all()) == [soins] and chine.products.count() == 0
-    assert Collection.objects.count() == 2  # aucune collection créée
-    text = report.read_text(encoding="utf-8")
-    assert "| Coffrets cadeaux | 1 | — | à traiter : aucune collection Jodhur de ce nom |" in text
-    assert "pays de fabrication" in text and p.brand == "Coopérative Test" and p.supplier == "Coopérative Test"
-
-
-@pytest.mark.django_db
-def test_collection_ambigue_non_reliee(source):
-    coll("Soins")
-    Collection.objects.create(slug="soins-2", name="soins")
-    run(source([product()]))
-    assert Product.objects.get().collections.count() == 0
-
-
-@pytest.mark.django_db
-def test_mise_a_jour_deja_importe_sans_ecraser(source, tmp_path):
-    run(source([product(collections=[], vendor="")]))  # import ancien : pas de fournisseur dans Shopify
-    p = Product.objects.get()
-    p.brand, p.name = "Ma marque", "Nom modifié"
-    p.save()
-    v = p.variants.get()
-    v.price, v.compare_at_price = 99, None
-    v.save()
-    soins = coll("Soins")
-    path = source([product()])
-    report = tmp_path / "a.md"
-    run(path, "--dry-run", "--mettre-a-jour", "--report", str(report))  # aperçu : rien n'est écrit
-    p.refresh_from_db()
-    assert p.supplier == "" and p.collections.count() == 0
-    text = report.read_text(encoding="utf-8")
-    assert "fournisseur → « Coopérative Test »" in text and "collection + « Soins »" in text
-
-    run(path)  # sans --mettre-a-jour : produits existants non touchés
-    p.refresh_from_db()
-    assert p.supplier == "" and p.collections.count() == 0
-
-    run(path, "--mettre-a-jour")
-    p.refresh_from_db()
-    v.refresh_from_db()
-    assert p.supplier == "Coopérative Test" and list(p.collections.all()) == [soins]
-    assert (p.brand, p.name, v.price, Product.objects.count()) == ("Ma marque", "Nom modifié", 99, 1)
-
-
-@pytest.mark.django_db
-def test_fournisseur_local_et_retraits_manuels_respectes(source, tmp_path):
-    soins = coll("Soins")
-    path = source([product()])
-    run(path)
-    p = Product.objects.get()
-    assert list(p.collections.all()) == [soins]
-    p.supplier = "Fournisseur corrigé"
-    p.save()
-    p.collections.remove(soins)  # retrait manuel
-    report = tmp_path / "r.md"
-    run(path, "--mettre-a-jour", "--report", str(report))
-    p.refresh_from_db()
-    assert p.supplier == "Fournisseur corrigé" and p.collections.count() == 0
-    text = report.read_text(encoding="utf-8")
-    assert "fournisseur local « Fournisseur corrigé » conservé" in text and "retirée à la main" in text
-
-    p.supplier = ""  # effacé à la main après l'import : pas remis
-    p.save()
-    run(path, "--mettre-a-jour")
-    p.refresh_from_db()
-    assert p.supplier == ""
-
-
-@pytest.mark.django_db
-def test_liaison_produit_local_par_identifiant_url(source, sellable):
-    local = sellable(slug="baume-rose")
-    price = local.variants.get().price
-    soins = coll("Soins")
-    run(source([product()]), "--mettre-a-jour")
-    local.refresh_from_db()
-    assert local.shopify_id == "gid://shopify/Product/1" and local.supplier == "Coopérative Test"
-    assert list(local.collections.all()) == [soins] and local.status == "active"
-    assert local.variants.get().price == price and local.brand == "Marque"  # marque saisie : conservée
-    assert Product.objects.count() == 1
-
-
-@pytest.mark.django_db
-def test_liaison_ambigue_refusee(source, sellable, tmp_path):
-    local = sellable(slug="baume-rose")
-    report = tmp_path / "r.md"
-    twins = [product(), product(pid=3, handle="baume-rose-2", vendor="Autre")]  # même nom dans Shopify
-    run(source(twins), "--mettre-a-jour", "--report", str(report))
-    local.refresh_from_db()
-    assert local.shopify_id is None and local.supplier == ""  # pas relié : on ne devine pas lequel
-    assert "correspondance ambiguë" in report.read_text(encoding="utf-8")
-
-
-@pytest.mark.django_db
-def test_categorie_ajoutee_aux_produits_deja_importes_sans_categorie(source, category, tmp_path):
-    path = source([product(collections=["Soins Corps", "Mes Solutions"])])
-    run(path)  # import ancien : aucune catégorie Jodhur de ce nom à l'époque
-    p = Product.objects.get()
-    assert p.categories.count() == 0
-    corps = category(slug="soins-corps", name="Soins corps")  # même nom (majuscules ignorées)
-    category(slug="soins", name="Soins")  # nom proche : jamais proposé
-    report, csv_path = tmp_path / "a.md", tmp_path / "a.csv"
-    run(path, "--dry-run", "--mettre-a-jour", "--report", str(report), "--csv", str(csv_path))
-    assert p.categories.count() == 0  # aperçu : rien n'est écrit
-    text = report.read_text(encoding="utf-8")
-    assert "## Prévisualisation détaillée par produit" in text
-    assert "| Soins Corps, Mes Solutions | Lip Balms | aucune | Soins corps | catégorie + « Soins corps » |" in text
-    assert "categorie_jodhur_proposee" in csv_path.read_text(encoding="utf-8-sig")
-
-    run(path, "--mettre-a-jour")
-    assert list(p.categories.all()) == [corps] and p.brand == "Coopérative Test"
-    run(path, "--dry-run", "--mettre-a-jour")  # 2e passage : plus rien à faire
-    p.categories.clear()  # retrait manuel après l'import
-    report2 = tmp_path / "b.md"
-    run(path, "--mettre-a-jour", "--report", str(report2))
-    assert p.categories.count() == 0 and "retirée(s) à la main" in report2.read_text(encoding="utf-8")
-
-
-@pytest.mark.django_db
-def test_categorie_choisie_dans_jodhur_conservee(source, category, tmp_path):
-    path = source([product(collections=["Soins Corps"])])
-    run(path)
-    p = Product.objects.get()
-    mine = category(slug="baumes", name="Baumes")
-    p.categories.add(mine)
-    category(slug="soins-corps", name="Soins Corps")
-    report = tmp_path / "r.md"
-    run(path, "--mettre-a-jour", "--report", str(report))
-    assert list(p.categories.all()) == [mine]
-    assert "déjà choisie(s) dans Jodhur conservée(s)" in report.read_text(encoding="utf-8")
-
-
-@pytest.mark.django_db
-def test_categorie_ambigue_non_proposee(source, category):
-    path = source([product(collections=["Soins Corps"])])
-    run(path)
-    category(slug="soins-corps", name="Soins Corps")
-    category(slug="soins-corps-2", name="Soins corps")  # deux catégories de ce nom : on ne choisit pas
-    run(path, "--mettre-a-jour")
-    assert Product.objects.get().categories.count() == 0
-
-
-def _mapping(tmp_path, rows):
-    import csv
-
-    path = tmp_path / "corresp.csv"
-    with path.open("w", encoding="utf-8-sig", newline="") as fh:
+    monkeypatch.setattr(import_shopify, "download", fake_download)
+    mapping = tmp_path / "corresp.csv"
+    with mapping.open("w", encoding="utf-8-sig", newline="") as fh:
         w = csv.writer(fh, delimiter=";")
         w.writerow(import_shopify.MAPPING_HEADER)
-        for name, value in rows:
-            w.writerow([name, "collection", "", "", "", value])
-    return str(path)
+        w.writerow(["Soins Corps", "collection", "", "", "", "corps", "sûr", ""])
+        w.writerow(["Mes Solutions", "collection", "", "", "", "aucune", "aucune catégorie adaptée", ""])
+
+    def write(nodes):
+        path = tmp_path / "export.json"
+        path.write_text(json.dumps({"source": "test", "products": nodes}), encoding="utf-8")
+        return path
+
+    def run(nodes, *args, report=None):
+        argv = ["--source", str(write(nodes)), "--correspondances", str(mapping), "--nouvelles-categories", "",
+                "--categories-produits", "", "--base-precedente", ""]  # fmt: skip
+        if report:
+            argv += ["--report", str(report)]
+        call_command("import_shopify", *argv, *args)
+        return report.read_text(encoding="utf-8") if report else None
+
+    return {"run": run, "corps": corps, "downloads": downloads, "tmp": tmp_path}
 
 
 @pytest.mark.django_db
-def test_modele_de_correspondances_sans_ecriture(source, category, tmp_path):
-    category(slug="soins-corps", name="Soins Corps")
-    out = tmp_path / "corresp.csv"
-    run(source([product(collections=["Soins Corps", "Mes Solutions"])]), "--modele-correspondances", str(out))
-    assert Product.objects.count() == 0  # rien n'est importé
-    text = out.read_text(encoding="utf-8-sig")
-    assert "collection_shopify;type;produits" in text
-    assert "Soins Corps;collection;1;Baume Rose;soins-corps;" in text and "Mes Solutions;collection;1;" in text
-    cats = (tmp_path / "corresp_categories_jodhur.csv").read_text(encoding="utf-8-sig")
-    assert "soins-corps;Soins Corps" in cats
+def test_apercu_n_ecrit_rien(setup):
+    text = setup["run"]([node()], report=setup["tmp"] / "a.md")
+    assert Product.objects.count() == 0 and not setup["downloads"]
+    assert "APERÇU" in text and "créé actif" in text and "À télécharger : 2" in text
 
 
 @pytest.mark.django_db
-def test_correspondances_appliquees_seulement_avec_mise_a_jour(source, category, tmp_path):
-    path = source([product(collections=["Soins Corps", "Mes Solutions"])])
-    run(path)
+def test_creation_complete_et_active(setup):
+    setup["run"]([node()], "--appliquer")
+    p = Product.objects.get(shopify_id="gid://shopify/Product/1")
+    assert p.status == "active" and p.published_at is not None
+    assert (p.brand, p.supplier, p.name, p.summary) == (
+        "Coopérative Test",
+        "Coopérative Test",
+        "Baume Rose",
+        "Premier paragraphe.",
+    )
+    assert "<script" not in p.description_html
+    assert (p.seo_title, p.seo_description) == ("Baume Rose | Jodhur", "Description SEO.")
+    assert (p.shopify_handle, p.shopify_product_type, p.shopify_category) == (
+        "baume-rose",
+        "Soin lèvres",
+        "Health & Beauty > Lip Balms",
+    )
+    assert p.shopify_tags == ["zone-levres", "bio"] and p.shopify_collections == ["Soins Corps"]
+    assert p.ingredients == ["Beurre de karité", "Cire d'abeille"] and p.benefits == ["Nourrit", "Protège"]
+    assert p.skin_types == "Tous types"
+    assert list(p.categories.all()) == [setup["corps"]]
+    images = list(p.images.order_by("position"))
+    assert [i.shopify_media_id for i in images] == ["gid://shopify/MediaImage/1a", "gid://shopify/MediaImage/1b"]
+    assert images[0].alt == "Alt a" and images[1].alt == "Baume Rose"  # alt vide → nom du produit
+    assert all(i.media.file.name.startswith("uploads/") for i in images)  # fichiers locaux, pas d'URL Shopify
+    v = p.variants.get()
+    assert (v.sku, v.barcode, v.price, v.stock_quantity) == ("SKU-1", "6111000000001", 20, 7)
+    assert StockMovement.objects.get(variant=v).reason == "initial_count"
+    assert ProductMetafield.objects.filter(product=p).count() == 4
+    assert ProductMetafield.objects.get(product=p, key="rating").value == '{"value":"5.0"}'
+
+
+@pytest.mark.django_db
+def test_produit_bloque_reste_brouillon_avec_le_champ_manquant(setup):
+    text = setup["run"](
+        [node(collections=("Mes Solutions",), category=None)], "--appliquer", report=setup["tmp"] / "r.md"
+    )
     p = Product.objects.get()
-    corps = category(slug="corps", name="Corps")
-    visage = category(slug="visage", name="Visage")
-    corresp = _mapping(tmp_path, [("Soins Corps", "corps"), ("Mes Solutions", "visage | corps")])
+    assert p.status == "draft"
+    assert "**Baume Rose** (`baume-rose`) : Au moins une catégorie est obligatoire." in text
+    assert "aucune correspondance pour : Mes Solutions" in text
+
+
+@pytest.mark.django_db
+def test_relance_sans_doublon(setup):
+    nodes = [node(), node(pid=2, handle="savon", title="Savon", images=("a",))]
+    setup["run"](nodes, "--appliquer")
+    n_dl = len(setup["downloads"])
+    text = setup["run"](nodes, "--appliquer", report=setup["tmp"] / "r.md")
+    assert len(setup["downloads"]) == n_dl  # rien n'est retéléchargé
+    assert Product.objects.count() == 2 and ProductImage.objects.count() == 3 and Variant.objects.count() == 2
+    assert ProductMetafield.objects.count() == 8 and "déjà à jour" in text and "créé" not in text.split("## Détail")[1]
+
+
+@pytest.mark.django_db
+def test_modifications_manuelles_conservees(setup):
+    from apps.catalog import services
+
+    setup["run"]([node()], "--appliquer")
+    p = Product.objects.get()
+    p.name, p.seo_title = "Nom à moi", "SEO à moi"
+    p.save()
+    v = p.variants.get()
+    v.price = 25
+    v.save()
+    p.categories.clear()
+    services.change_status(p, "draft", user=_staff())
+    changed = node(
+        title="Baume Rose v2", variants=[variant(10, price="30.00", stock=9, sku="SKU-1", barcode="6111000000001")]
+    )
+    text = setup["run"]([changed], "--appliquer", report=setup["tmp"] / "r.md")
+    p.refresh_from_db()
+    v.refresh_from_db()
+    assert (p.name, p.seo_title, p.status, v.price) == ("Nom à moi", "SEO à moi", "draft", 25)
+    assert p.display_name == "Baume Rose v2"  # non modifié dans Jodhur → mis à jour
+    assert v.stock_quantity == 9  # stock non modifié dans Jodhur → mis à jour (avec mouvement tracé)
+    assert StockMovement.objects.filter(variant=v, reason="recount").exists()
+    assert p.categories.count() == 0  # catégorie retirée à la main : non remise
+    assert "nom modifié(e) dans Jodhur : gardé(e)" in text and "mis en brouillon à la main" in text
+
+
+@pytest.mark.django_db
+def test_metafield_disparu_garde_et_marque(setup):
+    setup["run"]([node()], "--appliquer")
+    setup["run"](
+        [node(metafields=[mf("custom", "type_de_peau", "single_line_text_field", "Tous types")])], "--appliquer"
+    )
+    p = Product.objects.get()
+    assert ProductMetafield.objects.filter(product=p).count() == 4
+    assert ProductMetafield.objects.get(product=p, key="rating").in_shopify is False
+
+
+@pytest.mark.django_db
+def test_image_identique_non_dupliquee(setup, monkeypatch):
+    monkeypatch.setattr(import_shopify, "download", lambda url, attempts=3, timeout=30: image_bytes())
+    setup["run"]([node(images=("a", "b"))], "--appliquer")  # deux médias Shopify, même fichier
+    p = Product.objects.get()
+    assert p.images.count() == 1 and p.images.get().shopify_media_id == "gid://shopify/MediaImage/1b"
+
+
+def test_telechargement_nouvelles_tentatives(monkeypatch):
+    calls = []
+
+    class Resp:
+        def __enter__(self):
+            return self
+
+        def __exit__(self, *a):
+            return False
+
+        def read(self, n):
+            return b"img"
+
+    def fake_urlopen(req, timeout):
+        calls.append(1)
+        if len(calls) < 3:
+            raise OSError("réseau")
+        return Resp()
+
+    monkeypatch.setattr(import_shopify.urllib.request, "urlopen", fake_urlopen)
+    monkeypatch.setattr(import_shopify.time, "sleep", lambda s: None)
+    assert import_shopify.download(IMG.format("x")) == b"img" and len(calls) == 3
+    for url in ("https://evil.example/x.png", "http://cdn.shopify.com/x.png"):
+        with pytest.raises(ValueError):
+            import_shopify.download(url)
+
+
+def test_lecture_api_paginee(monkeypatch):
+    pages = [
+        {"data": {"products": {"pageInfo": {"hasNextPage": True, "endCursor": "c1"}, "nodes": [{"id": 1}]}}},
+        {"data": {"products": {"pageInfo": {"hasNextPage": False, "endCursor": None}, "nodes": [{"id": 2}]}}},
+    ]
+    seen = []
+
+    def fake_post(url, token, body):
+        seen.append(json.loads(body)["variables"]["after"])
+        return pages[len(seen) - 1]
+
+    monkeypatch.setattr(src, "_post_with_retries", fake_post)
+    nodes = src.fetch_from_api("boutique.myshopify.com", "jeton", "2026-01", log=lambda m: None)
+    assert [n["id"] for n in nodes] == [1, 2] and seen == [None, "c1"]
+    with pytest.raises(src.SourceError):
+        src.fetch_from_api("evil.example.com", "jeton", "2026-01")
+
+
+@pytest.mark.django_db
+def test_variantes_options_et_prix_barre(setup):
+    multi = node(
+        variants=[
+            variant(11, "30 ml", "30.00", 4, options=[{"name": "size", "value": "30 ml"}], compare="40.00"),
+            variant(12, "60 ml", "50.00", 0, options=[{"name": "size", "value": "60 ml"}], compare="10.00"),
+        ],
+        options=[{"name": "size", "position": 1, "values": ["30 ml", "60 ml"]}],
+    )
+    setup["run"]([multi], "--appliquer")
+    p = Product.objects.get()
+    assert [o.name for o in p.options.all()] == ["Taille"]
+    v1, v2 = p.variants.order_by("position")
+    assert (v1.compare_at_price, v2.compare_at_price) == (40, None)  # prix barré seulement s'il est > prix
+    assert v1.is_default and [ov.value for ov in v2.option_values.all()] == ["60 ml"]
+
+
+@pytest.mark.django_db
+def test_refus_produits_non_actifs_et_ancien_format(setup, tmp_path):
+    with pytest.raises(CommandError):
+        setup["run"]([node(status="DRAFT")])
+    old = tmp_path / "old.json"
+    old.write_text(json.dumps({"products": [{"id": "x", "status": "ACTIVE", "images": []}]}), encoding="utf-8")
+    with pytest.raises(CommandError, match="Ancien format"):
+        call_command("import_shopify", "--source", str(old))
+
+
+@pytest.mark.django_db
+def test_donnees_shopify_dans_l_admin_pas_sur_la_boutique(setup, staff):
+    from apps.accounts.roles import Role
+    from apps.catalog.public import product_payload
+
+    setup["run"]([node()], "--appliquer")
+    p = Product.objects.get()
+    data = staff(Role.ADMIN).get(f"/api/v1/admin/products/{p.pk}").json()["shopify"]
+    assert data["handle"] == "baume-rose" and data["tags"] == ["zone-levres", "bio"]
+    assert {m["key"] for m in data["metafields"]} >= {"ingredients", "rating"}
+    public = json.dumps(product_payload(p))
+    assert "metafield" not in public and "zone-levres" not in public
+
+
+def _staff():
+    from apps.accounts.models import User
+
+    return User.objects.create_user(email="gestion@exemple.ma", password="Mot-de-passe-solide-1", is_staff=True)
+
+
+@pytest.mark.django_db
+def test_categories_utiles_rendues_visibles_avant_activation(setup, tmp_path):
+    news = tmp_path / "nouvelles.csv"
+    news.write_text(
+        "identifiant_url;nom;nom_ar;parente\nsoins;Soins;;\ncorps-x;Corps X;;soins\ninutile;Inutile;;\n",
+        encoding="utf-8-sig",
+    )
+    mapping = tmp_path / "corresp2.csv"
+    mapping.write_text(
+        ";".join(import_shopify.MAPPING_HEADER) + "\nSoins Corps;collection;;;;corps-x;sûr;\n", encoding="utf-8-sig"
+    )
+    src_file = tmp_path / "export2.json"
+    src_file.write_text(json.dumps({"products": [node(), node(pid=2, handle="x", title="X", collections=())]}))
+    args = ["--source", str(src_file), "--correspondances", str(mapping), "--nouvelles-categories", str(news),
+            "--categories-produits", "", "--base-precedente", "", "--rendre-visibles", "utiles"]  # fmt: skip
     report = tmp_path / "a.md"
-    run(path, "--dry-run", "--mettre-a-jour", "--correspondances", corresp, "--report", str(report))
-    assert p.categories.count() == 0
+    call_command("import_shopify", *args, "--report", str(report))
     text = report.read_text(encoding="utf-8")
-    assert "« Soins Corps » → Corps (1 produit(s), tableau)" in text
-    assert "catégorie + « Corps »; catégorie + « Visage »" in text
-    run(path, "--mettre-a-jour", "--correspondances", corresp)
-    assert set(p.categories.all()) == {corps, visage}
+    assert "Soins › Corps X (`corps-x`) : sera rendue visible — 1 produit(s)" in text and "Soins (`soins`)" in text
+    assert "Restent masquées (aucun produit actif) : Inutile" in text
+    assert "**X** (`x`) : Au moins une catégorie est obligatoire." in text
+    from apps.catalog.models import Category
 
-
-@pytest.mark.django_db
-def test_correspondance_aucune_bloque_le_nom_identique(source, category, tmp_path):
-    path = source([product(collections=["Soins Corps"])])
-    run(path)
-    category(slug="soins-corps", name="Soins Corps")
-    run(path, "--mettre-a-jour", "--correspondances", _mapping(tmp_path, [("Soins Corps", "aucune")]))
-    assert Product.objects.get().categories.count() == 0
-
-
-@pytest.mark.django_db
-def test_tableau_errone_refuse_sans_rien_ecrire(source, tmp_path):
-    from django.core.management.base import CommandError
-
-    corresp = _mapping(tmp_path, [("Soins", "inexistante"), ("Pas dans Shopify", "")])
-    with pytest.raises(CommandError, match="inexistante"):
-        run(source([product()]), "--correspondances", corresp)
-    assert Product.objects.count() == 0
-
-
-@pytest.mark.django_db
-def test_marque_completee_si_vide_et_marque_saisie_conservee(source, tmp_path):
-    old = source([product(vendor=""), product(pid=4, handle="savon", title="Savon")])
-    run(old)  # import ancien : Vendor vide → marque et fournisseur vides
-    a = Product.objects.get(shopify_id="gid://shopify/Product/1")
-    b = Product.objects.get(shopify_id="gid://shopify/Product/4")
-    Product.objects.filter(pk=a.pk).update(brand="")
-    Product.objects.filter(pk=b.pk).update(brand="Ma marque")  # saisie à la main
-    path = source([product(vendor="Rouh Ennabta"), product(pid=4, handle="savon", title="Savon")])
-    report, csv_path = tmp_path / "a.md", tmp_path / "a.csv"
-    run(path, "--dry-run", "--mettre-a-jour", "--report", str(report), "--csv", str(csv_path))
-    a.refresh_from_db()
-    assert a.brand == ""  # aperçu : rien n'est écrit
-    text = report.read_text(encoding="utf-8")
-    assert "| Baume Rose | `baume-rose` | Rouh Ennabta | (vide) | Rouh Ennabta |" in text
-    assert "marque locale « Ma marque » conservée (Vendor Shopify : « Coopérative Test »)" in text
-    assert "marque_proposee" in csv_path.read_text(encoding="utf-8-sig")
-
-    run(path, "--mettre-a-jour")
-    a.refresh_from_db()
-    b.refresh_from_db()
-    assert (a.brand, a.supplier) == ("Rouh Ennabta", "Rouh Ennabta") and b.brand == "Ma marque"
-
-    Product.objects.filter(pk=a.pk).update(brand="")  # effacée à la main après l'import : pas remise
-    run(path, "--mettre-a-jour")
-    a.refresh_from_db()
-    assert a.brand == ""
+    assert not Category.objects.filter(slug="corps-x").exists()  # aperçu
+    call_command("import_shopify", *args, "--appliquer")
+    assert Category.objects.get(slug="corps-x").is_active and Category.objects.get(slug="soins").is_active
+    assert not Category.objects.get(slug="inutile").is_active
+    assert Product.objects.get(slug="baume-rose").status == "active" and Product.objects.get(slug="x").status == "draft"

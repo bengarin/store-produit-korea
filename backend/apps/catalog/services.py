@@ -336,6 +336,7 @@ def duplicate_product(product: Product, *, user=None, request=None) -> Product:
     copy.id = None
     copy.slug = unique_slug(f"{source.slug}-copie", Product)
     copy.shopify_id = None  # la copie n'est pas le produit Shopify d'origine (identifiant unique)
+    copy.shopify_baseline, copy.shopify_synced_at = {}, None  # la copie n'est jamais mise à jour par l'import
     copy.display_name = f"{source.public_name} (copie)"[:255]
     copy.status = Product.Status.DRAFT
     copy.published_at = None
@@ -359,6 +360,7 @@ def duplicate_product(product: Product, *, user=None, request=None) -> Product:
         old_pk = image.pk
         image.pk = None
         image.product = copy
+        image.shopify_media_id = None
         image.save()
         images[old_pk] = image
     copy.hover_image = images.get(source.hover_image_id)
