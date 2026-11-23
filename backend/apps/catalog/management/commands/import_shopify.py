@@ -14,18 +14,18 @@ Règles :
 - mise à jour des produits existants (seulement avec --mettre-a-jour, toujours visible dans l'aperçu) :
   · produit relié par son identifiant Shopify, ou relié s'il correspond à UN SEUL produit local (même identifiant
     URL ou même nom) sans ambiguïté — l'identifiant Shopify est alors enregistré sur la fiche ;
-  · seuls le fournisseur (s'il est vide), les collections (ajout uniquement) et la catégorie (seulement si le
-    produit n'en a AUCUNE et qu'une correspondance est claire) sont complétés ; un fournisseur ou une catégorie
-    choisis dans l'admin ne sont jamais remplacés ; un fournisseur, une collection ou une catégorie retirés à la
-    main après un import précédent ne sont pas remis (historique d'audit) ; nom, textes, prix, stock, variantes,
-    images, statut et marque ne sont jamais touchés ;
-- produit créé en BROUILLON (rien n'apparaît sur la boutique sans relecture) ; fournisseur = « Vendor » Shopify ;
-  marque laissée vide (Shopify n'en fournit pas) ; aucune donnée inventée ;
+  · seuls le fournisseur et la marque (s'ils sont vides), les collections (ajout uniquement) et la catégorie
+    (seulement si le produit n'en a AUCUNE et qu'une correspondance est claire) sont complétés ; un fournisseur,
+    une marque ou une catégorie saisis dans l'admin ne sont jamais remplacés ; ce qui a été retiré ou effacé à la
+    main après un import précédent n'est pas remis (historique d'audit) ; nom, textes, prix, stock, variantes,
+    images et statut ne sont jamais touchés ;
+- produit créé en BROUILLON (rien n'apparaît sur la boutique sans relecture) ; aucune donnée inventée ;
 - variantes, prix, prix barrés et stock Shopify conservés ; chaque stock importé est tracé (« Premier comptage ») ;
   SKU repris s'il existe et n'est pas déjà utilisé ;
 - images téléchargées depuis cdn.shopify.com (HTTPS uniquement), ré-encodées en WebP ; une image en échec est
   signalée, le produit est quand même créé ;
-- fournisseur = « Vendor » Shopify ; la MARQUE est un autre champ, jamais déduit du fournisseur ;
+- « Vendor » Shopify → Fournisseur ET Marque (décision de la propriétaire : dans sa boutique Shopify, le Vendor
+  est aussi la marque) ; deux champs distincts dans Jodhur, chacun modifiable séparément ;
 - collections : une collection Shopify est reliée à une collection Jodhur seulement si leurs noms sont identiques
   (majuscules, accents et ponctuation ignorés) ; aucune collection n'est créée ; les autres sont listées
   « à traiter » ; les règles d'entrée de la collection Jodhur (pays, ingrédients) sont respectées ;
@@ -256,7 +256,8 @@ class Command(BaseCommand):
         row["jodhur_categories"] = [c.name for c in cats]
         if not cats:
             warnings.append("catégorie Jodhur à choisir (aucune correspondance claire)")
-        warnings.append("marque à renseigner (Shopify n'en fournit pas)")
+        if not row["vendor"]:
+            warnings.append("marque à renseigner (Vendor Shopify vide)")
         used_skus = set()
         for v in p["variants"]:
             sku = (v.get("sku") or "").strip()
@@ -300,12 +301,13 @@ class Command(BaseCommand):
         logs = AuditLog.objects.filter(
             target_type="catalog.product", target_id=str(product.pk), action__in=[ACTION_CREATE, ACTION_UPDATE]
         )
-        supplier, collections, categories = False, set(), set()
+        supplier, brand, collections, categories = False, False, set(), set()
         for log in logs:
             supplier = supplier or bool((log.changes or {}).get("supplier"))
+            brand = brand or bool((log.changes or {}).get("brand"))
             collections.update((log.changes or {}).get("collectionsAdded") or [])
             categories.update((log.changes or {}).get("categoriesAdded") or [])
-        return {"supplier": supplier, "collections": collections, "categories": categories}
+        return {"supplier": supplier, "brand": brand, "collections": collections, "categories": categories}
 
     def _plan_update(self, product: Product, row: dict, link: str | None = None) -> dict:
         """Ce qui serait complété sur un produit existant. Ne lit que la base : aucune écriture."""
@@ -315,6 +317,8 @@ class Command(BaseCommand):
             "pk": product.pk,
             "link": link,
             "supplier": None,
+            "brand": None,
+            "current_brand": product.brand.strip(),
             "add": [],
             "categories": [],
             "kept": [],
@@ -335,6 +339,16 @@ class Command(BaseCommand):
                 plan["changes"].append(f"fournisseur → « {vendor} »")
         elif vendor and local != vendor:
             plan["kept"].append(f"fournisseur local « {local} » conservé (Shopify : « {vendor} »)")
+        brand = row["vendor"].strip()[:100]
+        local_brand = plan["current_brand"]
+        if brand and not local_brand:
+            if history["brand"]:
+                plan["kept"].append("marque effacée à la main après un import : laissée vide")
+            else:
+                plan["brand"] = brand
+                plan["changes"].append(f"marque → « {brand} »")
+        elif brand and local_brand != brand:
+            plan["kept"].append(f"marque locale « {local_brand} » conservée (Vendor Shopify : « {brand} »)")
         current = set(product.collections.values_list("pk", flat=True))
         for _name, coll in row["collection_matches"]:
             if not isinstance(coll, Collection) or coll.pk in current or coll in plan["add"]:
@@ -540,7 +554,7 @@ class Command(BaseCommand):
         product = Product.objects.create(
             slug=unique_slug(p["handle"], Product),
             position=position,
-            brand="",
+            brand=(p.get("vendor") or "").strip()[:100],
             supplier=(p.get("vendor") or "")[:150],
             shopify_id=p["id"],
             name=p["title"][:200],
@@ -624,6 +638,7 @@ class Command(BaseCommand):
             changes={
                 "shopifyId": p["id"],
                 "supplier": product.supplier,
+                "brand": product.brand,
                 "variants": len(p["variants"]),
                 "collectionsAdded": [c.pk for c in added],
                 "categoriesAdded": [c.pk for c in new_cats],
@@ -646,6 +661,9 @@ class Command(BaseCommand):
                 if plan["supplier"]:
                     product.supplier = plan["supplier"]
                     fields.append("supplier")
+                if plan["brand"]:
+                    product.brand = plan["brand"]
+                    fields.append("brand")
                 if fields:
                     product.save(update_fields=[*fields, "updated_at"])
                 product.collections.add(*plan["add"])
@@ -662,6 +680,7 @@ class Command(BaseCommand):
                             "shopifyId": p["id"],
                             "linked": bool(plan["link"]),
                             "supplier": plan["supplier"] or "",
+                            "brand": plan["brand"] or "",
                             "collectionsAdded": [c.pk for c in plan["add"]],
                             "categoriesAdded": [c.pk for c in plan["categories"]],
                         },
@@ -687,10 +706,10 @@ class Command(BaseCommand):
             "",
             "Actions : " + " · ".join(f"**{k}** : {v}" for k, v in sorted(counts.items())),
             "",
-            "Règles : produits créés en brouillon ; fournisseur = « Vendor » Shopify (la marque est un autre champ,"
-            " laissée vide) ; collections reliées seulement si le nom est identique ; aucune collection créée ;"
-            " produits existants : seuls le fournisseur vide, les collections et la catégorie (si aucune)"
-            " sont complétés (avec --mettre-a-jour) ;"
+            "Règles : produits créés en brouillon ; « Vendor » Shopify → Fournisseur ET Marque ;"
+            " collections reliées seulement si le nom est identique ; aucune collection créée ;"
+            " produits existants : seuls le fournisseur et la marque vides, les collections et la catégorie"
+            " (si aucune) sont complétés (avec --mettre-a-jour) ;"
             " Shopify jamais modifié.",
             "",
             "## Données manquantes",
@@ -698,7 +717,8 @@ class Command(BaseCommand):
             f"- SKU manquant : {sum(1 for v in variants if v.get('sku_note') == 'SKU manquant')} variante(s) sur"
             f" {len(variants)}",
             f"- Catégorie Jodhur à choisir : {sum(1 for r in rows if not r.get('jodhur_categories'))} produit(s)",
-            "- Marque : à renseigner pour tous les produits (Shopify n'a pas de champ marque ; non devinée)",
+            f"- Marque : reprise du Vendor Shopify ; Vendor vide :"
+            f" {sum(1 for r in rows if not r['vendor'])} produit(s)",
             f"- Stock à 0 (rupture) : {sum(1 for v in variants if v.get('stock_note') == 'rupture')} variante(s)",
             f"- Sans image : {sum(1 for r in rows if not r['images'])} · sans fournisseur :"
             f" {sum(1 for r in rows if not r['vendor'])}",
@@ -773,11 +793,34 @@ class Command(BaseCommand):
         fill = [r for r in planned if r["plan"]["supplier"]]
         kept = [(r, k) for r in planned for k in r["plan"]["kept"] if k.startswith("fournisseur")]
         same = len(planned) - len(fill) - len({id(r) for r, _k in kept})
+        bfill = [r for r in planned if r["plan"]["brand"]]
+        bkept = [(r, k) for r in planned for k in r["plan"]["kept"] if k.startswith("marque")]
+        bsame = len(planned) - len(bfill) - len({id(r) for r, _k in bkept})
         lines = [
             "",
-            "## Fournisseur (« Vendor » Shopify → champ Fournisseur Jodhur)",
+            "## Fournisseur et marque (« Vendor » Shopify → Fournisseur ET Marque Jodhur)",
             "",
-            "La marque n'est jamais remplie à partir du fournisseur : ce sont deux champs différents.",
+            "Deux champs distincts dans Jodhur, remplis avec la même valeur Shopify. Une valeur saisie dans l'admin"
+            " n'est jamais remplacée ; seuls les champs vides sont complétés.",
+            "",
+            "### Marque",
+            "",
+            f"- Nouveaux produits avec marque : {sum(1 for r in new if r['vendor'])} / {len(new)}",
+            f"- Produits existants dont la marque vide sera complétée : {len(bfill)}",
+            f"- Produits existants à la marque déjà identique (ou Vendor vide) : {bsame}",
+            f"- Marque locale différente ou effacée à la main (conservée, non remplacée) : {len(bkept)}",
+        ]
+        lines += [f"  - {r['title']} : {k}" for r, k in bkept]
+        if self.supplier_groups:
+            lines += [
+                "",
+                "⚠️ Vendors probablement identiques écrits différemment : ils donneront des marques différentes"
+                " (à harmoniser dans Shopify ou dans l'admin si besoin) :",
+            ]
+            lines += ["- " + " · ".join(f"« {g} »" for g in group) for group in self.supplier_groups]
+        lines += [
+            "",
+            "### Fournisseur",
             "",
             f"- Nouveaux produits avec fournisseur : {sum(1 for r in new if r['vendor'])} / {len(new)}",
             f"- Produits existants dont le fournisseur vide sera complété : {len(fill)}",
@@ -902,9 +945,10 @@ class Command(BaseCommand):
             "",
             "## Prévisualisation détaillée par produit",
             "",
-            "| Produit | Fiche Jodhur | Collections Shopify | Catégorie Shopify | Catégorie(s) Jodhur actuelle(s)"
-            " | Catégorie Jodhur proposée | Champs modifiés | Conservé tel quel / à traiter |",
-            "|---|---|---|---|---|---|---|---|",
+            "| Produit | Fiche Jodhur | Vendor Shopify | Marque actuelle | Marque proposée | Collections Shopify"
+            " | Catégorie Shopify | Catégorie(s) Jodhur actuelle(s) | Catégorie Jodhur proposée | Champs modifiés"
+            " | Conservé tel quel / à traiter |",
+            "|---|---|---|---|---|---|---|---|---|---|---|",
         ]
         for r in rows:
             plan = r.get("plan")
@@ -915,19 +959,24 @@ class Command(BaseCommand):
                 )
                 changes = "; ".join(plan["changes"]) or "aucun"
                 kept = "; ".join(plan["kept"]) or "—"
+                brand_now = plan["current_brand"] or "(vide)"
+                brand_new = plan["brand"] or "— (inchangée)"
             else:
                 current = "— (nouveau)" if r["action"] in (CREATE, "créé (brouillon)") else "—"
                 cats = r.get("jodhur_categories") or []
                 proposed = ", ".join(cats) or "aucune correspondance claire"
                 changes = "création (brouillon)" if r["action"] in (CREATE, "créé (brouillon)") else r["action"]
+                is_new = r["action"] in (CREATE, "créé (brouillon)")
+                brand_now = "— (nouveau)" if is_new else "—"
+                brand_new = (r["vendor"] or "(vide)") if is_new else "—"
                 kept = "; ".join(w for w in r["warnings"] if not w.startswith(("marque", "SKU manquant"))) or "—"
             lines.append(
-                f"| {_cell(r['title'], 60)} | `{r.get('local', '—')}`"
+                f"| {_cell(r['title'], 60)} | `{r.get('local', '—')}` | {_cell(r['vendor'] or '(vide)', 60)}"
+                f" | {_cell(brand_now, 60)} | {_cell(brand_new, 60)}"
                 f" | {_cell(', '.join(r['collections']) or '—', 300)}"
                 f" | {_cell(r['category'].split('>')[-1].strip() or '—', 60)} | {_cell(current, 120)}"
                 f" | {_cell(proposed, 120)} | {_cell(changes, 300)} | {_cell(kept, 300)} |"
             )
-        lines += ["", "La marque n'est jamais modifiée par l'import (Shopify n'a pas de champ marque)."]
         return lines
 
     def _csv(self, path: Path, rows):
@@ -937,15 +986,18 @@ class Command(BaseCommand):
             w = csv.writer(fh, delimiter=";")
             w.writerow(
                 ["produit", "handle", "fournisseur", "variante", "sku", "prix", "prix_barre", "stock", "images",
-                 "categorie_shopify", "collections_shopify", "categorie_jodhur_actuelle", "categorie_jodhur_proposee",
+                 "categorie_shopify", "collections_shopify", "marque_actuelle", "marque_proposee",
+                 "categorie_jodhur_actuelle", "categorie_jodhur_proposee",
                  "collections_jodhur", "action", "changements", "a_verifier"]
             )  # fmt: skip
             for r in rows:
                 plan = r.get("plan") or {}
                 if plan:
-                    cats = [", ".join(plan["current_categories"]), ", ".join(_cat_label(c) for c in plan["categories"])]
+                    proposed = ", ".join(_cat_label(c) for c in plan["categories"])
+                    cats = [plan["current_brand"], plan["brand"] or "", ", ".join(plan["current_categories"]), proposed]
                 else:
-                    cats = ["", ", ".join(r.get("jodhur_categories") or [])]
+                    new = r["action"] in (CREATE, "créé (brouillon)")
+                    cats = ["", r["vendor"] if new else "", "", ", ".join(r.get("jodhur_categories") or [])]
                 common = [*cats, ", ".join(self._collections_for(r)), r["action"], "; ".join(plan.get("changes", []))]
                 if not r["variants"]:
                     w.writerow(

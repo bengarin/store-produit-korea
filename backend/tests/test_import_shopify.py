@@ -99,7 +99,7 @@ def test_apercu_n_ecrit_rien(source, tmp_path):
 def test_import_brouillon_fournisseur_variantes_stock(source):
     run(source([product(), multi()]))
     p = Product.objects.get(shopify_id="gid://shopify/Product/1")
-    assert p.status == "draft" and p.supplier == "Coopérative Test" and p.brand == ""
+    assert p.status == "draft" and p.supplier == "Coopérative Test" and p.brand == "Coopérative Test"
     assert p.display_name == "Baume Rose" and p.summary == "Premier paragraphe."
     assert "<script" not in p.description_html
     assert p.images.count() == 1
@@ -192,7 +192,7 @@ def test_collections_reliees_si_nom_identique_sans_en_creer(source, tmp_path):
     assert Collection.objects.count() == 2  # aucune collection créée
     text = report.read_text(encoding="utf-8")
     assert "| Coffrets cadeaux | 1 | — | à traiter : aucune collection Jodhur de ce nom |" in text
-    assert "pays de fabrication" in text and p.brand == "" and p.supplier == "Coopérative Test"
+    assert "pays de fabrication" in text and p.brand == "Coopérative Test" and p.supplier == "Coopérative Test"
 
 
 @pytest.mark.django_db
@@ -265,7 +265,7 @@ def test_liaison_produit_local_par_identifiant_url(source, sellable):
     local.refresh_from_db()
     assert local.shopify_id == "gid://shopify/Product/1" and local.supplier == "Coopérative Test"
     assert list(local.collections.all()) == [soins] and local.status == "active"
-    assert local.variants.get().price == price and local.brand != "Coopérative Test"
+    assert local.variants.get().price == price and local.brand == "Marque"  # marque saisie : conservée
     assert Product.objects.count() == 1
 
 
@@ -297,7 +297,7 @@ def test_categorie_ajoutee_aux_produits_deja_importes_sans_categorie(source, cat
     assert "categorie_jodhur_proposee" in csv_path.read_text(encoding="utf-8-sig")
 
     run(path, "--mettre-a-jour")
-    assert list(p.categories.all()) == [corps] and p.brand == ""
+    assert list(p.categories.all()) == [corps] and p.brand == "Coopérative Test"
     run(path, "--dry-run", "--mettre-a-jour")  # 2e passage : plus rien à faire
     p.categories.clear()  # retrait manuel après l'import
     report2 = tmp_path / "b.md"
@@ -389,3 +389,32 @@ def test_tableau_errone_refuse_sans_rien_ecrire(source, tmp_path):
     with pytest.raises(CommandError, match="inexistante"):
         run(source([product()]), "--correspondances", corresp)
     assert Product.objects.count() == 0
+
+
+@pytest.mark.django_db
+def test_marque_completee_si_vide_et_marque_saisie_conservee(source, tmp_path):
+    old = source([product(vendor=""), product(pid=4, handle="savon", title="Savon")])
+    run(old)  # import ancien : Vendor vide → marque et fournisseur vides
+    a = Product.objects.get(shopify_id="gid://shopify/Product/1")
+    b = Product.objects.get(shopify_id="gid://shopify/Product/4")
+    Product.objects.filter(pk=a.pk).update(brand="")
+    Product.objects.filter(pk=b.pk).update(brand="Ma marque")  # saisie à la main
+    path = source([product(vendor="Rouh Ennabta"), product(pid=4, handle="savon", title="Savon")])
+    report, csv_path = tmp_path / "a.md", tmp_path / "a.csv"
+    run(path, "--dry-run", "--mettre-a-jour", "--report", str(report), "--csv", str(csv_path))
+    a.refresh_from_db()
+    assert a.brand == ""  # aperçu : rien n'est écrit
+    text = report.read_text(encoding="utf-8")
+    assert "| Baume Rose | `baume-rose` | Rouh Ennabta | (vide) | Rouh Ennabta |" in text
+    assert "marque locale « Ma marque » conservée (Vendor Shopify : « Coopérative Test »)" in text
+    assert "marque_proposee" in csv_path.read_text(encoding="utf-8-sig")
+
+    run(path, "--mettre-a-jour")
+    a.refresh_from_db()
+    b.refresh_from_db()
+    assert (a.brand, a.supplier) == ("Rouh Ennabta", "Rouh Ennabta") and b.brand == "Ma marque"
+
+    Product.objects.filter(pk=a.pk).update(brand="")  # effacée à la main après l'import : pas remise
+    run(path, "--mettre-a-jour")
+    a.refresh_from_db()
+    assert a.brand == ""
